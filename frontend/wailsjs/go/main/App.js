@@ -46,6 +46,10 @@ export function MergeFavoriteSnapshots(arg1) {
   return window['go']['main']['App']['MergeFavoriteSnapshots'](arg1);
 }
 
+export function MergeKnownMapNamesFromRows(arg1) {
+  return window['go']['main']['App']['MergeKnownMapNamesFromRows'](arg1);
+}
+
 export function OpenExternalURL(arg1) {
   return window['go']['main']['App']['OpenExternalURL'](arg1);
 }

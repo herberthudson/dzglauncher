@@ -1,6 +1,6 @@
 import {useEffect, useMemo, useState} from 'react';
 import {useTranslation} from 'react-i18next';
-import {Package, Rows3, Search} from 'lucide-react';
+import {ExternalLink, Package, Rows3, Search, Trash2} from 'lucide-react';
 import * as App from '../../../wailsjs/go/main/App';
 import {workshop} from '../../../wailsjs/go/models';
 import {DsSelect} from '../../shared/DsSelect';
@@ -333,9 +333,11 @@ export function ModsPage() {
                   <td>
                     <div className="row-actions">
                     <button type="button" className="btn btn-secondary" disabled={busy} title={t('mods.steamPageTitle')} onClick={() => App.WorkshopPage(m.id)}>
+                      <ExternalLink size={14} strokeWidth={2} aria-hidden />
                       {t('mods.steam')}
                     </button>
                     <button type="button" className="btn btn-danger" disabled={busy} title={t('mods.deleteTitle')} onClick={() => deleteOne(m)}>
+                      <Trash2 size={14} strokeWidth={2} aria-hidden />
                       {t('mods.delete')}
                     </button>
                     </div>

@@ -103,6 +103,7 @@ type Settings struct {
 	ClientGeoUpdated   int64         `json:"clientGeoUpdated"`
 	Locale             string        `json:"locale"`
 	UITheme            string        `json:"uiTheme"`
+	KnownMapNames      []string      `json:"knownMapNames,omitempty"`
 }
 
 func DefaultSettings() Settings {

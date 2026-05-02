@@ -73,6 +73,9 @@ func mergeDefaults(s domain.Settings) domain.Settings {
 	if s.UITheme == "" {
 		s.UITheme = d.UITheme
 	}
+	if s.KnownMapNames == nil {
+		s.KnownMapNames = []string{}
+	}
 	return s
 }
 

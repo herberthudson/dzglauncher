@@ -1,6 +1,6 @@
 import {useEffect, useMemo, useState} from 'react';
 import {useTranslation} from 'react-i18next';
-import {Rows3, Server, Star} from 'lucide-react';
+import {Package, Play, Rows3, Server, Star, Trash2} from 'lucide-react';
 import * as App from '../../../wailsjs/go/main/App';
 import {domain} from '../../../wailsjs/go/models';
 import {favoriteKey, favoriteKeyParts, favoritesToRows, rowKey} from '../../shared/favoriteRows';
@@ -252,6 +252,7 @@ export function FavoritesPage() {
                       <td>
                         <div className="row-actions">
                           <button type="button" className="btn btn-secondary" title={t('favorites.connectTitle')} onClick={() => App.LaunchConnect(row).catch((e) => setErr(String(e)))}>
+                            <Play size={14} strokeWidth={2} aria-hidden />
                             {t('favorites.connect')}
                           </button>
                           <button
@@ -261,6 +262,7 @@ export function FavoritesPage() {
                             title={t('favorites.modsA2STitle')}
                             onClick={() => enrichMods(row)}
                           >
+                            <Package size={14} strokeWidth={2} aria-hidden />
                             {modsBusyKey === rowKey(row) ? t('favorites.modsA2SBusy') : t('favorites.modsA2S')}
                           </button>
                           <button
@@ -276,6 +278,7 @@ export function FavoritesPage() {
                                 .catch((e) => setErr(String(e)));
                             }}
                           >
+                            <Trash2 size={14} strokeWidth={2} aria-hidden />
                             {t('favorites.remove')}
                           </button>
                         </div>

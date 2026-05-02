@@ -4,6 +4,7 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
+	"slices"
 	"sync"
 	"time"
 
@@ -149,6 +150,23 @@ func (a *App) DiscoverMapNames(rows []domain.ServerRow) []string {
 		out = append(out, m)
 	}
 	return out
+}
+
+func (a *App) MergeKnownMapNamesFromRows(rows []domain.ServerRow) ([]string, error) {
+	discovered := a.DiscoverMapNames(rows)
+	cfg, err := a.store.Load()
+	if err != nil {
+		return nil, err
+	}
+	merged := domain.MergeKnownMapNamesUnion(cfg.KnownMapNames, discovered)
+	if slices.Equal(cfg.KnownMapNames, merged) {
+		return merged, nil
+	}
+	cfg.KnownMapNames = merged
+	if err := a.store.Save(cfg); err != nil {
+		return nil, err
+	}
+	return merged, nil
 }
 
 func (a *App) RefreshServersPing(rows []domain.ServerRow) ([]domain.ServerRow, error) {
