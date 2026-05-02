@@ -2,6 +2,7 @@ import {useEffect, useMemo, useState} from 'react';
 import * as App from '../../../wailsjs/go/main/App';
 import {domain} from '../../../wailsjs/go/models';
 import {favoriteKey, favoriteKeyParts, favoritesToRows, rowKey} from '../../shared/favoriteRows';
+import {useA2sModsHint} from '../../shared/useA2sModsHint';
 
 const PAGE_PRESETS = [10, 20, 50, 100] as const;
 
@@ -21,6 +22,8 @@ export function FavoritesPage() {
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [modsHint, setModsHint] = useA2sModsHint();
+  const [modsBusyKey, setModsBusyKey] = useState<string | null>(null);
 
   const reload = () => App.LoadSettings().then(setS);
 
@@ -58,13 +61,33 @@ export function FavoritesPage() {
   };
 
   const enrichMods = (row: domain.ServerRow) => {
+    const rk = rowKey(row);
+    setErr('');
+    setModsHint(null);
+    setModsBusyKey(rk);
     App.EnrichServerMods(row.queryHost, row.queryPort)
       .then((ids) => {
-        const patched = domain.ServerRow.createFrom({...row, workshopModIds: ids});
-        return App.MergeFavoriteSnapshots([patched]);
+        const list = Array.isArray(ids) ? ids : [];
+        const patched = domain.ServerRow.createFrom({...row, workshopModIds: list});
+        return App.MergeFavoriteSnapshots([patched]).then(() => list);
       })
-      .then(() => reload())
-      .catch((e) => setErr(String(e)));
+      .then((list) => {
+        const label = row.name || row.address;
+        if (!list.length) {
+          setModsHint({
+            level: 'warn',
+            text: `Mods A2S: nenhum ID Workshop nas regras do servidor «${label}». Muitos servidores DayZ não publicam mods aí.`,
+          });
+        } else {
+          setModsHint({
+            level: 'info',
+            text: `Mods A2S: ${list.length} ID(s) guardado(s) nos favoritos para «${label}».`,
+          });
+        }
+        return reload();
+      })
+      .catch((e) => setErr(String(e)))
+      .finally(() => setModsBusyKey(null));
   };
 
   const presetValue = PAGE_PRESETS.includes(pageSize as (typeof PAGE_PRESETS)[number]) ? String(pageSize) : 'custom';
@@ -73,6 +96,7 @@ export function FavoritesPage() {
     <div>
       <h1 style={{marginTop: 0}}>Favoritos</h1>
       {err ? <div className="msg msg-error">{err}</div> : null}
+      {modsHint ? <div className={modsHint.level === 'warn' ? 'msg msg-warn' : 'msg msg-info'}>{modsHint.text}</div> : null}
       <div className="toolbar">
         <button type="button" className="btn btn-secondary" disabled={loading || !s.quickFavorite} onClick={() => App.ClearQuickFavorite().then(reload)}>
           Limpar favorito rápido
@@ -188,8 +212,14 @@ export function FavoritesPage() {
                       <button type="button" className="btn btn-secondary" onClick={() => App.LaunchConnect(row).catch((e) => setErr(String(e)))}>
                         Ligar
                       </button>
-                      <button type="button" className="btn btn-secondary" onClick={() => enrichMods(row)}>
-                        Mods A2S
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        disabled={modsBusyKey === rowKey(row)}
+                        title="Pedido A2S_RULES: extrai IDs Steam Workshop e guarda no favorito."
+                        onClick={() => enrichMods(row)}
+                      >
+                        {modsBusyKey === rowKey(row) ? 'A2S…' : 'Mods A2S'}
                       </button>
                       <button
                         type="button"
@@ -206,7 +236,11 @@ export function FavoritesPage() {
                         Remover
                       </button>
                     </div>
-                    {row.workshopModIds?.length ? <div style={{fontSize: '0.65rem', color: 'var(--text-muted)', maxWidth: '12rem'}}>{row.workshopModIds.join(', ')}</div> : null}
+                    {row.workshopModIds && row.workshopModIds.length > 0 ? (
+                      <div style={{fontSize: '0.65rem', color: 'var(--text-muted)', maxWidth: '14rem'}}>{row.workshopModIds.join(', ')}</div>
+                    ) : row.workshopModIds && row.workshopModIds.length === 0 ? (
+                      <div style={{fontSize: '0.65rem', color: 'var(--text-muted)', maxWidth: '14rem'}}>Regras A2S sem IDs Workshop.</div>
+                    ) : null}
                   </td>
                 </tr>
               );

@@ -1,6 +1,7 @@
 import {useCallback, useEffect, useMemo, useState} from 'react';
 import * as App from '../../../wailsjs/go/main/App';
 import {domain} from '../../../wailsjs/go/models';
+import {useA2sModsHint} from '../../shared/useA2sModsHint';
 
 function defaultFilters(): domain.FilterState {
   return domain.FilterState.createFrom({
@@ -72,6 +73,8 @@ export function ServerBrowserPage() {
   const [bmId, setBmId] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [modsHint, setModsHint] = useA2sModsHint();
+  const [modsBusyKey, setModsBusyKey] = useState<string | null>(null);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize) || 1);
 
@@ -165,16 +168,31 @@ export function ServerBrowserPage() {
   };
 
   const enrichMods = (row: domain.ServerRow) => {
+    const rk = rowKey(row);
+    setErr('');
+    setModsHint(null);
+    setModsBusyKey(rk);
     App.EnrichServerMods(row.queryHost, row.queryPort)
       .then((ids) => {
-        setFiltered((prev) =>
-          prev.map((r) => (r.address === row.address && r.queryPort === row.queryPort ? domain.ServerRow.createFrom({...r, workshopModIds: ids}) : r)),
-        );
-        setRaw((prev) =>
-          prev.map((r) => (r.address === row.address && r.queryPort === row.queryPort ? domain.ServerRow.createFrom({...r, workshopModIds: ids}) : r)),
-        );
+        const list = Array.isArray(ids) ? ids : [];
+        const next = domain.ServerRow.createFrom({...row, workshopModIds: list});
+        setFiltered((prev) => prev.map((r) => (rowKey(r) === rk ? next : r)));
+        setRaw((prev) => prev.map((r) => (rowKey(r) === rk ? next : r)));
+        const label = row.name || row.address;
+        if (!list.length) {
+          setModsHint({
+            level: 'warn',
+            text: `Mods A2S: nenhum ID Workshop nas regras do servidor «${label}». Muitos servidores DayZ não publicam mods aí; os IDs podem estar noutro formato.`,
+          });
+        } else {
+          setModsHint({
+            level: 'info',
+            text: `Mods A2S: ${list.length} ID(s) Workshop obtido(s) para «${label}». Lista abaixo dos botões da linha.`,
+          });
+        }
       })
-      .catch((e) => setErr(String(e)));
+      .catch((e) => setErr(String(e)))
+      .finally(() => setModsBusyKey(null));
   };
 
   const presetValue = PAGE_PRESETS.includes(pageSize as (typeof PAGE_PRESETS)[number]) ? String(pageSize) : 'custom';
@@ -183,6 +201,7 @@ export function ServerBrowserPage() {
     <div>
       <h1 style={{marginTop: 0}}>Browser de servidores</h1>
       {err ? <div className="msg msg-error">{err}</div> : null}
+      {modsHint ? <div className={modsHint.level === 'warn' ? 'msg msg-warn' : 'msg msg-info'}>{modsHint.text}</div> : null}
       <div className="toolbar">
         <button type="button" className="btn" disabled={loading} onClick={fetchSteam}>
           Carregar lista Steam
@@ -343,7 +362,7 @@ export function ServerBrowserPage() {
           </thead>
           <tbody>
             {pageSlice.map((row) => (
-              <tr key={row.address + ':' + row.queryPort}>
+              <tr key={rowKey(row)}>
                 <td style={{maxWidth: '14rem', whiteSpace: 'normal'}}>{row.name}</td>
                 <td>{row.mapName}</td>
                 <td>{row.perspective}</td>
@@ -367,11 +386,21 @@ export function ServerBrowserPage() {
                     <button type="button" className="btn btn-secondary" onClick={() => App.SetQuickFavorite(row, window.prompt('Etiqueta', row.name) || row.name).catch((e) => setErr(String(e)))}>
                       Fav rápido
                     </button>
-                    <button type="button" className="btn btn-secondary" onClick={() => enrichMods(row)}>
-                      Mods A2S
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      disabled={modsBusyKey === rowKey(row)}
+                      title="Pedido A2S_RULES: extrai IDs Steam Workshop (8–12 dígitos) dos valores das regras, quando o servidor os expõe."
+                      onClick={() => enrichMods(row)}
+                    >
+                      {modsBusyKey === rowKey(row) ? 'A2S…' : 'Mods A2S'}
                     </button>
                   </div>
-                  {row.workshopModIds?.length ? <div style={{fontSize: '0.65rem', color: 'var(--text-muted)', maxWidth: '12rem'}}>{row.workshopModIds.join(', ')}</div> : null}
+                  {row.workshopModIds && row.workshopModIds.length > 0 ? (
+                    <div style={{fontSize: '0.65rem', color: 'var(--text-muted)', maxWidth: '14rem'}}>{row.workshopModIds.join(', ')}</div>
+                  ) : row.workshopModIds && row.workshopModIds.length === 0 ? (
+                    <div style={{fontSize: '0.65rem', color: 'var(--text-muted)', maxWidth: '14rem'}}>Regras A2S sem IDs Workshop.</div>
+                  ) : null}
                 </td>
               </tr>
             ))}

@@ -186,7 +186,7 @@ func readCString(b []byte, off *int) string {
 
 func WorkshopIDsFromRules(r RulesResult) []string {
 	seen := map[string]struct{}{}
-	var out []string
+	out := make([]string, 0)
 	for _, v := range r.Pairs {
 		for _, m := range reWorkshop.FindAllString(v, -1) {
 			if _, ok := seen[m]; ok {
