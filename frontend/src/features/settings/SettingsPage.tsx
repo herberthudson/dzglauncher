@@ -77,7 +77,7 @@ export function SettingsPage() {
       </div>
       <div className="field">
         <label>Pasta raiz Steam (workshop)</label>
-        <input value={s.steamRootPath} onChange={bind('steamRootPath')} placeholder="ex.: ~/.local/share/Steam" />
+        <input value={s.steamRootPath} onChange={bind('steamRootPath')} placeholder="ex.: ~/.local/share/Steam ou caminho absoluto" />
       </div>
       <div className="field">
         <label>Ramo DayZ</label>

@@ -9,6 +9,8 @@ export function ApplyServerFilters(arg1:Array<domain.ServerRow>,arg2:domain.Filt
 
 export function ClearQuickFavorite():Promise<void>;
 
+export function DeleteWorkshopItems(arg1:Array<string>):Promise<void>;
+
 export function DiscoverMapNames(arg1:Array<domain.ServerRow>):Promise<Array<string>>;
 
 export function EnrichServerMods(arg1:string,arg2:number):Promise<Array<string>>;

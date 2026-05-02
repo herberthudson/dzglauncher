@@ -256,6 +256,22 @@ func (a *App) ListWorkshopItems() ([]workshop.Item, error) {
 	return workshop.ListInstalled(root, appid)
 }
 
+func (a *App) DeleteWorkshopItems(paths []string) error {
+	if len(paths) == 0 {
+		return nil
+	}
+	cfg, err := a.store.Load()
+	if err != nil {
+		return err
+	}
+	root := workshop.WorkshopContentRoot(cfg.SteamRootPath)
+	if root == "" {
+		return fmt.Errorf("pasta raiz Steam não configurada")
+	}
+	appid := workshop.DayZAppID(cfg.DayZBranch)
+	return workshop.DeleteModDirs(root, appid, paths)
+}
+
 func (a *App) ToggleFavoriteRow(row domain.ServerRow) error {
 	cfg, err := a.store.Load()
 	if err != nil {

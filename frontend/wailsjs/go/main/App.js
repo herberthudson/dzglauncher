@@ -14,6 +14,10 @@ export function ClearQuickFavorite() {
   return window['go']['main']['App']['ClearQuickFavorite']();
 }
 
+export function DeleteWorkshopItems(arg1) {
+  return window['go']['main']['App']['DeleteWorkshopItems'](arg1);
+}
+
 export function DiscoverMapNames(arg1) {
   return window['go']['main']['App']['DiscoverMapNames'](arg1);
 }

@@ -237,6 +237,7 @@ export namespace workshop {
 	    id: string;
 	    name: string;
 	    path: string;
+	    sizeBytes: number;
 	
 	    static createFrom(source: any = {}) {
 	        return new Item(source);
@@ -247,6 +248,7 @@ export namespace workshop {
 	        this.id = source["id"];
 	        this.name = source["name"];
 	        this.path = source["path"];
+	        this.sizeBytes = source["sizeBytes"];
 	    }
 	}
 

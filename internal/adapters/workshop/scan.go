@@ -2,6 +2,7 @@ package workshop
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -12,18 +13,26 @@ var rePublished = regexp.MustCompile(`(?i)publishedid\s*=\s*(\d+)`)
 var reName = regexp.MustCompile(`(?i)name\s*=\s*"([^"]*)"`)
 
 type Item struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-	Path string `json:"path"`
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	Path      string `json:"path"`
+	SizeBytes int64  `json:"sizeBytes"`
 }
 
 func ListInstalled(contentRoot string, appid string) ([]Item, error) {
 	root := filepath.Join(contentRoot, "steamapps", "workshop", "content", appid)
-	ents, err := os.ReadDir(root)
+	fi, err := os.Stat(root)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			return []Item{}, nil
+			return nil, fmt.Errorf("pasta workshop DayZ não encontrada (appid %s): %s", appid, root)
 		}
+		return nil, err
+	}
+	if !fi.IsDir() {
+		return nil, fmt.Errorf("caminho workshop não é pasta: %s", root)
+	}
+	ents, err := os.ReadDir(root)
+	if err != nil {
 		return nil, err
 	}
 	var out []Item
@@ -43,13 +52,47 @@ func ListInstalled(contentRoot string, appid string) ([]Item, error) {
 				name = string(m[1])
 			}
 		}
-		out = append(out, Item{ID: id, Name: name, Path: filepath.Join(root, e.Name())})
+		modPath := filepath.Join(root, e.Name())
+		sz, _ := DirSizeBytes(modPath)
+		out = append(out, Item{ID: id, Name: name, Path: modPath, SizeBytes: sz})
 	}
 	return out, nil
 }
 
 func WorkshopContentRoot(steamRoot string) string {
-	return strings.TrimSpace(steamRoot)
+	return NormalizeSteamRoot(steamRoot)
+}
+
+func NormalizeSteamRoot(raw string) string {
+	p := strings.TrimSpace(raw)
+	if p == "" {
+		return ""
+	}
+	if p == "~" {
+		if h, err := os.UserHomeDir(); err == nil {
+			return filepath.Clean(h)
+		}
+		return p
+	}
+	if len(p) >= 2 && p[0] == '~' && (p[1] == filepath.Separator || p[1] == '/') {
+		if h, err := os.UserHomeDir(); err == nil {
+			rest := strings.TrimPrefix(p[2:], "/")
+			if rest == "" {
+				return filepath.Clean(h)
+			}
+			return filepath.Clean(filepath.Join(h, rest))
+		}
+	}
+	if filepath.IsAbs(p) {
+		return filepath.Clean(p)
+	}
+	if h, err := os.UserHomeDir(); err == nil {
+		candidate := filepath.Join(h, p)
+		if st, err := os.Stat(candidate); err == nil && st.IsDir() {
+			return filepath.Clean(candidate)
+		}
+	}
+	return filepath.Clean(p)
 }
 
 func DayZAppID(branch string) string {
