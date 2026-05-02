@@ -1,4 +1,5 @@
 import {useEffect, useMemo, useState} from 'react';
+import {useTranslation} from 'react-i18next';
 import * as App from '../../../wailsjs/go/main/App';
 import {workshop} from '../../../wailsjs/go/models';
 import {formatBytes} from '../../shared/formatBytes';
@@ -23,6 +24,7 @@ function cmpStr(a: string, b: string) {
 }
 
 export function ModsPage() {
+  const {t} = useTranslation();
   const [items, setItems] = useState<workshop.Item[]>([]);
   const [err, setErr] = useState('');
   const [q, setQ] = useState('');
@@ -46,11 +48,11 @@ export function ModsPage() {
   }, []);
 
   const filtered = useMemo(() => {
-    const t = q.trim().toLowerCase();
-    if (!t) {
+    const x = q.trim().toLowerCase();
+    if (!x) {
       return items;
     }
-    return items.filter((m) => m.name.toLowerCase().includes(t) || String(m.id).toLowerCase().includes(t));
+    return items.filter((m) => m.name.toLowerCase().includes(x) || String(m.id).toLowerCase().includes(x));
   }, [items, q]);
 
   const totalBytesAll = useMemo(() => items.reduce((s, m) => s + (Number(m.sizeBytes) || 0), 0), [items]);
@@ -110,7 +112,7 @@ export function ModsPage() {
 
   const thSort = (col: SortCol, label: string) => (
     <th>
-      <button type="button" className="btn btn-secondary" style={{font: 'inherit', padding: '0.15rem 0.35rem'}} onClick={toggleSort(col)} title="Ordenar">
+      <button type="button" className="btn btn-secondary" style={{font: 'inherit', padding: '0.15rem 0.35rem'}} onClick={toggleSort(col)} title={t('mods.sortTitle')}>
         {label}
         {sortCol === col ? (sortAsc ? ' ▲' : ' ▼') : ''}
       </button>
@@ -160,7 +162,7 @@ export function ModsPage() {
   };
 
   const deleteOne = (m: workshop.Item) => {
-    if (!window.confirm('Apagar esta pasta do mod do disco?')) {
+    if (!window.confirm(t('mods.confirmOne'))) {
       return;
     }
     deletePaths([m.path]);
@@ -171,7 +173,7 @@ export function ModsPage() {
     if (paths.length === 0) {
       return;
     }
-    if (!window.confirm(`Apagar ${paths.length} mod(s) selecionado(s) do disco?`)) {
+    if (!window.confirm(t('mods.confirmMany', {count: paths.length}))) {
       return;
     }
     deletePaths(paths);
@@ -181,34 +183,34 @@ export function ModsPage() {
 
   return (
     <div>
-      <h1 style={{marginTop: 0}}>Mods Workshop instalados</h1>
+      <h1 style={{marginTop: 0}}>{t('mods.title')}</h1>
       {err ? <div className="msg msg-error">{err}</div> : null}
       {items.length > 0 ? (
         <p style={{fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '0.75rem'}}>
-          Total no disco (todos os mods): <strong style={{color: 'var(--text)'}}>{formatBytes(totalBytesAll)}</strong>
+          {t('mods.totalAll')} <strong style={{color: 'var(--text)'}}>{formatBytes(totalBytesAll)}</strong>
           {q.trim() && sorted.length !== items.length ? (
             <>
               {' '}
-              · Filtrados: <strong style={{color: 'var(--text)'}}>{formatBytes(totalBytesFiltered)}</strong> ({sorted.length} mods)
+              · {t('mods.filtered')} <strong style={{color: 'var(--text)'}}>{formatBytes(totalBytesFiltered)}</strong> ({t('mods.modsCount', {count: sorted.length})})
             </>
           ) : null}
         </p>
       ) : null}
-      <p style={{color: 'var(--text-muted)', fontSize: '0.85rem'}}>Lê meta.cpp em steamapps/workshop/content/&lt;appid&gt;. Configure a pasta raiz Steam nas definições.</p>
+      <p style={{color: 'var(--text-muted)', fontSize: '0.85rem'}}>{t('mods.help')}</p>
       <div className="field">
-        <label>Pesquisa (nome ou ID)</label>
-        <input value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} placeholder="Filtrar…" />
+        <label>{t('mods.searchLabel')}</label>
+        <input value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} placeholder={t('mods.filterPh')} />
       </div>
       <div className="toolbar" style={{flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center'}}>
         <button type="button" className="btn btn-secondary" disabled={busy || sorted.length === 0} onClick={toggleSelectAllFiltered}>
-          {allFilteredSelected ? 'Desmarcar todos (filtrados)' : 'Selecionar todos (filtrados)'}
+          {allFilteredSelected ? t('mods.deselectAll') : t('mods.selectAll')}
         </button>
         <button type="button" className="btn btn-danger" disabled={busy || sel.size === 0} onClick={deleteSelected}>
-          Excluir selecionados ({sel.size})
+          {t('mods.deleteSel', {count: sel.size})}
         </button>
       </div>
       <div className="toolbar" style={{alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap'}}>
-        <span style={{fontSize: '0.85rem', color: 'var(--text-muted)'}}>Por página</span>
+        <span style={{fontSize: '0.85rem', color: 'var(--text-muted)'}}>{t('mods.perPage')}</span>
         <select
           value={presetValue}
           onChange={(e) => {
@@ -226,10 +228,10 @@ export function ModsPage() {
               {n}
             </option>
           ))}
-          <option value="custom">Outro…</option>
+          <option value="custom">{t('mods.other')}</option>
         </select>
         <label style={{display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.85rem', color: 'var(--text-muted)'}}>
-          Número
+          {t('mods.number')}
           <input
             type="number"
             min={1}
@@ -245,7 +247,7 @@ export function ModsPage() {
       </div>
       <div className="toolbar" style={{justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem'}}>
         <p style={{fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0}}>
-          {`Página: ${pageSlice.length} linhas · ${sorted.length} filtrados · ${items.length} total`}
+          {t('mods.pageLine', {slice: pageSlice.length, filtered: sorted.length, total: items.length})}
         </p>
         <div style={{display: 'flex', gap: '0.35rem', alignItems: 'center', flexWrap: 'wrap'}}>
           <button type="button" className="btn btn-secondary" disabled={page <= 1 || busy} onClick={() => setPage(1)}>
@@ -270,13 +272,13 @@ export function ModsPage() {
           <thead>
             <tr>
               <th style={{width: '2.5rem'}}>
-                <input type="checkbox" checked={allFilteredSelected} disabled={busy || sorted.length === 0} onChange={toggleSelectAllFiltered} title="Todos os filtrados" />
+                <input type="checkbox" checked={allFilteredSelected} disabled={busy || sorted.length === 0} onChange={toggleSelectAllFiltered} title={t('mods.selectFilteredTitle')} />
               </th>
-              {thSort('id', 'ID')}
-              {thSort('name', 'Nome')}
-              {thSort('size', 'Tamanho')}
-              {thSort('path', 'Pasta')}
-              <th>Ações</th>
+              {thSort('id', t('mods.thId'))}
+              {thSort('name', t('mods.thName'))}
+              {thSort('size', t('mods.thSize'))}
+              {thSort('path', t('mods.thPath'))}
+              <th>{t('mods.thActions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -292,10 +294,10 @@ export function ModsPage() {
                 <td>
                   <div className="row-actions">
                     <button type="button" className="btn btn-secondary" disabled={busy} onClick={() => App.WorkshopPage(m.id)}>
-                      Steam
+                      {t('mods.steam')}
                     </button>
                     <button type="button" className="btn btn-danger" disabled={busy} onClick={() => deleteOne(m)}>
-                      Excluir
+                      {t('mods.delete')}
                     </button>
                   </div>
                 </td>
@@ -304,8 +306,8 @@ export function ModsPage() {
           </tbody>
         </table>
       </div>
-      {items.length === 0 && !err ? <p>Nenhum mod encontrado.</p> : null}
-      {items.length > 0 && sorted.length === 0 ? <p>Nenhum mod corresponde à pesquisa.</p> : null}
+      {items.length === 0 && !err ? <p>{t('mods.noneFound')}</p> : null}
+      {items.length > 0 && sorted.length === 0 ? <p>{t('mods.noMatch')}</p> : null}
     </div>
   );
 }

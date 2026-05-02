@@ -1,4 +1,5 @@
 import {useCallback, useEffect, useMemo, useState} from 'react';
+import {useTranslation} from 'react-i18next';
 import * as App from '../../../wailsjs/go/main/App';
 import {domain} from '../../../wailsjs/go/models';
 import {useA2sModsHint} from '../../shared/useA2sModsHint';
@@ -64,6 +65,7 @@ function clampPageSize(n: number) {
 }
 
 export function ServerBrowserPage() {
+  const {t} = useTranslation();
   const [raw, setRaw] = useState<domain.ServerRow[]>([]);
   const [filtered, setFiltered] = useState<domain.ServerRow[]>([]);
   const [filters, setFilters] = useState(defaultFilters);
@@ -182,12 +184,12 @@ export function ServerBrowserPage() {
         if (!list.length) {
           setModsHint({
             level: 'warn',
-            text: `Mods A2S: nenhum ID Workshop nas regras do servidor «${label}». Muitos servidores DayZ não publicam mods aí; os IDs podem estar noutro formato.`,
+            text: t('browse.modsA2sNone', {name: label}),
           });
         } else {
           setModsHint({
             level: 'info',
-            text: `Mods A2S: ${list.length} ID(s) Workshop obtido(s) para «${label}». Lista abaixo dos botões da linha.`,
+            text: t('browse.modsA2sOk', {count: list.length, name: label}),
           });
         }
       })
@@ -199,28 +201,28 @@ export function ServerBrowserPage() {
 
   return (
     <div>
-      <h1 style={{marginTop: 0}}>Browser de servidores</h1>
+      <h1 style={{marginTop: 0}}>{t('browse.title')}</h1>
       {err ? <div className="msg msg-error">{err}</div> : null}
       {modsHint ? <div className={modsHint.level === 'warn' ? 'msg msg-warn' : 'msg msg-info'}>{modsHint.text}</div> : null}
       <div className="toolbar">
         <button type="button" className="btn" disabled={loading} onClick={fetchSteam}>
-          Carregar lista Steam
+          {t('browse.loadSteam')}
         </button>
-        <button type="button" className="btn btn-secondary" disabled={loading || pageSlice.length === 0} onClick={ping} title="Apenas servidores desta página">
-          Atualizar ping (A2S) — página atual
+        <button type="button" className="btn btn-secondary" disabled={loading || pageSlice.length === 0} onClick={ping} title={t('browse.refreshPingTitle')}>
+          {t('browse.refreshPing')}
         </button>
         <button type="button" className="btn btn-secondary" disabled={loading} onClick={scanLan}>
-          Escanear LAN
+          {t('browse.scanLan')}
         </button>
       </div>
       <div className="toolbar">
-        <input value={bmId} onChange={(e) => setBmId(e.target.value)} placeholder="ID Battlemetrics" style={{width: '10rem'}} />
+        <input value={bmId} onChange={(e) => setBmId(e.target.value)} placeholder={t('browse.bmPlaceholder')} style={{width: '10rem'}} />
         <button type="button" className="btn btn-secondary" disabled={loading} onClick={resolveBm}>
-          Resolver ID
+          {t('browse.resolveId')}
         </button>
       </div>
       <div className="toolbar" style={{alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap'}}>
-        <span style={{fontSize: '0.85rem', color: 'var(--text-muted)'}}>Por página</span>
+        <span style={{fontSize: '0.85rem', color: 'var(--text-muted)'}}>{t('browse.perPage')}</span>
         <select
           value={presetValue}
           onChange={(e) => {
@@ -238,10 +240,10 @@ export function ServerBrowserPage() {
               {n}
             </option>
           ))}
-          <option value="custom">Outro…</option>
+          <option value="custom">{t('browse.other')}</option>
         </select>
         <label style={{display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.85rem', color: 'var(--text-muted)'}}>
-          Número
+          {t('browse.number')}
           <input
             type="number"
             min={1}
@@ -257,13 +259,13 @@ export function ServerBrowserPage() {
         </label>
       </div>
       <div className="field">
-        <label>Pesquisa (nome, mapa, IP)</label>
+        <label>{t('browse.searchLabel')}</label>
         <input value={filters.searchSubstring} onChange={(e) => setFilters(patchFilter(filters, {searchSubstring: e.target.value}))} />
       </div>
       <div className="field">
-        <label>Mapa</label>
+        <label>{t('browse.map')}</label>
         <select value={filters.mapEquals} onChange={(e) => setFilters(patchFilter(filters, {mapEquals: e.target.value}))}>
-          <option value="">Todos os mapas</option>
+          <option value="">{t('browse.allMaps')}</option>
           {maps.map((m) => (
             <option key={m} value={m}>
               {m}
@@ -274,56 +276,56 @@ export function ServerBrowserPage() {
       <div className="grid-filters">
         <label>
           <input type="checkbox" checked={filters.exclude1PP} onChange={toggleFilter('exclude1PP')} />
-          Excluir 1PP
+          {t('browse.f1pp')}
         </label>
         <label>
           <input type="checkbox" checked={filters.exclude3PP} onChange={toggleFilter('exclude3PP')} />
-          Excluir 3PP
+          {t('browse.f3pp')}
         </label>
         <label>
           <input type="checkbox" checked={filters.excludeDay} onChange={toggleFilter('excludeDay')} />
-          Excluir dia (hora in-game)
+          {t('browse.fDay')}
         </label>
         <label>
           <input type="checkbox" checked={filters.excludeNight} onChange={toggleFilter('excludeNight')} />
-          Excluir noite
+          {t('browse.fNight')}
         </label>
         <label>
           <input type="checkbox" checked={filters.excludeEmpty} onChange={toggleFilter('excludeEmpty')} />
-          Excluir vazios
+          {t('browse.fEmpty')}
         </label>
         <label>
           <input type="checkbox" checked={filters.excludeFull} onChange={toggleFilter('excludeFull')} />
-          Excluir cheios
+          {t('browse.fFull')}
         </label>
         <label>
           <input type="checkbox" checked={filters.excludeLowPop} onChange={toggleFilter('excludeLowPop')} />
-          Excluir acima do limiar de baixa pop.
+          {t('browse.fLowPop')}
         </label>
         <label>
           <input type="checkbox" checked={filters.excludeNonASCII} onChange={toggleFilter('excludeNonASCII')} />
-          Excluir nomes não-ASCII
+          {t('browse.fAscii')}
         </label>
         <label>
           <input type="checkbox" checked={filters.deduplicateByName} onChange={toggleFilter('deduplicateByName')} />
-          Duplicados por nome
+          {t('browse.fDedupe')}
         </label>
         <label>
           <input type="checkbox" checked={filters.excludeOfficial} onChange={toggleFilter('excludeOfficial')} />
-          Excluir oficiais
+          {t('browse.fOfficial')}
         </label>
         <label>
           <input type="checkbox" checked={filters.excludeUnofficial} onChange={toggleFilter('excludeUnofficial')} />
-          Excluir não oficiais
+          {t('browse.fUnofficial')}
         </label>
         <label>
           <input type="checkbox" checked={filters.excludeNonModded} onChange={toggleFilter('excludeNonModded')} />
-          Excluir sem mods
+          {t('browse.fNoMods')}
         </label>
       </div>
       <div className="toolbar" style={{justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem'}}>
         <p style={{fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0}}>
-          {loading ? 'A processar…' : `Página: ${pageSlice.length} linhas · ${filtered.length} filtrados · ${raw.length} na fonte`}
+          {loading ? t('common.processing') : t('browse.pageLine', {slice: pageSlice.length, filtered: filtered.length, raw: raw.length})}
         </p>
         <div style={{display: 'flex', gap: '0.35rem', alignItems: 'center', flexWrap: 'wrap'}}>
           <button type="button" className="btn btn-secondary" disabled={page <= 1 || loading} onClick={() => setPage(1)}>
@@ -347,17 +349,17 @@ export function ServerBrowserPage() {
         <table className="data">
           <thead>
             <tr>
-              <th>Nome</th>
-              <th>Mapa</th>
-              <th>PP</th>
-              <th>Forn.</th>
-              <th>Mods</th>
-              <th>Hora</th>
-              <th>Jog.</th>
-              <th>Endereço</th>
-              <th>Ping</th>
-              <th>Dist.</th>
-              <th>Ações</th>
+              <th>{t('browse.thName')}</th>
+              <th>{t('browse.thMap')}</th>
+              <th>{t('browse.thPP')}</th>
+              <th>{t('browse.thProv')}</th>
+              <th>{t('browse.thMods')}</th>
+              <th>{t('browse.thTime')}</th>
+              <th>{t('browse.thPlayers')}</th>
+              <th>{t('browse.thAddr')}</th>
+              <th>{t('browse.thPing')}</th>
+              <th>{t('browse.thDist')}</th>
+              <th>{t('browse.thActions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -367,7 +369,7 @@ export function ServerBrowserPage() {
                 <td>{row.mapName}</td>
                 <td>{row.perspective}</td>
                 <td>{row.provider}</td>
-                <td>{row.modded ? 'sim' : 'não'}</td>
+                <td>{row.modded ? t('common.yes') : t('common.no')}</td>
                 <td>{row.inGameTime}</td>
                 <td>
                   {row.players}/{row.maxPlayers}
@@ -378,28 +380,28 @@ export function ServerBrowserPage() {
                 <td>
                   <div className="row-actions">
                     <button type="button" className="btn btn-secondary" onClick={() => App.LaunchConnect(row).catch((e) => setErr(String(e)))}>
-                      Ligar
+                      {t('browse.connect')}
                     </button>
                     <button type="button" className="btn btn-secondary" onClick={() => App.ToggleFavoriteRow(row).catch((e) => setErr(String(e)))}>
-                      Fav
+                      {t('browse.fav')}
                     </button>
-                    <button type="button" className="btn btn-secondary" onClick={() => App.SetQuickFavorite(row, window.prompt('Etiqueta', row.name) || row.name).catch((e) => setErr(String(e)))}>
-                      Fav rápido
+                    <button type="button" className="btn btn-secondary" onClick={() => App.SetQuickFavorite(row, window.prompt(t('browse.quickFavPrompt'), row.name) || row.name).catch((e) => setErr(String(e)))}>
+                      {t('browse.quickFav')}
                     </button>
                     <button
                       type="button"
                       className="btn btn-secondary"
                       disabled={modsBusyKey === rowKey(row)}
-                      title="Pedido A2S_RULES: extrai IDs Steam Workshop (8–12 dígitos) dos valores das regras, quando o servidor os expõe."
+                      title={t('browse.modsA2STitle')}
                       onClick={() => enrichMods(row)}
                     >
-                      {modsBusyKey === rowKey(row) ? 'A2S…' : 'Mods A2S'}
+                      {modsBusyKey === rowKey(row) ? t('browse.modsA2SBusy') : t('browse.modsA2S')}
                     </button>
                   </div>
                   {row.workshopModIds && row.workshopModIds.length > 0 ? (
                     <div style={{fontSize: '0.65rem', color: 'var(--text-muted)', maxWidth: '14rem'}}>{row.workshopModIds.join(', ')}</div>
                   ) : row.workshopModIds && row.workshopModIds.length === 0 ? (
-                    <div style={{fontSize: '0.65rem', color: 'var(--text-muted)', maxWidth: '14rem'}}>Regras A2S sem IDs Workshop.</div>
+                    <div style={{fontSize: '0.65rem', color: 'var(--text-muted)', maxWidth: '14rem'}}>{t('browse.rulesNoWorkshop')}</div>
                   ) : null}
                 </td>
               </tr>

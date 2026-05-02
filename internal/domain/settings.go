@@ -101,6 +101,7 @@ type Settings struct {
 	ClientLat          float64       `json:"clientLat"`
 	ClientLon          float64       `json:"clientLon"`
 	ClientGeoUpdated   int64         `json:"clientGeoUpdated"`
+	Locale             string        `json:"locale"`
 }
 
 func DefaultSettings() Settings {

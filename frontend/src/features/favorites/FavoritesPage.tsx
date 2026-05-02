@@ -1,4 +1,5 @@
 import {useEffect, useMemo, useState} from 'react';
+import {useTranslation} from 'react-i18next';
 import * as App from '../../../wailsjs/go/main/App';
 import {domain} from '../../../wailsjs/go/models';
 import {favoriteKey, favoriteKeyParts, favoritesToRows, rowKey} from '../../shared/favoriteRows';
@@ -17,6 +18,7 @@ function clampPageSize(n: number) {
 }
 
 export function FavoritesPage() {
+  const {t} = useTranslation();
   const [s, setS] = useState<domain.Settings | null>(null);
   const [err, setErr] = useState('');
   const [loading, setLoading] = useState(false);
@@ -45,7 +47,7 @@ export function FavoritesPage() {
   }, [allRows, page, pageSize]);
 
   if (!s) {
-    return <p>A carregar…</p>;
+    return <p>{t('common.loading')}</p>;
   }
 
   const ping = () => {
@@ -76,12 +78,12 @@ export function FavoritesPage() {
         if (!list.length) {
           setModsHint({
             level: 'warn',
-            text: `Mods A2S: nenhum ID Workshop nas regras do servidor «${label}». Muitos servidores DayZ não publicam mods aí.`,
+            text: t('favorites.modsA2sNone', {name: label}),
           });
         } else {
           setModsHint({
             level: 'info',
-            text: `Mods A2S: ${list.length} ID(s) guardado(s) nos favoritos para «${label}».`,
+            text: t('favorites.modsA2sOk', {count: list.length, name: label}),
           });
         }
         return reload();
@@ -94,19 +96,19 @@ export function FavoritesPage() {
 
   return (
     <div>
-      <h1 style={{marginTop: 0}}>Favoritos</h1>
+      <h1 style={{marginTop: 0}}>{t('favorites.title')}</h1>
       {err ? <div className="msg msg-error">{err}</div> : null}
       {modsHint ? <div className={modsHint.level === 'warn' ? 'msg msg-warn' : 'msg msg-info'}>{modsHint.text}</div> : null}
       <div className="toolbar">
         <button type="button" className="btn btn-secondary" disabled={loading || !s.quickFavorite} onClick={() => App.ClearQuickFavorite().then(reload)}>
-          Limpar favorito rápido
+          {t('favorites.clearQuick')}
         </button>
-        <button type="button" className="btn btn-secondary" disabled={loading || pageSlice.length === 0} onClick={ping} title="Apenas servidores desta página">
-          Atualizar ping (A2S) — página atual
+        <button type="button" className="btn btn-secondary" disabled={loading || pageSlice.length === 0} onClick={ping} title={t('favorites.refreshPingTitle')}>
+          {t('favorites.refreshPing')}
         </button>
       </div>
       <div className="toolbar" style={{alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap'}}>
-        <span style={{fontSize: '0.85rem', color: 'var(--text-muted)'}}>Por página</span>
+        <span style={{fontSize: '0.85rem', color: 'var(--text-muted)'}}>{t('browse.perPage')}</span>
         <select
           value={presetValue}
           onChange={(e) => {
@@ -124,10 +126,10 @@ export function FavoritesPage() {
               {n}
             </option>
           ))}
-          <option value="custom">Outro…</option>
+          <option value="custom">{t('browse.other')}</option>
         </select>
         <label style={{display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.85rem', color: 'var(--text-muted)'}}>
-          Número
+          {t('browse.number')}
           <input
             type="number"
             min={1}
@@ -144,7 +146,7 @@ export function FavoritesPage() {
       </div>
       <div className="toolbar" style={{justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem'}}>
         <p style={{fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0}}>
-          {loading ? 'A processar…' : `Página: ${pageSlice.length} linhas · ${allRows.length} favoritos`}
+          {loading ? t('common.processing') : t('favorites.pageLine', {slice: pageSlice.length, total: allRows.length})}
         </p>
         <div style={{display: 'flex', gap: '0.35rem', alignItems: 'center', flexWrap: 'wrap'}}>
           <button type="button" className="btn btn-secondary" disabled={page <= 1 || loading} onClick={() => setPage(1)}>
@@ -164,22 +166,22 @@ export function FavoritesPage() {
           </button>
         </div>
       </div>
-      {allRows.length === 0 ? <p>Lista vazia. Adicione a partir do browser de servidores.</p> : null}
+      {allRows.length === 0 ? <p>{t('favorites.empty')}</p> : null}
       <div className="table-wrap">
         <table className="data">
           <thead>
             <tr>
-              <th>Nome</th>
-              <th>Mapa</th>
-              <th>PP</th>
-              <th>Forn.</th>
-              <th>Mods</th>
-              <th>Hora</th>
-              <th>Jog.</th>
-              <th>Endereço</th>
-              <th>Ping</th>
-              <th>Dist.</th>
-              <th>Ações</th>
+              <th>{t('browse.thName')}</th>
+              <th>{t('browse.thMap')}</th>
+              <th>{t('browse.thPP')}</th>
+              <th>{t('browse.thProv')}</th>
+              <th>{t('browse.thMods')}</th>
+              <th>{t('browse.thTime')}</th>
+              <th>{t('browse.thPlayers')}</th>
+              <th>{t('browse.thAddr')}</th>
+              <th>{t('browse.thPing')}</th>
+              <th>{t('browse.thDist')}</th>
+              <th>{t('browse.thActions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -194,12 +196,12 @@ export function FavoritesPage() {
                 <tr key={rowKey(row)}>
                   <td style={{maxWidth: '14rem', whiteSpace: 'normal'}}>
                     {row.name}
-                    {isQuick ? <span style={{fontSize: '0.7rem', color: 'var(--text-muted)', marginLeft: '0.35rem'}}>(rápido)</span> : null}
+                    {isQuick ? <span style={{fontSize: '0.7rem', color: 'var(--text-muted)', marginLeft: '0.35rem'}}>{t('favorites.quickBadge')}</span> : null}
                   </td>
                   <td>{row.mapName}</td>
                   <td>{row.perspective}</td>
                   <td>{row.provider}</td>
-                  <td>{row.modded ? 'sim' : 'não'}</td>
+                  <td>{row.modded ? t('common.yes') : t('common.no')}</td>
                   <td>{row.inGameTime}</td>
                   <td>
                     {row.players}/{row.maxPlayers}
@@ -210,16 +212,16 @@ export function FavoritesPage() {
                   <td>
                     <div className="row-actions">
                       <button type="button" className="btn btn-secondary" onClick={() => App.LaunchConnect(row).catch((e) => setErr(String(e)))}>
-                        Ligar
+                        {t('favorites.connect')}
                       </button>
                       <button
                         type="button"
                         className="btn btn-secondary"
                         disabled={modsBusyKey === rowKey(row)}
-                        title="Pedido A2S_RULES: extrai IDs Steam Workshop e guarda no favorito."
+                        title={t('favorites.modsA2STitle')}
                         onClick={() => enrichMods(row)}
                       >
-                        {modsBusyKey === rowKey(row) ? 'A2S…' : 'Mods A2S'}
+                        {modsBusyKey === rowKey(row) ? t('favorites.modsA2SBusy') : t('favorites.modsA2S')}
                       </button>
                       <button
                         type="button"
@@ -233,13 +235,13 @@ export function FavoritesPage() {
                             .catch((e) => setErr(String(e)));
                         }}
                       >
-                        Remover
+                        {t('favorites.remove')}
                       </button>
                     </div>
                     {row.workshopModIds && row.workshopModIds.length > 0 ? (
                       <div style={{fontSize: '0.65rem', color: 'var(--text-muted)', maxWidth: '14rem'}}>{row.workshopModIds.join(', ')}</div>
                     ) : row.workshopModIds && row.workshopModIds.length === 0 ? (
-                      <div style={{fontSize: '0.65rem', color: 'var(--text-muted)', maxWidth: '14rem'}}>Regras A2S sem IDs Workshop.</div>
+                      <div style={{fontSize: '0.65rem', color: 'var(--text-muted)', maxWidth: '14rem'}}>{t('favorites.rulesNoWorkshop')}</div>
                     ) : null}
                   </td>
                 </tr>

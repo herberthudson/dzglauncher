@@ -168,6 +168,7 @@ export namespace domain {
 	    clientLat: number;
 	    clientLon: number;
 	    clientGeoUpdated: number;
+	    locale: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new Settings(source);
@@ -194,6 +195,7 @@ export namespace domain {
 	        this.clientLat = source["clientLat"];
 	        this.clientLon = source["clientLon"];
 	        this.clientGeoUpdated = source["clientGeoUpdated"];
+	        this.locale = source["locale"];
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {
