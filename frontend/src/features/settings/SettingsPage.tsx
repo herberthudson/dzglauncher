@@ -6,6 +6,7 @@ import {domain} from '../../../wailsjs/go/models';
 import {i18n} from '../../i18n/i18n';
 import {resolveLocale} from '../../i18n/resolveLocale';
 import {applyThemeToDocument, resolveTheme} from '../../theme/resolveTheme';
+import {DsSelect} from '../../shared/DsSelect';
 import {PageHeader} from '../../shared/PageHeader';
 
 export function SettingsPage() {
@@ -84,19 +85,29 @@ export function SettingsPage() {
         </h2>
         <div className="field">
           <label htmlFor="settings-locale">{t('settings.language')}</label>
-          <select id="settings-locale" value={s.locale || 'auto'} onChange={(e) => applyLocale(e.target.value)}>
-            <option value="auto">{t('settings.langAuto')}</option>
-            <option value="en">{t('settings.langEn')}</option>
-            <option value="pt-BR">{t('settings.langPtBR')}</option>
-            <option value="es">{t('settings.langEs')}</option>
-          </select>
+          <DsSelect
+            id="settings-locale"
+            value={s.locale || 'auto'}
+            options={[
+              {value: 'auto', label: t('settings.langAuto')},
+              {value: 'en', label: t('settings.langEn')},
+              {value: 'pt-BR', label: t('settings.langPtBR')},
+              {value: 'es', label: t('settings.langEs')},
+            ]}
+            onChange={applyLocale}
+          />
         </div>
         <div className="field">
           <label htmlFor="settings-ui-theme">{t('settings.theme')}</label>
-          <select id="settings-ui-theme" value={resolveTheme(s.uiTheme)} onChange={(e) => applyTheme(e.target.value)}>
-            <option value="flat-dark-theme">{t('settings.themeFlatDark')}</option>
-            <option value="flat-light-theme">{t('settings.themeFlatLight')}</option>
-          </select>
+          <DsSelect
+            id="settings-ui-theme"
+            value={resolveTheme(s.uiTheme)}
+            options={[
+              {value: 'flat-dark-theme', label: t('settings.themeFlatDark')},
+              {value: 'flat-light-theme', label: t('settings.themeFlatLight')},
+            ]}
+            onChange={applyTheme}
+          />
         </div>
         <div className="field">
           <label htmlFor="settings-player">{t('settings.playerName')}</label>
@@ -136,10 +147,15 @@ export function SettingsPage() {
         </div>
         <div className="field">
           <label htmlFor="settings-dayz-branch">{t('settings.dayzBranch')}</label>
-          <select id="settings-dayz-branch" value={s.dayZBranch} onChange={bind('dayZBranch')}>
-            <option value="stable">{t('settings.stable')}</option>
-            <option value="experimental">{t('settings.experimental')}</option>
-          </select>
+          <DsSelect
+            id="settings-dayz-branch"
+            value={s.dayZBranch}
+            options={[
+              {value: 'stable', label: t('settings.stable')},
+              {value: 'experimental', label: t('settings.experimental')},
+            ]}
+            onChange={(v) => setS(domain.Settings.createFrom({...s, dayZBranch: v}))}
+          />
         </div>
       </section>
 

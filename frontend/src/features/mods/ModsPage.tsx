@@ -3,6 +3,7 @@ import {useTranslation} from 'react-i18next';
 import {Package, Rows3, Search} from 'lucide-react';
 import * as App from '../../../wailsjs/go/main/App';
 import {workshop} from '../../../wailsjs/go/models';
+import {DsSelect} from '../../shared/DsSelect';
 import {PageHeader} from '../../shared/PageHeader';
 import {formatBytes} from '../../shared/formatBytes';
 import {workshopFolderDisplayPath} from '../../shared/workshopDisplayPath';
@@ -112,9 +113,16 @@ export function ModsPage() {
     setPage(1);
   };
 
-  const thSort = (col: SortCol, label: string) => (
-    <th>
-      <button type="button" className="btn btn-secondary" style={{font: 'inherit', padding: '0.15rem 0.35rem'}} onClick={toggleSort(col)} title={t('mods.sortTitle')}>
+  const thSort = (col: SortCol, label: string, longDesc: string) => (
+    <th scope="col" title={longDesc}>
+      <button
+        type="button"
+        className="btn btn-secondary"
+        style={{font: 'inherit', padding: '0.15rem 0.35rem'}}
+        onClick={toggleSort(col)}
+        title={`${longDesc} (${t('mods.sortTitle')})`}
+        aria-label={`${label}: ${longDesc}. ${t('mods.sortAria')}`}
+      >
         {label}
         {sortCol === col ? (sortAsc ? ' ▲' : ' ▼') : ''}
       </button>
@@ -183,6 +191,11 @@ export function ModsPage() {
 
   const presetValue = PAGE_PRESETS.includes(pageSize as (typeof PAGE_PRESETS)[number]) ? String(pageSize) : 'custom';
 
+  const perPageSelectOptions = useMemo(
+    () => [...PAGE_PRESETS.map((n) => ({value: String(n), label: String(n)})), {value: 'custom', label: t('mods.other')}],
+    [t],
+  );
+
   return (
     <div>
       <PageHeader icon={Package} title={t('mods.title')} description={t('mods.subtitle')} />
@@ -226,26 +239,20 @@ export function ModsPage() {
         </div>
         <div className="toolbar" style={{alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap'}}>
           <span style={{fontSize: '0.8125rem', color: 'var(--text-muted)', fontWeight: 600}}>{t('mods.perPage')}</span>
-          <select
-            aria-label={t('mods.perPage')}
+          <DsSelect
+            ariaLabel={t('mods.perPage')}
+            width="auto"
+            className="ds-select-w-compact"
             value={presetValue}
-            onChange={(e) => {
-              const v = e.target.value;
+            options={perPageSelectOptions}
+            onChange={(v) => {
               if (v === 'custom') {
                 return;
               }
               setPageSize(parseInt(v, 10));
               setPage(1);
             }}
-            style={{width: '5.5rem', maxWidth: 'none'}}
-          >
-            {PAGE_PRESETS.map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-            <option value="custom">{t('mods.other')}</option>
-          </select>
+          />
           <label style={{display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.8125rem', color: 'var(--text-muted)'}}>
             <span>{t('mods.number')}</span>
             <input
@@ -285,23 +292,39 @@ export function ModsPage() {
         </div>
         <div className="table-wrap" style={{marginTop: 'var(--ds-space-md)'}}>
           <table className="data">
+            <caption className="sr-only">{t('mods.tableCaption')}</caption>
             <thead>
               <tr>
-                <th style={{width: '2.5rem'}}>
-                  <input type="checkbox" checked={allFilteredSelected} disabled={busy || sorted.length === 0} onChange={toggleSelectAllFiltered} title={t('mods.selectFilteredTitle')} />
+                <th scope="col" title={t('mods.thSelectColumnLong')} style={{width: '2.5rem'}}>
+                  <input
+                    type="checkbox"
+                    checked={allFilteredSelected}
+                    disabled={busy || sorted.length === 0}
+                    onChange={toggleSelectAllFiltered}
+                    title={t('mods.selectFilteredTitle')}
+                    aria-label={t('mods.selectFilteredTitle')}
+                  />
                 </th>
-                {thSort('id', t('mods.thId'))}
-                {thSort('name', t('mods.thName'))}
-                {thSort('size', t('mods.thSize'))}
-                {thSort('path', t('mods.thPath'))}
-                <th>{t('mods.thActions')}</th>
+                {thSort('id', t('mods.thId'), t('mods.thIdLong'))}
+                {thSort('name', t('mods.thName'), t('mods.thNameLong'))}
+                {thSort('size', t('mods.thSize'), t('mods.thSizeLong'))}
+                {thSort('path', t('mods.thPath'), t('mods.thPathLong'))}
+                <th scope="col" title={t('mods.thActionsLong')}>
+                  {t('mods.thActions')}
+                </th>
               </tr>
             </thead>
             <tbody>
               {pageSlice.map((m) => (
                 <tr key={m.path}>
                   <td>
-                    <input type="checkbox" checked={sel.has(m.path)} disabled={busy} onChange={() => toggleRow(m.path)} />
+                    <input
+                      type="checkbox"
+                      checked={sel.has(m.path)}
+                      disabled={busy}
+                      onChange={() => toggleRow(m.path)}
+                      aria-label={t('mods.toggleRowAria', {name: m.name || String(m.id)})}
+                    />
                   </td>
                   <td>{m.id}</td>
                   <td>{m.name}</td>
@@ -309,12 +332,12 @@ export function ModsPage() {
                   <td style={{whiteSpace: 'normal', maxWidth: '24rem'}}>{workshopFolderDisplayPath(m.path)}</td>
                   <td>
                     <div className="row-actions">
-                      <button type="button" className="btn btn-secondary" disabled={busy} onClick={() => App.WorkshopPage(m.id)}>
-                        {t('mods.steam')}
-                      </button>
-                      <button type="button" className="btn btn-danger" disabled={busy} onClick={() => deleteOne(m)}>
-                        {t('mods.delete')}
-                      </button>
+                    <button type="button" className="btn btn-secondary" disabled={busy} title={t('mods.steamPageTitle')} onClick={() => App.WorkshopPage(m.id)}>
+                      {t('mods.steam')}
+                    </button>
+                    <button type="button" className="btn btn-danger" disabled={busy} title={t('mods.deleteTitle')} onClick={() => deleteOne(m)}>
+                      {t('mods.delete')}
+                    </button>
                     </div>
                   </td>
                 </tr>

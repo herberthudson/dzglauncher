@@ -245,25 +245,141 @@
 
 .field input,
 .field select,
-.field textarea {
+.field textarea,
+.shell-main select,
+.shell-main input[type="number"] {
   width: 100%;
   max-width: 36rem;
+  min-height: 2.375rem;
   padding: 0.45rem 0.55rem;
   border-radius: var(--radius);
   border: 1px solid var(--border);
-  background: var(--bg-input);
+  background-color: var(--bg-input);
   color: var(--text);
   box-sizing: border-box;
   font-family: inherit;
   font-size: 0.875rem;
+  line-height: 1.35;
+}
+
+.shell-main select,
+.field select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  cursor: pointer;
+  background-image: var(--select-arrow);
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  background-size: 0.875rem;
+  padding-right: 2rem;
+}
+
+.shell-main select option,
+.field select option {
+  background-color: var(--bg-elevated);
+  color: var(--text);
+}
+
+.field textarea {
+  min-height: 4.5rem;
+  resize: vertical;
 }
 
 .field input:focus-visible,
 .field select:focus-visible,
-.field textarea:focus-visible {
+.field textarea:focus-visible,
+.shell-main select:focus-visible,
+.shell-main input[type="number"]:focus-visible {
   outline: none;
   border-color: var(--border-focus);
   box-shadow: 0 0 0 1px var(--border-focus);
+}
+
+.ds-select {
+  position: relative;
+  width: 100%;
+  max-width: 36rem;
+}
+
+.ds-select.ds-select-auto {
+  width: auto;
+  max-width: none;
+}
+
+.ds-select-w-compact {
+  width: 5.5rem;
+  max-width: none;
+}
+
+.ds-select-trigger {
+  width: 100%;
+  min-height: 2.375rem;
+  padding: 0.45rem 0.55rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background-color: var(--bg-input);
+  color: var(--text);
+  box-sizing: border-box;
+  font-family: inherit;
+  font-size: 0.875rem;
+  line-height: 1.35;
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.ds-select-value {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ds-select-chevron {
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+.ds-select-trigger:focus-visible {
+  outline: none;
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 1px var(--border-focus);
+}
+
+.ds-select-trigger:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.ds-select-panel {
+  overflow-y: auto;
+  background-color: var(--bg-elevated);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--ds-shadow-sm), 0 8px 24px rgba(0, 0, 0, 0.28);
+  padding: var(--ds-space-xs) 0;
+}
+
+.ds-select-option {
+  padding: 0.45rem 0.65rem;
+  font-size: 0.875rem;
+  line-height: 1.35;
+  cursor: pointer;
+}
+
+.ds-select-option:hover,
+.ds-select-option-active {
+  background: var(--bg-hover);
+}
+
+.ds-select-option-selected {
+  background: var(--accent-muted);
 }
 
 .grid-filters {

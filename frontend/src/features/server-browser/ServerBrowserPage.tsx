@@ -3,6 +3,7 @@ import {useTranslation} from 'react-i18next';
 import {ListFilter, Radar, Rows3, Server} from 'lucide-react';
 import * as App from '../../../wailsjs/go/main/App';
 import {domain} from '../../../wailsjs/go/models';
+import {DsSelect} from '../../shared/DsSelect';
 import {PageHeader} from '../../shared/PageHeader';
 import {useA2sModsHint} from '../../shared/useA2sModsHint';
 
@@ -201,6 +202,16 @@ export function ServerBrowserPage() {
 
   const presetValue = PAGE_PRESETS.includes(pageSize as (typeof PAGE_PRESETS)[number]) ? String(pageSize) : 'custom';
 
+  const perPageSelectOptions = useMemo(
+    () => [...PAGE_PRESETS.map((n) => ({value: String(n), label: String(n)})), {value: 'custom', label: t('browse.other')}],
+    [t],
+  );
+
+  const mapSelectOptions = useMemo(
+    () => [{value: '', label: t('browse.allMaps')}, ...maps.map((m) => ({value: m, label: m}))],
+    [maps, t],
+  );
+
   return (
     <div>
       <PageHeader icon={Server} title={t('browse.title')} description={t('browse.subtitle')} />
@@ -241,26 +252,20 @@ export function ServerBrowserPage() {
         </h2>
         <div className="toolbar" style={{alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap'}}>
           <span style={{fontSize: '0.8125rem', color: 'var(--text-muted)', fontWeight: 600}}>{t('browse.perPage')}</span>
-          <select
-            aria-label={t('browse.perPage')}
+          <DsSelect
+            ariaLabel={t('browse.perPage')}
+            width="auto"
+            className="ds-select-w-compact"
             value={presetValue}
-            onChange={(e) => {
-              const v = e.target.value;
+            options={perPageSelectOptions}
+            onChange={(v) => {
               if (v === 'custom') {
                 return;
               }
               setPageSize(parseInt(v, 10));
               setPage(1);
             }}
-            style={{width: '5.5rem', maxWidth: 'none'}}
-          >
-            {PAGE_PRESETS.map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-            <option value="custom">{t('browse.other')}</option>
-          </select>
+          />
           <label style={{display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.8125rem', color: 'var(--text-muted)'}}>
             <span>{t('browse.number')}</span>
             <input
@@ -283,14 +288,7 @@ export function ServerBrowserPage() {
         </div>
         <div className="field">
           <label htmlFor="browse-map">{t('browse.map')}</label>
-          <select id="browse-map" value={filters.mapEquals} onChange={(e) => setFilters(patchFilter(filters, {mapEquals: e.target.value}))}>
-            <option value="">{t('browse.allMaps')}</option>
-            {maps.map((m) => (
-              <option key={m} value={m}>
-                {m}
-              </option>
-            ))}
-          </select>
+          <DsSelect id="browse-map" value={filters.mapEquals} options={mapSelectOptions} onChange={(v) => setFilters(patchFilter(filters, {mapEquals: v}))} />
         </div>
       </section>
 
@@ -380,19 +378,42 @@ export function ServerBrowserPage() {
       </div>
       <div className="table-wrap">
         <table className="data">
+          <caption className="sr-only">{t('browse.tableCaption')}</caption>
           <thead>
             <tr>
-              <th>{t('browse.thName')}</th>
-              <th>{t('browse.thMap')}</th>
-              <th>{t('browse.thPP')}</th>
-              <th>{t('browse.thProv')}</th>
-              <th>{t('browse.thMods')}</th>
-              <th>{t('browse.thTime')}</th>
-              <th>{t('browse.thPlayers')}</th>
-              <th>{t('browse.thAddr')}</th>
-              <th>{t('browse.thPing')}</th>
-              <th>{t('browse.thDist')}</th>
-              <th>{t('browse.thActions')}</th>
+              <th scope="col" title={t('browse.thNameLong')}>
+                {t('browse.thName')}
+              </th>
+              <th scope="col" title={t('browse.thMapLong')}>
+                {t('browse.thMap')}
+              </th>
+              <th scope="col" title={t('browse.thPPLong')}>
+                {t('browse.thPP')}
+              </th>
+              <th scope="col" title={t('browse.thProvLong')}>
+                {t('browse.thProv')}
+              </th>
+              <th scope="col" title={t('browse.thModsLong')}>
+                {t('browse.thMods')}
+              </th>
+              <th scope="col" title={t('browse.thTimeLong')}>
+                {t('browse.thTime')}
+              </th>
+              <th scope="col" title={t('browse.thPlayersLong')}>
+                {t('browse.thPlayers')}
+              </th>
+              <th scope="col" title={t('browse.thAddrLong')}>
+                {t('browse.thAddr')}
+              </th>
+              <th scope="col" title={t('browse.thPingLong')}>
+                {t('browse.thPing')}
+              </th>
+              <th scope="col" title={t('browse.thDistLong')}>
+                {t('browse.thDist')}
+              </th>
+              <th scope="col" title={t('browse.thActionsLong')}>
+                {t('browse.thActions')}
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -412,13 +433,13 @@ export function ServerBrowserPage() {
                 <td>{row.distanceLabel}</td>
                 <td>
                   <div className="row-actions">
-                    <button type="button" className="btn btn-secondary" onClick={() => App.LaunchConnect(row).catch((e) => setErr(String(e)))}>
+                    <button type="button" className="btn btn-secondary" title={t('browse.connectTitle')} onClick={() => App.LaunchConnect(row).catch((e) => setErr(String(e)))}>
                       {t('browse.connect')}
                     </button>
-                    <button type="button" className="btn btn-secondary" onClick={() => App.ToggleFavoriteRow(row).catch((e) => setErr(String(e)))}>
+                    <button type="button" className="btn btn-secondary" title={t('browse.favTitle')} onClick={() => App.ToggleFavoriteRow(row).catch((e) => setErr(String(e)))}>
                       {t('browse.fav')}
                     </button>
-                    <button type="button" className="btn btn-secondary" onClick={() => App.SetQuickFavorite(row, window.prompt(t('browse.quickFavPrompt'), row.name) || row.name).catch((e) => setErr(String(e)))}>
+                    <button type="button" className="btn btn-secondary" title={t('browse.quickFavTitle')} onClick={() => App.SetQuickFavorite(row, window.prompt(t('browse.quickFavPrompt'), row.name) || row.name).catch((e) => setErr(String(e)))}>
                       {t('browse.quickFav')}
                     </button>
                     <button

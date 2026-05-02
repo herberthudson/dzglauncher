@@ -1,5 +1,7 @@
 html[data-theme="flat-dark-theme"],
 html:not([data-theme]) {
+  color-scheme: dark;
+  --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none'%3E%3Cpath stroke='%239d9d9d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
   --bg: #1e1e1e;
   --bg-elevated: #252526;
   --bg-hover: #2d2d30;
