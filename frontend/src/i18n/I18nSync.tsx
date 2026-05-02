@@ -2,6 +2,7 @@ import {useEffect} from 'react';
 import * as App from '../../wailsjs/go/main/App';
 import {i18n} from './i18n';
 import {resolveLocale} from './resolveLocale';
+import {applyThemeToDocument} from '../theme/resolveTheme';
 
 export function I18nSync({children}: {children: React.ReactNode}) {
   useEffect(() => {
@@ -13,6 +14,7 @@ export function I18nSync({children}: {children: React.ReactNode}) {
         }
         const lng = resolveLocale(s.locale || '', navigator.language);
         void i18n.changeLanguage(lng);
+        applyThemeToDocument(s.uiTheme);
       })
       .catch(() => {});
     return () => {

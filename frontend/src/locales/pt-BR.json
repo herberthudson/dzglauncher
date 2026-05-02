@@ -4,7 +4,8 @@
     "settings": "Configurações",
     "favorites": "Favoritos",
     "history": "Histórico",
-    "modsWorkshop": "Mods Workshop"
+    "modsWorkshop": "Mods Workshop",
+    "ariaMain": "Navegação principal"
   },
   "common": {
     "loading": "Carregando…",
@@ -38,19 +39,35 @@
     "saved": "Salvo.",
     "keyValid": "Chave válida.",
     "invalid": "Inválida",
+    "subtitle": "Steam, rede e preferências do launcher.",
+    "sectionApp": "Aplicativo e idioma",
+    "sectionSteam": "Steam e DayZ",
+    "sectionNetwork": "Rede e localização",
+    "sectionOptions": "Opções",
+    "steamCmdPlaceholder": "steam ou flatpak run …",
     "language": "Idioma",
     "langAuto": "Automático (sistema)",
     "langEn": "English",
     "langPtBR": "Português (Brasil)",
-    "langEs": "Español"
+    "langEs": "Español",
+    "theme": "Tema da interface",
+    "themeFlatDark": "Plano escuro",
+    "themeFlatLight": "Plano claro"
   },
   "history": {
     "title": "Histórico de conexões",
+    "subtitle": "Servidores aos quais você se conectou recentemente.",
     "delete": "Excluir",
     "empty": "Nenhuma entrada."
   },
   "browse": {
     "title": "Lista de servidores",
+    "subtitle": "Carregue da Steam, LAN ou Battlemetrics; filtre e conecte-se.",
+    "sourcesTitle": "Fontes da lista",
+    "bmIdLabel": "ID Battlemetrics",
+    "paginationTitle": "Paginação e busca",
+    "filtersTitle": "Filtros da lista",
+    "tableTitle": "Servidores",
     "loadSteam": "Carregar lista da Steam",
     "refreshPing": "Atualizar ping (A2S) — página atual",
     "refreshPingTitle": "Só os servidores desta página",
@@ -100,6 +117,9 @@
   },
   "favorites": {
     "title": "Favoritos",
+    "subtitle": "Atalhos salvos, ping e mods por A2S.",
+    "toolsTitle": "Ações e paginação",
+    "tableTitle": "Servidores favoritos",
     "clearQuick": "Limpar favorito rápido",
     "refreshPing": "Atualizar ping (A2S) — página atual",
     "refreshPingTitle": "Só os servidores desta página",
@@ -117,6 +137,9 @@
   },
   "mods": {
     "title": "Mods Workshop instalados",
+    "subtitle": "Mods detectados na pasta Workshop da Steam configurada.",
+    "sectionOverview": "Resumo e busca",
+    "sectionList": "Lista, paginação e exclusão",
     "help": "Usa o arquivo meta.cpp em steamapps/workshop/content/<appid>. Configure a pasta raiz da Steam em Configurações.",
     "totalAll": "Total no disco (todos os mods):",
     "filtered": "Filtrados:",

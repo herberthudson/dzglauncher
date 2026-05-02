@@ -4,7 +4,8 @@
     "settings": "Settings",
     "favorites": "Favorites",
     "history": "History",
-    "modsWorkshop": "Workshop mods"
+    "modsWorkshop": "Workshop mods",
+    "ariaMain": "Main navigation"
   },
   "common": {
     "loading": "Loading…",
@@ -38,19 +39,35 @@
     "saved": "Saved.",
     "keyValid": "Key is valid.",
     "invalid": "Invalid",
+    "subtitle": "Steam, network, and launcher preferences.",
+    "sectionApp": "App & language",
+    "sectionSteam": "Steam & DayZ",
+    "sectionNetwork": "Network & location",
+    "sectionOptions": "Options",
+    "steamCmdPlaceholder": "steam or flatpak run …",
     "language": "Language",
     "langAuto": "Automatic (system)",
     "langEn": "English",
     "langPtBR": "Portuguese (Brazil)",
-    "langEs": "Spanish"
+    "langEs": "Spanish",
+    "theme": "Interface theme",
+    "themeFlatDark": "Flat dark",
+    "themeFlatLight": "Flat light"
   },
   "history": {
     "title": "Connection history",
+    "subtitle": "Servers you connected to recently.",
     "delete": "Delete",
     "empty": "No entries."
   },
   "browse": {
     "title": "Server list",
+    "subtitle": "Load from Steam, LAN, or Battlemetrics; filter and connect.",
+    "sourcesTitle": "List sources",
+    "bmIdLabel": "Battlemetrics ID",
+    "paginationTitle": "Pagination & search",
+    "filtersTitle": "List filters",
+    "tableTitle": "Servers",
     "loadSteam": "Load Steam server list",
     "refreshPing": "Refresh ping (A2S) — current page",
     "refreshPingTitle": "Only servers on this page",
@@ -100,6 +117,9 @@
   },
   "favorites": {
     "title": "Favorites",
+    "subtitle": "Saved shortcuts, ping, and A2S mods.",
+    "toolsTitle": "Actions & pagination",
+    "tableTitle": "Favorite servers",
     "clearQuick": "Clear quick favorite",
     "refreshPing": "Refresh ping (A2S) — current page",
     "refreshPingTitle": "Only servers on this page",
@@ -117,6 +137,9 @@
   },
   "mods": {
     "title": "Installed Workshop mods",
+    "subtitle": "Mods found under the Steam Workshop path in Settings.",
+    "sectionOverview": "Summary & search",
+    "sectionList": "List, pagination & delete",
     "help": "Reads meta.cpp under steamapps/workshop/content/<appid>. Set the Steam root folder in Settings.",
     "totalAll": "Total on disk (all mods):",
     "filtered": "Filtered:",

@@ -6,7 +6,7 @@ import {FavoritesPage} from './features/favorites/FavoritesPage';
 import {HistoryPage} from './features/history/HistoryPage';
 import {ModsPage} from './features/mods/ModsPage';
 import {I18nSync} from './i18n/I18nSync';
-import './theme/variables.css';
+import './theme/app.css';
 
 function App() {
   return (

@@ -1,7 +1,9 @@
 import {useEffect, useMemo, useState} from 'react';
 import {useTranslation} from 'react-i18next';
+import {Package, Rows3, Search} from 'lucide-react';
 import * as App from '../../../wailsjs/go/main/App';
 import {workshop} from '../../../wailsjs/go/models';
+import {PageHeader} from '../../shared/PageHeader';
 import {formatBytes} from '../../shared/formatBytes';
 import {workshopFolderDisplayPath} from '../../shared/workshopDisplayPath';
 
@@ -183,131 +185,146 @@ export function ModsPage() {
 
   return (
     <div>
-      <h1 style={{marginTop: 0}}>{t('mods.title')}</h1>
+      <PageHeader icon={Package} title={t('mods.title')} description={t('mods.subtitle')} />
       {err ? <div className="msg msg-error">{err}</div> : null}
-      {items.length > 0 ? (
-        <p style={{fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '0.75rem'}}>
-          {t('mods.totalAll')} <strong style={{color: 'var(--text)'}}>{formatBytes(totalBytesAll)}</strong>
-          {q.trim() && sorted.length !== items.length ? (
-            <>
-              {' '}
-              · {t('mods.filtered')} <strong style={{color: 'var(--text)'}}>{formatBytes(totalBytesFiltered)}</strong> ({t('mods.modsCount', {count: sorted.length})})
-            </>
-          ) : null}
-        </p>
-      ) : null}
-      <p style={{color: 'var(--text-muted)', fontSize: '0.85rem'}}>{t('mods.help')}</p>
-      <div className="field">
-        <label>{t('mods.searchLabel')}</label>
-        <input value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} placeholder={t('mods.filterPh')} />
-      </div>
-      <div className="toolbar" style={{flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center'}}>
-        <button type="button" className="btn btn-secondary" disabled={busy || sorted.length === 0} onClick={toggleSelectAllFiltered}>
-          {allFilteredSelected ? t('mods.deselectAll') : t('mods.selectAll')}
-        </button>
-        <button type="button" className="btn btn-danger" disabled={busy || sel.size === 0} onClick={deleteSelected}>
-          {t('mods.deleteSel', {count: sel.size})}
-        </button>
-      </div>
-      <div className="toolbar" style={{alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap'}}>
-        <span style={{fontSize: '0.85rem', color: 'var(--text-muted)'}}>{t('mods.perPage')}</span>
-        <select
-          value={presetValue}
-          onChange={(e) => {
-            const v = e.target.value;
-            if (v === 'custom') {
-              return;
-            }
-            setPageSize(parseInt(v, 10));
-            setPage(1);
-          }}
-          style={{width: '5.5rem'}}
-        >
-          {PAGE_PRESETS.map((n) => (
-            <option key={n} value={n}>
-              {n}
-            </option>
-          ))}
-          <option value="custom">{t('mods.other')}</option>
-        </select>
-        <label style={{display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.85rem', color: 'var(--text-muted)'}}>
-          {t('mods.number')}
-          <input
-            type="number"
-            min={1}
-            max={500}
-            value={pageSize}
-            onChange={(e) => {
-              setPageSize(clampPageSize(parseInt(e.target.value, 10)));
-              setPage(1);
-            }}
-            style={{width: '4.5rem'}}
-          />
-        </label>
-      </div>
-      <div className="toolbar" style={{justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem'}}>
-        <p style={{fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0}}>
-          {t('mods.pageLine', {slice: pageSlice.length, filtered: sorted.length, total: items.length})}
-        </p>
-        <div style={{display: 'flex', gap: '0.35rem', alignItems: 'center', flexWrap: 'wrap'}}>
-          <button type="button" className="btn btn-secondary" disabled={page <= 1 || busy} onClick={() => setPage(1)}>
-            ««
+
+      <section className="ds-card" aria-labelledby="mods-overview-title">
+        <h2 id="mods-overview-title" className="ds-section-title">
+          <Search size={16} strokeWidth={1.75} aria-hidden />
+          {t('mods.sectionOverview')}
+        </h2>
+        {items.length > 0 ? (
+          <p style={{fontSize: '0.875rem', color: 'var(--text-muted)', marginTop: 0, marginBottom: 'var(--ds-space-md)'}}>
+            {t('mods.totalAll')} <strong style={{color: 'var(--text)'}}>{formatBytes(totalBytesAll)}</strong>
+            {q.trim() && sorted.length !== items.length ? (
+              <>
+                {' '}
+                · {t('mods.filtered')} <strong style={{color: 'var(--text)'}}>{formatBytes(totalBytesFiltered)}</strong> ({t('mods.modsCount', {count: sorted.length})})
+              </>
+            ) : null}
+          </p>
+        ) : null}
+        <p style={{color: 'var(--text-muted)', fontSize: '0.8125rem', marginTop: 0}}>{t('mods.help')}</p>
+        <div className="field" style={{marginBottom: 0}}>
+          <label htmlFor="mods-search">{t('mods.searchLabel')}</label>
+          <input id="mods-search" value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} placeholder={t('mods.filterPh')} autoComplete="off" />
+        </div>
+      </section>
+
+      <section className="ds-card" aria-labelledby="mods-list-title">
+        <h2 id="mods-list-title" className="ds-section-title">
+          <Rows3 size={16} strokeWidth={1.75} aria-hidden />
+          {t('mods.sectionList')}
+        </h2>
+        <div className="toolbar" style={{flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center'}}>
+          <button type="button" className="btn btn-secondary" disabled={busy || sorted.length === 0} onClick={toggleSelectAllFiltered}>
+            {allFilteredSelected ? t('mods.deselectAll') : t('mods.selectAll')}
           </button>
-          <button type="button" className="btn btn-secondary" disabled={page <= 1 || busy} onClick={() => setPage((p) => p - 1)}>
-            ‹
-          </button>
-          <span style={{fontSize: '0.85rem', color: 'var(--text-muted)', minWidth: '8rem', textAlign: 'center'}}>
-            {page} / {totalPages}
-          </span>
-          <button type="button" className="btn btn-secondary" disabled={page >= totalPages || busy} onClick={() => setPage((p) => p + 1)}>
-            ›
-          </button>
-          <button type="button" className="btn btn-secondary" disabled={page >= totalPages || busy} onClick={() => setPage(totalPages)}>
-            »»
+          <button type="button" className="btn btn-danger" disabled={busy || sel.size === 0} onClick={deleteSelected}>
+            {t('mods.deleteSel', {count: sel.size})}
           </button>
         </div>
-      </div>
-      <div className="table-wrap">
-        <table className="data">
-          <thead>
-            <tr>
-              <th style={{width: '2.5rem'}}>
-                <input type="checkbox" checked={allFilteredSelected} disabled={busy || sorted.length === 0} onChange={toggleSelectAllFiltered} title={t('mods.selectFilteredTitle')} />
-              </th>
-              {thSort('id', t('mods.thId'))}
-              {thSort('name', t('mods.thName'))}
-              {thSort('size', t('mods.thSize'))}
-              {thSort('path', t('mods.thPath'))}
-              <th>{t('mods.thActions')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {pageSlice.map((m) => (
-              <tr key={m.path}>
-                <td>
-                  <input type="checkbox" checked={sel.has(m.path)} disabled={busy} onChange={() => toggleRow(m.path)} />
-                </td>
-                <td>{m.id}</td>
-                <td>{m.name}</td>
-                <td>{formatBytes(Number(m.sizeBytes) || 0)}</td>
-                <td style={{whiteSpace: 'normal', maxWidth: '24rem'}}>{workshopFolderDisplayPath(m.path)}</td>
-                <td>
-                  <div className="row-actions">
-                    <button type="button" className="btn btn-secondary" disabled={busy} onClick={() => App.WorkshopPage(m.id)}>
-                      {t('mods.steam')}
-                    </button>
-                    <button type="button" className="btn btn-danger" disabled={busy} onClick={() => deleteOne(m)}>
-                      {t('mods.delete')}
-                    </button>
-                  </div>
-                </td>
-              </tr>
+        <div className="toolbar" style={{alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap'}}>
+          <span style={{fontSize: '0.8125rem', color: 'var(--text-muted)', fontWeight: 600}}>{t('mods.perPage')}</span>
+          <select
+            aria-label={t('mods.perPage')}
+            value={presetValue}
+            onChange={(e) => {
+              const v = e.target.value;
+              if (v === 'custom') {
+                return;
+              }
+              setPageSize(parseInt(v, 10));
+              setPage(1);
+            }}
+            style={{width: '5.5rem', maxWidth: 'none'}}
+          >
+            {PAGE_PRESETS.map((n) => (
+              <option key={n} value={n}>
+                {n}
+              </option>
             ))}
-          </tbody>
-        </table>
-      </div>
-      {items.length === 0 && !err ? <p>{t('mods.noneFound')}</p> : null}
-      {items.length > 0 && sorted.length === 0 ? <p>{t('mods.noMatch')}</p> : null}
+            <option value="custom">{t('mods.other')}</option>
+          </select>
+          <label style={{display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.8125rem', color: 'var(--text-muted)'}}>
+            <span>{t('mods.number')}</span>
+            <input
+              type="number"
+              min={1}
+              max={500}
+              value={pageSize}
+              onChange={(e) => {
+                setPageSize(clampPageSize(parseInt(e.target.value, 10)));
+                setPage(1);
+              }}
+              style={{width: '4.5rem', maxWidth: 'none'}}
+            />
+          </label>
+        </div>
+        <div className="toolbar" style={{justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem'}}>
+          <p style={{fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0}}>
+            {t('mods.pageLine', {slice: pageSlice.length, filtered: sorted.length, total: items.length})}
+          </p>
+          <div style={{display: 'flex', gap: '0.35rem', alignItems: 'center', flexWrap: 'wrap'}}>
+            <button type="button" className="btn btn-secondary" disabled={page <= 1 || busy} onClick={() => setPage(1)}>
+              ««
+            </button>
+            <button type="button" className="btn btn-secondary" disabled={page <= 1 || busy} onClick={() => setPage((p) => p - 1)}>
+              ‹
+            </button>
+            <span style={{fontSize: '0.85rem', color: 'var(--text-muted)', minWidth: '8rem', textAlign: 'center'}}>
+              {page} / {totalPages}
+            </span>
+            <button type="button" className="btn btn-secondary" disabled={page >= totalPages || busy} onClick={() => setPage((p) => p + 1)}>
+              ›
+            </button>
+            <button type="button" className="btn btn-secondary" disabled={page >= totalPages || busy} onClick={() => setPage(totalPages)}>
+              »»
+            </button>
+          </div>
+        </div>
+        <div className="table-wrap" style={{marginTop: 'var(--ds-space-md)'}}>
+          <table className="data">
+            <thead>
+              <tr>
+                <th style={{width: '2.5rem'}}>
+                  <input type="checkbox" checked={allFilteredSelected} disabled={busy || sorted.length === 0} onChange={toggleSelectAllFiltered} title={t('mods.selectFilteredTitle')} />
+                </th>
+                {thSort('id', t('mods.thId'))}
+                {thSort('name', t('mods.thName'))}
+                {thSort('size', t('mods.thSize'))}
+                {thSort('path', t('mods.thPath'))}
+                <th>{t('mods.thActions')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {pageSlice.map((m) => (
+                <tr key={m.path}>
+                  <td>
+                    <input type="checkbox" checked={sel.has(m.path)} disabled={busy} onChange={() => toggleRow(m.path)} />
+                  </td>
+                  <td>{m.id}</td>
+                  <td>{m.name}</td>
+                  <td>{formatBytes(Number(m.sizeBytes) || 0)}</td>
+                  <td style={{whiteSpace: 'normal', maxWidth: '24rem'}}>{workshopFolderDisplayPath(m.path)}</td>
+                  <td>
+                    <div className="row-actions">
+                      <button type="button" className="btn btn-secondary" disabled={busy} onClick={() => App.WorkshopPage(m.id)}>
+                        {t('mods.steam')}
+                      </button>
+                      <button type="button" className="btn btn-danger" disabled={busy} onClick={() => deleteOne(m)}>
+                        {t('mods.delete')}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {items.length === 0 && !err ? <p style={{marginBottom: 0}}>{t('mods.noneFound')}</p> : null}
+        {items.length > 0 && sorted.length === 0 ? <p style={{marginBottom: 0}}>{t('mods.noMatch')}</p> : null}
+      </section>
     </div>
   );
 }

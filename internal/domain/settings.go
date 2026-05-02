@@ -102,6 +102,7 @@ type Settings struct {
 	ClientLon          float64       `json:"clientLon"`
 	ClientGeoUpdated   int64         `json:"clientGeoUpdated"`
 	Locale             string        `json:"locale"`
+	UITheme            string        `json:"uiTheme"`
 }
 
 func DefaultSettings() Settings {
@@ -111,6 +112,7 @@ func DefaultSettings() Settings {
 		LANQueryPort:       2305,
 		Favorites:          []Favorite{},
 		History:            []HistoryLine{},
+		UITheme:            "flat-dark-theme",
 	}
 }
 

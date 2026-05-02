@@ -1,7 +1,9 @@
 import {useEffect, useState} from 'react';
 import {useTranslation} from 'react-i18next';
+import {Clock} from 'lucide-react';
 import * as App from '../../../wailsjs/go/main/App';
 import {domain} from '../../../wailsjs/go/models';
+import {PageHeader} from '../../shared/PageHeader';
 
 export function HistoryPage() {
   const {t} = useTranslation();
@@ -26,7 +28,7 @@ export function HistoryPage() {
   if (!s) {
     return (
       <div>
-        <h1 style={{marginTop: 0}}>{t('history.title')}</h1>
+        <PageHeader icon={Clock} title={t('history.title')} description={t('history.subtitle')} />
         {err ? <div className="msg msg-error">{err}</div> : <p>{t('common.loading')}</p>}
       </div>
     );
@@ -36,19 +38,26 @@ export function HistoryPage() {
 
   return (
     <div>
-      <h1 style={{marginTop: 0}}>{t('history.title')}</h1>
+      <PageHeader icon={Clock} title={t('history.title')} description={t('history.subtitle')} />
       {err ? <div className="msg msg-error">{err}</div> : null}
-      <ol style={{paddingLeft: '1.2rem'}}>
-        {hist.map((h, i) => (
-          <li key={i} style={{marginBottom: '0.35rem'}}>
-            {h.name} — {h.ip}:{h.gamePort} (q {h.queryPort})
-            <button type="button" className="btn btn-secondary" style={{marginLeft: '0.5rem', fontSize: '0.75rem'}} onClick={() => App.RemoveHistoryIndex(i).then(reload)}>
-              {t('history.delete')}
-            </button>
-          </li>
-        ))}
-      </ol>
-      {hist.length === 0 ? <p>{t('history.empty')}</p> : null}
+      <section className="ds-card" aria-label={t('history.title')}>
+        {hist.length === 0 ? (
+          <p style={{margin: 0}}>{t('history.empty')}</p>
+        ) : (
+          <ul className="history-list">
+            {hist.map((h, i) => (
+              <li key={i} className="history-item">
+                <span>
+                  {h.name} — {h.ip}:{h.gamePort} (q {h.queryPort})
+                </span>
+                <button type="button" className="btn btn-secondary" onClick={() => App.RemoveHistoryIndex(i).then(reload)}>
+                  {t('history.delete')}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }

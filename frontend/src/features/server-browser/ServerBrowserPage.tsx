@@ -1,7 +1,9 @@
 import {useCallback, useEffect, useMemo, useState} from 'react';
 import {useTranslation} from 'react-i18next';
+import {ListFilter, Radar, Rows3, Server} from 'lucide-react';
 import * as App from '../../../wailsjs/go/main/App';
 import {domain} from '../../../wailsjs/go/models';
+import {PageHeader} from '../../shared/PageHeader';
 import {useA2sModsHint} from '../../shared/useA2sModsHint';
 
 function defaultFilters(): domain.FilterState {
@@ -201,83 +203,107 @@ export function ServerBrowserPage() {
 
   return (
     <div>
-      <h1 style={{marginTop: 0}}>{t('browse.title')}</h1>
+      <PageHeader icon={Server} title={t('browse.title')} description={t('browse.subtitle')} />
       {err ? <div className="msg msg-error">{err}</div> : null}
       {modsHint ? <div className={modsHint.level === 'warn' ? 'msg msg-warn' : 'msg msg-info'}>{modsHint.text}</div> : null}
-      <div className="toolbar">
-        <button type="button" className="btn" disabled={loading} onClick={fetchSteam}>
-          {t('browse.loadSteam')}
-        </button>
-        <button type="button" className="btn btn-secondary" disabled={loading || pageSlice.length === 0} onClick={ping} title={t('browse.refreshPingTitle')}>
-          {t('browse.refreshPing')}
-        </button>
-        <button type="button" className="btn btn-secondary" disabled={loading} onClick={scanLan}>
-          {t('browse.scanLan')}
-        </button>
-      </div>
-      <div className="toolbar">
-        <input value={bmId} onChange={(e) => setBmId(e.target.value)} placeholder={t('browse.bmPlaceholder')} style={{width: '10rem'}} />
-        <button type="button" className="btn btn-secondary" disabled={loading} onClick={resolveBm}>
-          {t('browse.resolveId')}
-        </button>
-      </div>
-      <div className="toolbar" style={{alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap'}}>
-        <span style={{fontSize: '0.85rem', color: 'var(--text-muted)'}}>{t('browse.perPage')}</span>
-        <select
-          value={presetValue}
-          onChange={(e) => {
-            const v = e.target.value;
-            if (v === 'custom') {
-              return;
-            }
-            setPageSize(parseInt(v, 10));
-            setPage(1);
-          }}
-          style={{width: '5.5rem'}}
-        >
-          {PAGE_PRESETS.map((n) => (
-            <option key={n} value={n}>
-              {n}
-            </option>
-          ))}
-          <option value="custom">{t('browse.other')}</option>
-        </select>
-        <label style={{display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.85rem', color: 'var(--text-muted)'}}>
-          {t('browse.number')}
-          <input
-            type="number"
-            min={1}
-            max={500}
-            value={pageSize}
+
+      <section className="ds-card" aria-labelledby="browse-sources-title">
+        <h2 id="browse-sources-title" className="ds-section-title">
+          <Radar size={16} strokeWidth={1.75} aria-hidden />
+          {t('browse.sourcesTitle')}
+        </h2>
+        <div className="toolbar">
+          <button type="button" className="btn" disabled={loading} onClick={fetchSteam}>
+            {t('browse.loadSteam')}
+          </button>
+          <button type="button" className="btn btn-secondary" disabled={loading || pageSlice.length === 0} onClick={ping} title={t('browse.refreshPingTitle')}>
+            {t('browse.refreshPing')}
+          </button>
+          <button type="button" className="btn btn-secondary" disabled={loading} onClick={scanLan}>
+            {t('browse.scanLan')}
+          </button>
+        </div>
+        <div className="field-row">
+          <div className="field" style={{flex: '1 1 12rem', maxWidth: '20rem', marginBottom: 0}}>
+            <label htmlFor="browse-bm-id">{t('browse.bmIdLabel')}</label>
+            <input id="browse-bm-id" value={bmId} onChange={(e) => setBmId(e.target.value)} placeholder={t('browse.bmPlaceholder')} autoComplete="off" />
+          </div>
+          <button type="button" className="btn btn-secondary" disabled={loading} onClick={resolveBm}>
+            {t('browse.resolveId')}
+          </button>
+        </div>
+      </section>
+
+      <section className="ds-card" aria-labelledby="browse-pagination-title">
+        <h2 id="browse-pagination-title" className="ds-section-title">
+          <Rows3 size={16} strokeWidth={1.75} aria-hidden />
+          {t('browse.paginationTitle')}
+        </h2>
+        <div className="toolbar" style={{alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap'}}>
+          <span style={{fontSize: '0.8125rem', color: 'var(--text-muted)', fontWeight: 600}}>{t('browse.perPage')}</span>
+          <select
+            aria-label={t('browse.perPage')}
+            value={presetValue}
             onChange={(e) => {
-              const n = clampPageSize(parseInt(e.target.value, 10));
-              setPageSize(n);
+              const v = e.target.value;
+              if (v === 'custom') {
+                return;
+              }
+              setPageSize(parseInt(v, 10));
               setPage(1);
             }}
-            style={{width: '4.5rem'}}
-          />
-        </label>
-      </div>
-      <div className="field">
-        <label>{t('browse.searchLabel')}</label>
-        <input value={filters.searchSubstring} onChange={(e) => setFilters(patchFilter(filters, {searchSubstring: e.target.value}))} />
-      </div>
-      <div className="field">
-        <label>{t('browse.map')}</label>
-        <select value={filters.mapEquals} onChange={(e) => setFilters(patchFilter(filters, {mapEquals: e.target.value}))}>
-          <option value="">{t('browse.allMaps')}</option>
-          {maps.map((m) => (
-            <option key={m} value={m}>
-              {m}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div className="grid-filters">
-        <label>
-          <input type="checkbox" checked={filters.exclude1PP} onChange={toggleFilter('exclude1PP')} />
-          {t('browse.f1pp')}
-        </label>
+            style={{width: '5.5rem', maxWidth: 'none'}}
+          >
+            {PAGE_PRESETS.map((n) => (
+              <option key={n} value={n}>
+                {n}
+              </option>
+            ))}
+            <option value="custom">{t('browse.other')}</option>
+          </select>
+          <label style={{display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.8125rem', color: 'var(--text-muted)'}}>
+            <span>{t('browse.number')}</span>
+            <input
+              type="number"
+              min={1}
+              max={500}
+              value={pageSize}
+              onChange={(e) => {
+                const n = clampPageSize(parseInt(e.target.value, 10));
+                setPageSize(n);
+                setPage(1);
+              }}
+              style={{width: '4.5rem', maxWidth: 'none'}}
+            />
+          </label>
+        </div>
+        <div className="field">
+          <label htmlFor="browse-search">{t('browse.searchLabel')}</label>
+          <input id="browse-search" value={filters.searchSubstring} onChange={(e) => setFilters(patchFilter(filters, {searchSubstring: e.target.value}))} />
+        </div>
+        <div className="field">
+          <label htmlFor="browse-map">{t('browse.map')}</label>
+          <select id="browse-map" value={filters.mapEquals} onChange={(e) => setFilters(patchFilter(filters, {mapEquals: e.target.value}))}>
+            <option value="">{t('browse.allMaps')}</option>
+            {maps.map((m) => (
+              <option key={m} value={m}>
+                {m}
+              </option>
+            ))}
+          </select>
+        </div>
+      </section>
+
+      <section className="ds-card" aria-labelledby="browse-filters-title">
+        <h2 id="browse-filters-title" className="ds-section-title">
+          <ListFilter size={16} strokeWidth={1.75} aria-hidden />
+          {t('browse.filtersTitle')}
+        </h2>
+        <div className="grid-filters" role="group" aria-label={t('browse.filtersTitle')}>
+          <label>
+            <input type="checkbox" checked={filters.exclude1PP} onChange={toggleFilter('exclude1PP')} />
+            {t('browse.f1pp')}
+          </label>
         <label>
           <input type="checkbox" checked={filters.exclude3PP} onChange={toggleFilter('exclude3PP')} />
           {t('browse.f3pp')}
@@ -322,8 +348,15 @@ export function ServerBrowserPage() {
           <input type="checkbox" checked={filters.excludeNonModded} onChange={toggleFilter('excludeNonModded')} />
           {t('browse.fNoMods')}
         </label>
-      </div>
-      <div className="toolbar" style={{justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem'}}>
+        </div>
+      </section>
+
+      <section className="ds-card" aria-labelledby="browse-table-title">
+        <h2 id="browse-table-title" className="ds-section-title">
+          <Server size={16} strokeWidth={1.75} aria-hidden />
+          {t('browse.tableTitle')}
+        </h2>
+        <div className="toolbar" style={{justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem'}}>
         <p style={{fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0}}>
           {loading ? t('common.processing') : t('browse.pageLine', {slice: pageSlice.length, filtered: filtered.length, raw: raw.length})}
         </p>
@@ -409,6 +442,7 @@ export function ServerBrowserPage() {
           </tbody>
         </table>
       </div>
+      </section>
     </div>
   );
 }

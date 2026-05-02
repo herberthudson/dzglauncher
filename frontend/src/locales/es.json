@@ -4,7 +4,8 @@
     "settings": "Ajustes",
     "favorites": "Favoritos",
     "history": "Historial",
-    "modsWorkshop": "Mods Workshop"
+    "modsWorkshop": "Mods Workshop",
+    "ariaMain": "Navegación principal"
   },
   "common": {
     "loading": "Cargando…",
@@ -38,19 +39,35 @@
     "saved": "Guardado.",
     "keyValid": "Clave válida.",
     "invalid": "Inválida",
+    "subtitle": "Steam, red y preferencias del launcher.",
+    "sectionApp": "Aplicación e idioma",
+    "sectionSteam": "Steam y DayZ",
+    "sectionNetwork": "Red y ubicación",
+    "sectionOptions": "Opciones",
+    "steamCmdPlaceholder": "steam o flatpak run …",
     "language": "Idioma",
     "langAuto": "Automático (sistema)",
     "langEn": "English",
     "langPtBR": "Português (Brasil)",
-    "langEs": "Español"
+    "langEs": "Español",
+    "theme": "Tema de la interfaz",
+    "themeFlatDark": "Plano oscuro",
+    "themeFlatLight": "Plano claro"
   },
   "history": {
     "title": "Historial de conexiones",
+    "subtitle": "Servidores a los que te conectaste recientemente.",
     "delete": "Eliminar",
     "empty": "Sin entradas."
   },
   "browse": {
     "title": "Lista de servidores",
+    "subtitle": "Carga desde Steam, LAN o Battlemetrics; filtra y conéctate.",
+    "sourcesTitle": "Fuentes de la lista",
+    "bmIdLabel": "ID Battlemetrics",
+    "paginationTitle": "Paginación y búsqueda",
+    "filtersTitle": "Filtros de la lista",
+    "tableTitle": "Servidores",
     "loadSteam": "Cargar lista de Steam",
     "refreshPing": "Actualizar ping (A2S) — página actual",
     "refreshPingTitle": "Solo servidores de esta página",
@@ -100,6 +117,9 @@
   },
   "favorites": {
     "title": "Favoritos",
+    "subtitle": "Accesos guardados, ping y mods por A2S.",
+    "toolsTitle": "Acciones y paginación",
+    "tableTitle": "Servidores favoritos",
     "clearQuick": "Borrar favorito rápido",
     "refreshPing": "Actualizar ping (A2S) — página actual",
     "refreshPingTitle": "Solo servidores de esta página",
@@ -117,6 +137,9 @@
   },
   "mods": {
     "title": "Mods Workshop instalados",
+    "subtitle": "Mods detectados en la carpeta Workshop de Steam configurada.",
+    "sectionOverview": "Resumen y búsqueda",
+    "sectionList": "Lista, paginación y borrado",
     "help": "Usa meta.cpp en steamapps/workshop/content/<appid>. Configura la carpeta raíz de Steam en Ajustes.",
     "totalAll": "Total en disco (todos los mods):",
     "filtered": "Filtrados:",

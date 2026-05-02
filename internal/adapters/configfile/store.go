@@ -67,6 +67,12 @@ func mergeDefaults(s domain.Settings) domain.Settings {
 	if s.History == nil {
 		s.History = d.History
 	}
+	if s.UITheme != "flat-dark-theme" && s.UITheme != "flat-light-theme" {
+		s.UITheme = d.UITheme
+	}
+	if s.UITheme == "" {
+		s.UITheme = d.UITheme
+	}
 	return s
 }
 

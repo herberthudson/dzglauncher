@@ -169,6 +169,7 @@ export namespace domain {
 	    clientLon: number;
 	    clientGeoUpdated: number;
 	    locale: string;
+	    uiTheme: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new Settings(source);
@@ -196,6 +197,7 @@ export namespace domain {
 	        this.clientLon = source["clientLon"];
 	        this.clientGeoUpdated = source["clientGeoUpdated"];
 	        this.locale = source["locale"];
+	        this.uiTheme = source["uiTheme"];
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {

@@ -1,8 +1,10 @@
 import {useEffect, useMemo, useState} from 'react';
 import {useTranslation} from 'react-i18next';
+import {Rows3, Server, Star} from 'lucide-react';
 import * as App from '../../../wailsjs/go/main/App';
 import {domain} from '../../../wailsjs/go/models';
 import {favoriteKey, favoriteKeyParts, favoritesToRows, rowKey} from '../../shared/favoriteRows';
+import {PageHeader} from '../../shared/PageHeader';
 import {useA2sModsHint} from '../../shared/useA2sModsHint';
 
 const PAGE_PRESETS = [10, 20, 50, 100] as const;
@@ -96,160 +98,177 @@ export function FavoritesPage() {
 
   return (
     <div>
-      <h1 style={{marginTop: 0}}>{t('favorites.title')}</h1>
+      <PageHeader icon={Star} title={t('favorites.title')} description={t('favorites.subtitle')} />
       {err ? <div className="msg msg-error">{err}</div> : null}
       {modsHint ? <div className={modsHint.level === 'warn' ? 'msg msg-warn' : 'msg msg-info'}>{modsHint.text}</div> : null}
-      <div className="toolbar">
-        <button type="button" className="btn btn-secondary" disabled={loading || !s.quickFavorite} onClick={() => App.ClearQuickFavorite().then(reload)}>
-          {t('favorites.clearQuick')}
-        </button>
-        <button type="button" className="btn btn-secondary" disabled={loading || pageSlice.length === 0} onClick={ping} title={t('favorites.refreshPingTitle')}>
-          {t('favorites.refreshPing')}
-        </button>
-      </div>
-      <div className="toolbar" style={{alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap'}}>
-        <span style={{fontSize: '0.85rem', color: 'var(--text-muted)'}}>{t('browse.perPage')}</span>
-        <select
-          value={presetValue}
-          onChange={(e) => {
-            const v = e.target.value;
-            if (v === 'custom') {
-              return;
-            }
-            setPageSize(parseInt(v, 10));
-            setPage(1);
-          }}
-          style={{width: '5.5rem'}}
-        >
-          {PAGE_PRESETS.map((n) => (
-            <option key={n} value={n}>
-              {n}
-            </option>
-          ))}
-          <option value="custom">{t('browse.other')}</option>
-        </select>
-        <label style={{display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.85rem', color: 'var(--text-muted)'}}>
-          {t('browse.number')}
-          <input
-            type="number"
-            min={1}
-            max={500}
-            value={pageSize}
-            onChange={(e) => {
-              const n = clampPageSize(parseInt(e.target.value, 10));
-              setPageSize(n);
-              setPage(1);
-            }}
-            style={{width: '4.5rem'}}
-          />
-        </label>
-      </div>
-      <div className="toolbar" style={{justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem'}}>
-        <p style={{fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0}}>
-          {loading ? t('common.processing') : t('favorites.pageLine', {slice: pageSlice.length, total: allRows.length})}
-        </p>
-        <div style={{display: 'flex', gap: '0.35rem', alignItems: 'center', flexWrap: 'wrap'}}>
-          <button type="button" className="btn btn-secondary" disabled={page <= 1 || loading} onClick={() => setPage(1)}>
-            ««
+
+      <section className="ds-card" aria-labelledby="fav-tools-title">
+        <h2 id="fav-tools-title" className="ds-section-title">
+          <Rows3 size={16} strokeWidth={1.75} aria-hidden />
+          {t('favorites.toolsTitle')}
+        </h2>
+        <div className="toolbar">
+          <button type="button" className="btn btn-secondary" disabled={loading || !s.quickFavorite} onClick={() => App.ClearQuickFavorite().then(reload)}>
+            {t('favorites.clearQuick')}
           </button>
-          <button type="button" className="btn btn-secondary" disabled={page <= 1 || loading} onClick={() => setPage((p) => p - 1)}>
-            ‹
-          </button>
-          <span style={{fontSize: '0.85rem', color: 'var(--text-muted)', minWidth: '8rem', textAlign: 'center'}}>
-            {page} / {totalPages}
-          </span>
-          <button type="button" className="btn btn-secondary" disabled={page >= totalPages || loading} onClick={() => setPage((p) => p + 1)}>
-            ›
-          </button>
-          <button type="button" className="btn btn-secondary" disabled={page >= totalPages || loading} onClick={() => setPage(totalPages)}>
-            »»
+          <button type="button" className="btn btn-secondary" disabled={loading || pageSlice.length === 0} onClick={ping} title={t('favorites.refreshPingTitle')}>
+            {t('favorites.refreshPing')}
           </button>
         </div>
-      </div>
-      {allRows.length === 0 ? <p>{t('favorites.empty')}</p> : null}
-      <div className="table-wrap">
-        <table className="data">
-          <thead>
-            <tr>
-              <th>{t('browse.thName')}</th>
-              <th>{t('browse.thMap')}</th>
-              <th>{t('browse.thPP')}</th>
-              <th>{t('browse.thProv')}</th>
-              <th>{t('browse.thMods')}</th>
-              <th>{t('browse.thTime')}</th>
-              <th>{t('browse.thPlayers')}</th>
-              <th>{t('browse.thAddr')}</th>
-              <th>{t('browse.thPing')}</th>
-              <th>{t('browse.thDist')}</th>
-              <th>{t('browse.thActions')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {pageSlice.map((row) => {
-              const qf = s.quickFavorite;
-              const isQuick =
-                !!qf &&
-                row.queryHost.trim().toLowerCase() === qf.ip.trim().toLowerCase() &&
-                row.gamePort === qf.gamePort &&
-                row.queryPort === qf.queryPort;
-              return (
-                <tr key={rowKey(row)}>
-                  <td style={{maxWidth: '14rem', whiteSpace: 'normal'}}>
-                    {row.name}
-                    {isQuick ? <span style={{fontSize: '0.7rem', color: 'var(--text-muted)', marginLeft: '0.35rem'}}>{t('favorites.quickBadge')}</span> : null}
-                  </td>
-                  <td>{row.mapName}</td>
-                  <td>{row.perspective}</td>
-                  <td>{row.provider}</td>
-                  <td>{row.modded ? t('common.yes') : t('common.no')}</td>
-                  <td>{row.inGameTime}</td>
-                  <td>
-                    {row.players}/{row.maxPlayers}
-                  </td>
-                  <td>{row.address}</td>
-                  <td>{row.ping}</td>
-                  <td>{row.distanceLabel}</td>
-                  <td>
-                    <div className="row-actions">
-                      <button type="button" className="btn btn-secondary" onClick={() => App.LaunchConnect(row).catch((e) => setErr(String(e)))}>
-                        {t('favorites.connect')}
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn-secondary"
-                        disabled={modsBusyKey === rowKey(row)}
-                        title={t('favorites.modsA2STitle')}
-                        onClick={() => enrichMods(row)}
-                      >
-                        {modsBusyKey === rowKey(row) ? t('favorites.modsA2SBusy') : t('favorites.modsA2S')}
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn-danger"
-                        onClick={() => {
-                          const k = favoriteKeyParts(row.queryHost, row.gamePort, row.queryPort);
-                          const matchesQuick = s.quickFavorite != null && favoriteKey(s.quickFavorite) === k;
-                          App.RemoveFavorite(row.queryHost, row.gamePort, row.queryPort)
-                            .then(() => (matchesQuick ? App.ClearQuickFavorite() : Promise.resolve()))
-                            .then(reload)
-                            .catch((e) => setErr(String(e)));
-                        }}
-                      >
-                        {t('favorites.remove')}
-                      </button>
-                    </div>
-                    {row.workshopModIds && row.workshopModIds.length > 0 ? (
-                      <div style={{fontSize: '0.65rem', color: 'var(--text-muted)', maxWidth: '14rem'}}>{row.workshopModIds.join(', ')}</div>
-                    ) : row.workshopModIds && row.workshopModIds.length === 0 ? (
-                      <div style={{fontSize: '0.65rem', color: 'var(--text-muted)', maxWidth: '14rem'}}>{t('favorites.rulesNoWorkshop')}</div>
-                    ) : null}
-                  </td>
+        <div className="toolbar" style={{alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap'}}>
+          <span style={{fontSize: '0.8125rem', color: 'var(--text-muted)', fontWeight: 600}}>{t('browse.perPage')}</span>
+          <select
+            aria-label={t('browse.perPage')}
+            value={presetValue}
+            onChange={(e) => {
+              const v = e.target.value;
+              if (v === 'custom') {
+                return;
+              }
+              setPageSize(parseInt(v, 10));
+              setPage(1);
+            }}
+            style={{width: '5.5rem', maxWidth: 'none'}}
+          >
+            {PAGE_PRESETS.map((n) => (
+              <option key={n} value={n}>
+                {n}
+              </option>
+            ))}
+            <option value="custom">{t('browse.other')}</option>
+          </select>
+          <label style={{display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.8125rem', color: 'var(--text-muted)'}}>
+            <span>{t('browse.number')}</span>
+            <input
+              type="number"
+              min={1}
+              max={500}
+              value={pageSize}
+              onChange={(e) => {
+                const n = clampPageSize(parseInt(e.target.value, 10));
+                setPageSize(n);
+                setPage(1);
+              }}
+              style={{width: '4.5rem', maxWidth: 'none'}}
+            />
+          </label>
+        </div>
+        <div className="toolbar" style={{justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem', marginBottom: 0}}>
+          <p style={{fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0}}>
+            {loading ? t('common.processing') : t('favorites.pageLine', {slice: pageSlice.length, total: allRows.length})}
+          </p>
+          <div style={{display: 'flex', gap: '0.35rem', alignItems: 'center', flexWrap: 'wrap'}}>
+            <button type="button" className="btn btn-secondary" disabled={page <= 1 || loading} onClick={() => setPage(1)}>
+              ««
+            </button>
+            <button type="button" className="btn btn-secondary" disabled={page <= 1 || loading} onClick={() => setPage((p) => p - 1)}>
+              ‹
+            </button>
+            <span style={{fontSize: '0.85rem', color: 'var(--text-muted)', minWidth: '8rem', textAlign: 'center'}}>
+              {page} / {totalPages}
+            </span>
+            <button type="button" className="btn btn-secondary" disabled={page >= totalPages || loading} onClick={() => setPage((p) => p + 1)}>
+              ›
+            </button>
+            <button type="button" className="btn btn-secondary" disabled={page >= totalPages || loading} onClick={() => setPage(totalPages)}>
+              »»
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section className="ds-card" aria-labelledby="fav-table-title">
+        <h2 id="fav-table-title" className="ds-section-title">
+          <Server size={16} strokeWidth={1.75} aria-hidden />
+          {t('favorites.tableTitle')}
+        </h2>
+        {allRows.length === 0 ? <p style={{marginTop: 0}}>{t('favorites.empty')}</p> : null}
+        {allRows.length > 0 ? (
+          <div className="table-wrap">
+            <table className="data">
+              <thead>
+                <tr>
+                  <th>{t('browse.thName')}</th>
+                  <th>{t('browse.thMap')}</th>
+                  <th>{t('browse.thPP')}</th>
+                  <th>{t('browse.thProv')}</th>
+                  <th>{t('browse.thMods')}</th>
+                  <th>{t('browse.thTime')}</th>
+                  <th>{t('browse.thPlayers')}</th>
+                  <th>{t('browse.thAddr')}</th>
+                  <th>{t('browse.thPing')}</th>
+                  <th>{t('browse.thDist')}</th>
+                  <th>{t('browse.thActions')}</th>
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+              </thead>
+              <tbody>
+                {pageSlice.map((row) => {
+                  const qf = s.quickFavorite;
+                  const isQuick =
+                    !!qf &&
+                    row.queryHost.trim().toLowerCase() === qf.ip.trim().toLowerCase() &&
+                    row.gamePort === qf.gamePort &&
+                    row.queryPort === qf.queryPort;
+                  return (
+                    <tr key={rowKey(row)}>
+                      <td style={{maxWidth: '14rem', whiteSpace: 'normal'}}>
+                        {row.name}
+                        {isQuick ? <span style={{fontSize: '0.7rem', color: 'var(--text-muted)', marginLeft: '0.35rem'}}>{t('favorites.quickBadge')}</span> : null}
+                      </td>
+                      <td>{row.mapName}</td>
+                      <td>{row.perspective}</td>
+                      <td>{row.provider}</td>
+                      <td>{row.modded ? t('common.yes') : t('common.no')}</td>
+                      <td>{row.inGameTime}</td>
+                      <td>
+                        {row.players}/{row.maxPlayers}
+                      </td>
+                      <td>{row.address}</td>
+                      <td>{row.ping}</td>
+                      <td>{row.distanceLabel}</td>
+                      <td>
+                        <div className="row-actions">
+                          <button type="button" className="btn btn-secondary" onClick={() => App.LaunchConnect(row).catch((e) => setErr(String(e)))}>
+                            {t('favorites.connect')}
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-secondary"
+                            disabled={modsBusyKey === rowKey(row)}
+                            title={t('favorites.modsA2STitle')}
+                            onClick={() => enrichMods(row)}
+                          >
+                            {modsBusyKey === rowKey(row) ? t('favorites.modsA2SBusy') : t('favorites.modsA2S')}
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-danger"
+                            onClick={() => {
+                              const k = favoriteKeyParts(row.queryHost, row.gamePort, row.queryPort);
+                              const matchesQuick = s.quickFavorite != null && favoriteKey(s.quickFavorite) === k;
+                              App.RemoveFavorite(row.queryHost, row.gamePort, row.queryPort)
+                                .then(() => (matchesQuick ? App.ClearQuickFavorite() : Promise.resolve()))
+                                .then(reload)
+                                .catch((e) => setErr(String(e)));
+                            }}
+                          >
+                            {t('favorites.remove')}
+                          </button>
+                        </div>
+                        {row.workshopModIds && row.workshopModIds.length > 0 ? (
+                          <div style={{fontSize: '0.65rem', color: 'var(--text-muted)', maxWidth: '14rem'}}>{row.workshopModIds.join(', ')}</div>
+                        ) : row.workshopModIds && row.workshopModIds.length === 0 ? (
+                          <div style={{fontSize: '0.65rem', color: 'var(--text-muted)', maxWidth: '14rem'}}>{t('favorites.rulesNoWorkshop')}</div>
+                        ) : null}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
+      </section>
     </div>
   );
 }
