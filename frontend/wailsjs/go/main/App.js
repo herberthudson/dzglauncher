@@ -38,6 +38,10 @@ export function LoadSettings() {
   return window['go']['main']['App']['LoadSettings']();
 }
 
+export function MergeFavoriteSnapshots(arg1) {
+  return window['go']['main']['App']['MergeFavoriteSnapshots'](arg1);
+}
+
 export function OpenExternalURL(arg1) {
   return window['go']['main']['App']['OpenExternalURL'](arg1);
 }

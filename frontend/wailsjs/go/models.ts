@@ -5,6 +5,18 @@ export namespace domain {
 	    gamePort: number;
 	    queryPort: number;
 	    label?: string;
+	    name?: string;
+	    mapName?: string;
+	    perspective?: string;
+	    provider?: string;
+	    modded?: boolean;
+	    inGameTime?: string;
+	    queueSize?: number;
+	    players?: number;
+	    maxPlayers?: number;
+	    ping?: number;
+	    distanceLabel?: string;
+	    workshopModIds?: string[];
 	
 	    static createFrom(source: any = {}) {
 	        return new Favorite(source);
@@ -16,6 +28,18 @@ export namespace domain {
 	        this.gamePort = source["gamePort"];
 	        this.queryPort = source["queryPort"];
 	        this.label = source["label"];
+	        this.name = source["name"];
+	        this.mapName = source["mapName"];
+	        this.perspective = source["perspective"];
+	        this.provider = source["provider"];
+	        this.modded = source["modded"];
+	        this.inGameTime = source["inGameTime"];
+	        this.queueSize = source["queueSize"];
+	        this.players = source["players"];
+	        this.maxPlayers = source["maxPlayers"];
+	        this.ping = source["ping"];
+	        this.distanceLabel = source["distanceLabel"];
+	        this.workshopModIds = source["workshopModIds"];
 	    }
 	}
 	export class FilterState {

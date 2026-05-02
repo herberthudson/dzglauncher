@@ -261,7 +261,7 @@ func (a *App) ToggleFavoriteRow(row domain.ServerRow) error {
 	if err != nil {
 		return err
 	}
-	f := domain.Favorite{IP: row.QueryHost, GamePort: row.GamePort, QueryPort: row.QueryPort}
+	f := domain.FavoriteFromRow(row)
 	favhistory.ToggleFavorite(&cfg, f)
 	return a.store.Save(cfg)
 }
@@ -275,12 +275,47 @@ func (a *App) RemoveFavorite(ip string, gamePort, queryPort int) error {
 	return a.store.Save(cfg)
 }
 
+func (a *App) MergeFavoriteSnapshots(rows []domain.ServerRow) error {
+	if len(rows) == 0 {
+		return nil
+	}
+	cfg, err := a.store.Load()
+	if err != nil {
+		return err
+	}
+	by := make(map[string]domain.ServerRow, len(rows))
+	for _, r := range rows {
+		by[r.FavMatchKey()] = r
+	}
+	for i := range cfg.Favorites {
+		k := favhistory.FavoriteKey(cfg.Favorites[i])
+		if r, ok := by[k]; ok {
+			lbl := cfg.Favorites[i].Label
+			cfg.Favorites[i] = domain.FavoriteFromRow(r)
+			cfg.Favorites[i].Label = lbl
+		}
+	}
+	if cfg.QuickFavorite != nil {
+		k := favhistory.FavoriteKey(*cfg.QuickFavorite)
+		if r, ok := by[k]; ok {
+			lbl := cfg.QuickFavorite.Label
+			ql := cfg.QuickFavoriteLabel
+			nf := domain.FavoriteFromRow(r)
+			nf.Label = lbl
+			cfg.QuickFavorite = &nf
+			cfg.QuickFavoriteLabel = ql
+		}
+	}
+	return a.store.Save(cfg)
+}
+
 func (a *App) SetQuickFavorite(row domain.ServerRow, label string) error {
 	cfg, err := a.store.Load()
 	if err != nil {
 		return err
 	}
-	f := domain.Favorite{IP: row.QueryHost, GamePort: row.GamePort, QueryPort: row.QueryPort, Label: label}
+	f := domain.FavoriteFromRow(row)
+	f.Label = label
 	cfg.QuickFavorite = &f
 	cfg.QuickFavoriteLabel = label
 	return a.store.Save(cfg)

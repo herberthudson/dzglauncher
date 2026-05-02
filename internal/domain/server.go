@@ -1,5 +1,10 @@
 package domain
 
+import (
+	"strconv"
+	"strings"
+)
+
 type ServerRow struct {
 	Name           string   `json:"name"`
 	MapName        string   `json:"mapName"`
@@ -19,6 +24,10 @@ type ServerRow struct {
 	SteamID        string   `json:"steamId,omitempty"`
 	WorkshopModIDs []string `json:"workshopModIds,omitempty"`
 	ModNames       []string `json:"modNames,omitempty"`
+}
+
+func (r ServerRow) FavMatchKey() string {
+	return strings.ToLower(strings.TrimSpace(r.QueryHost)) + ":" + strconv.Itoa(r.GamePort) + ":" + strconv.Itoa(r.QueryPort)
 }
 
 type FilterState struct {

@@ -21,6 +21,8 @@ export function ListWorkshopItems():Promise<Array<workshop.Item>>;
 
 export function LoadSettings():Promise<domain.Settings>;
 
+export function MergeFavoriteSnapshots(arg1:Array<domain.ServerRow>):Promise<void>;
+
 export function OpenExternalURL(arg1:string):Promise<void>;
 
 export function RefreshServersPing(arg1:Array<domain.ServerRow>):Promise<Array<domain.ServerRow>>;

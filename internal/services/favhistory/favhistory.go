@@ -8,7 +8,11 @@ import (
 )
 
 func favKey(f domain.Favorite) string {
-	return strings.ToLower(f.IP) + ":" + strconv.Itoa(f.GamePort) + ":" + strconv.Itoa(f.QueryPort)
+	return strings.ToLower(strings.TrimSpace(f.IP)) + ":" + strconv.Itoa(f.GamePort) + ":" + strconv.Itoa(f.QueryPort)
+}
+
+func FavoriteKey(f domain.Favorite) string {
+	return favKey(f)
 }
 
 func ToggleFavorite(cfg *domain.Settings, f domain.Favorite) {

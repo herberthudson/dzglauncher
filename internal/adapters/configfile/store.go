@@ -39,7 +39,7 @@ func (s *Store) Load() (domain.Settings, error) {
 	data, err := os.ReadFile(s.path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return domain.DefaultSettings(), nil
+			return mergeDefaults(domain.DefaultSettings()), nil
 		}
 		return domain.Settings{}, err
 	}
@@ -60,6 +60,12 @@ func mergeDefaults(s domain.Settings) domain.Settings {
 	}
 	if s.LANQueryPort == 0 {
 		s.LANQueryPort = d.LANQueryPort
+	}
+	if s.Favorites == nil {
+		s.Favorites = d.Favorites
+	}
+	if s.History == nil {
+		s.History = d.History
 	}
 	return s
 }

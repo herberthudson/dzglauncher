@@ -1,10 +1,76 @@
 package domain
 
+import "fmt"
+
 type Favorite struct {
-	IP        string `json:"ip"`
-	GamePort  int    `json:"gamePort"`
-	QueryPort int    `json:"queryPort"`
-	Label     string `json:"label,omitempty"`
+	IP              string `json:"ip"`
+	GamePort        int    `json:"gamePort"`
+	QueryPort       int    `json:"queryPort"`
+	Label           string `json:"label,omitempty"`
+	Name            string `json:"name,omitempty"`
+	MapName         string `json:"mapName,omitempty"`
+	Perspective     string `json:"perspective,omitempty"`
+	Provider        string `json:"provider,omitempty"`
+	Modded          bool   `json:"modded,omitempty"`
+	InGameTime      string `json:"inGameTime,omitempty"`
+	QueueSize       int    `json:"queueSize,omitempty"`
+	Players         int    `json:"players,omitempty"`
+	MaxPlayers      int    `json:"maxPlayers,omitempty"`
+	Ping            int    `json:"ping,omitempty"`
+	DistanceLabel   string `json:"distanceLabel,omitempty"`
+	WorkshopModIDs  []string `json:"workshopModIds,omitempty"`
+}
+
+func FavoriteFromRow(r ServerRow) Favorite {
+	return Favorite{
+		IP:             r.QueryHost,
+		GamePort:       r.GamePort,
+		QueryPort:      r.QueryPort,
+		Name:           r.Name,
+		MapName:        r.MapName,
+		Perspective:    r.Perspective,
+		Provider:       r.Provider,
+		Modded:         r.Modded,
+		InGameTime:     r.InGameTime,
+		QueueSize:      r.QueueSize,
+		Players:        r.Players,
+		MaxPlayers:     r.MaxPlayers,
+		Ping:           r.Ping,
+		DistanceLabel:  r.DistanceLabel,
+		WorkshopModIDs: append([]string(nil), r.WorkshopModIDs...),
+	}
+}
+
+func (f Favorite) ToServerRow() ServerRow {
+	name := f.Name
+	if name == "" {
+		name = f.Label
+	}
+	if name == "" {
+		name = f.IP
+	}
+	ping := f.Ping
+	if ping <= 0 {
+		ping = 9999
+	}
+	return ServerRow{
+		Name:           name,
+		MapName:        f.MapName,
+		Perspective:    f.Perspective,
+		Provider:       f.Provider,
+		Modded:         f.Modded,
+		InGameTime:     f.InGameTime,
+		QueueSize:      f.QueueSize,
+		Players:        f.Players,
+		MaxPlayers:     f.MaxPlayers,
+		Address:        fmt.Sprintf("%s:%d", f.IP, f.GamePort),
+		QueryPort:      f.QueryPort,
+		GamePort:       f.GamePort,
+		QueryHost:      f.IP,
+		Ping:           ping,
+		DistanceLabel:  f.DistanceLabel,
+		WorkshopModIDs: append([]string(nil), f.WorkshopModIDs...),
+	}
 }
 
 type HistoryLine struct {
@@ -42,6 +108,8 @@ func DefaultSettings() Settings {
 		SteamLaunchCommand: "steam",
 		DayZBranch:         "stable",
 		LANQueryPort:       2305,
+		Favorites:          []Favorite{},
+		History:            []HistoryLine{},
 	}
 }
 
