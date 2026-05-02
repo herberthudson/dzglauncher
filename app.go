@@ -27,16 +27,16 @@ import (
 var embeddedGeoSample string
 
 type App struct {
-	ctx        context.Context
-	store      *configfile.Store
-	steam      *steambrowser.Service
-	bm         *battlemetrics.Client
-	geoMu            sync.RWMutex
-	geoRows          []geo.RangeRow
-	defaultGeoRows   []geo.RangeRow
-	geoPath          string
-	pingMu     sync.Mutex
-	lastPingAt time.Time
+	ctx            context.Context
+	store          *configfile.Store
+	steam          *steambrowser.Service
+	bm             *battlemetrics.Client
+	geoMu          sync.RWMutex
+	geoRows        []geo.RangeRow
+	defaultGeoRows []geo.RangeRow
+	geoPath        string
+	pingMu         sync.Mutex
+	lastPingAt     time.Time
 }
 
 func NewApp() (*App, error) {
