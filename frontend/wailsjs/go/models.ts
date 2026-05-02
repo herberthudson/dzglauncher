@@ -1,0 +1,230 @@
+export namespace domain {
+	
+	export class Favorite {
+	    ip: string;
+	    gamePort: number;
+	    queryPort: number;
+	    label?: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new Favorite(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.ip = source["ip"];
+	        this.gamePort = source["gamePort"];
+	        this.queryPort = source["queryPort"];
+	        this.label = source["label"];
+	    }
+	}
+	export class FilterState {
+	    exclude1PP: boolean;
+	    exclude3PP: boolean;
+	    excludeDay: boolean;
+	    excludeNight: boolean;
+	    excludeEmpty: boolean;
+	    excludeFull: boolean;
+	    excludeLowPop: boolean;
+	    lowPopThresholdPct: number;
+	    excludeNonASCII: boolean;
+	    deduplicateByName: boolean;
+	    excludeOfficial: boolean;
+	    excludeUnofficial: boolean;
+	    excludeNonModded: boolean;
+	    mapEquals: string;
+	    searchSubstring: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new FilterState(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.exclude1PP = source["exclude1PP"];
+	        this.exclude3PP = source["exclude3PP"];
+	        this.excludeDay = source["excludeDay"];
+	        this.excludeNight = source["excludeNight"];
+	        this.excludeEmpty = source["excludeEmpty"];
+	        this.excludeFull = source["excludeFull"];
+	        this.excludeLowPop = source["excludeLowPop"];
+	        this.lowPopThresholdPct = source["lowPopThresholdPct"];
+	        this.excludeNonASCII = source["excludeNonASCII"];
+	        this.deduplicateByName = source["deduplicateByName"];
+	        this.excludeOfficial = source["excludeOfficial"];
+	        this.excludeUnofficial = source["excludeUnofficial"];
+	        this.excludeNonModded = source["excludeNonModded"];
+	        this.mapEquals = source["mapEquals"];
+	        this.searchSubstring = source["searchSubstring"];
+	    }
+	}
+	export class HistoryLine {
+	    ip: string;
+	    gamePort: number;
+	    queryPort: number;
+	    name: string;
+	    atUnix: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new HistoryLine(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.ip = source["ip"];
+	        this.gamePort = source["gamePort"];
+	        this.queryPort = source["queryPort"];
+	        this.name = source["name"];
+	        this.atUnix = source["atUnix"];
+	    }
+	}
+	export class ServerRow {
+	    name: string;
+	    mapName: string;
+	    perspective: string;
+	    provider: string;
+	    modded: boolean;
+	    inGameTime: string;
+	    queueSize: number;
+	    players: number;
+	    maxPlayers: number;
+	    address: string;
+	    queryPort: number;
+	    gamePort: number;
+	    queryHost: string;
+	    ping: number;
+	    distanceLabel: string;
+	    steamId?: string;
+	    workshopModIds?: string[];
+	    modNames?: string[];
+	
+	    static createFrom(source: any = {}) {
+	        return new ServerRow(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.name = source["name"];
+	        this.mapName = source["mapName"];
+	        this.perspective = source["perspective"];
+	        this.provider = source["provider"];
+	        this.modded = source["modded"];
+	        this.inGameTime = source["inGameTime"];
+	        this.queueSize = source["queueSize"];
+	        this.players = source["players"];
+	        this.maxPlayers = source["maxPlayers"];
+	        this.address = source["address"];
+	        this.queryPort = source["queryPort"];
+	        this.gamePort = source["gamePort"];
+	        this.queryHost = source["queryHost"];
+	        this.ping = source["ping"];
+	        this.distanceLabel = source["distanceLabel"];
+	        this.steamId = source["steamId"];
+	        this.workshopModIds = source["workshopModIds"];
+	        this.modNames = source["modNames"];
+	    }
+	}
+	export class Settings {
+	    playerName: string;
+	    steamWebApiKey: string;
+	    battlemetricsToken: string;
+	    steamLaunchCommand: string;
+	    steamRootPath: string;
+	    dayZBranch: string;
+	    fullscreen: boolean;
+	    debug: boolean;
+	    modInstallAuto: boolean;
+	    favorites: Favorite[];
+	    quickFavorite?: Favorite;
+	    quickFavoriteLabel: string;
+	    history: HistoryLine[];
+	    steamCooldownUntil: number;
+	    geoIpDatabasePath: string;
+	    lanQueryPort: number;
+	    clientLat: number;
+	    clientLon: number;
+	    clientGeoUpdated: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new Settings(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.playerName = source["playerName"];
+	        this.steamWebApiKey = source["steamWebApiKey"];
+	        this.battlemetricsToken = source["battlemetricsToken"];
+	        this.steamLaunchCommand = source["steamLaunchCommand"];
+	        this.steamRootPath = source["steamRootPath"];
+	        this.dayZBranch = source["dayZBranch"];
+	        this.fullscreen = source["fullscreen"];
+	        this.debug = source["debug"];
+	        this.modInstallAuto = source["modInstallAuto"];
+	        this.favorites = this.convertValues(source["favorites"], Favorite);
+	        this.quickFavorite = this.convertValues(source["quickFavorite"], Favorite);
+	        this.quickFavoriteLabel = source["quickFavoriteLabel"];
+	        this.history = this.convertValues(source["history"], HistoryLine);
+	        this.steamCooldownUntil = source["steamCooldownUntil"];
+	        this.geoIpDatabasePath = source["geoIpDatabasePath"];
+	        this.lanQueryPort = source["lanQueryPort"];
+	        this.clientLat = source["clientLat"];
+	        this.clientLon = source["clientLon"];
+	        this.clientGeoUpdated = source["clientGeoUpdated"];
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	export class SteamKeyValidation {
+	    ok: boolean;
+	    message: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new SteamKeyValidation(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.ok = source["ok"];
+	        this.message = source["message"];
+	    }
+	}
+
+}
+
+export namespace workshop {
+	
+	export class Item {
+	    id: string;
+	    name: string;
+	    path: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new Item(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.name = source["name"];
+	        this.path = source["path"];
+	    }
+	}
+
+}
+

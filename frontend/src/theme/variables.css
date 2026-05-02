@@ -1,0 +1,12 @@
+:root {
+  --bg: #12161e;
+  --bg-elevated: #1a202c;
+  --border: #2d3748;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --accent: #38bdf8;
+  --accent-hover: #0ea5e9;
+  --danger: #f87171;
+  --radius: 8px;
+  --font: "Nunito", system-ui, sans-serif;
+}

@@ -1,28 +1,27 @@
-import {useState} from 'react';
-import logo from './assets/images/logo-universal.png';
-import './App.css';
-import {Greet} from "../wailsjs/go/main/App";
+import {BrowserRouter, Navigate, Route, Routes} from 'react-router-dom';
+import {AppShell} from './shared/AppShell';
+import {SettingsPage} from './features/settings/SettingsPage';
+import {ServerBrowserPage} from './features/server-browser/ServerBrowserPage';
+import {FavoritesPage} from './features/favorites/FavoritesPage';
+import {HistoryPage} from './features/history/HistoryPage';
+import {ModsPage} from './features/mods/ModsPage';
+import './theme/variables.css';
 
 function App() {
-    const [resultText, setResultText] = useState("Please enter your name below 👇");
-    const [name, setName] = useState('');
-    const updateName = (e: any) => setName(e.target.value);
-    const updateResultText = (result: string) => setResultText(result);
-
-    function greet() {
-        Greet(name).then(updateResultText);
-    }
-
-    return (
-        <div id="App">
-            <img src={logo} id="logo" alt="logo"/>
-            <div id="result" className="result">{resultText}</div>
-            <div id="input" className="input-box">
-                <input id="name" className="input" onChange={updateName} autoComplete="off" name="input" type="text"/>
-                <button className="btn" onClick={greet}>Greet</button>
-            </div>
-        </div>
-    )
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<AppShell />}>
+          <Route index element={<Navigate to="/browse" replace />} />
+          <Route path="browse" element={<ServerBrowserPage />} />
+          <Route path="settings" element={<SettingsPage />} />
+          <Route path="favorites" element={<FavoritesPage />} />
+          <Route path="history" element={<HistoryPage />} />
+          <Route path="mods" element={<ModsPage />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;
