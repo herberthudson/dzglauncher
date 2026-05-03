@@ -404,7 +404,8 @@ func (a *App) LaunchConnect(row domain.ServerRow) error {
 	if len(row.WorkshopModIDs) > 0 {
 		var missing []string
 		var werr error
-		modParam, missing, werr = workshop.ModParamFromWorkshopIDs(cfg.SteamRootPath, cfg.DayZBranch, row.WorkshopModIDs)
+		gameRoot := workshop.DayZGameInstallRoot(cfg.SteamRootPath, cfg.DayZInstallPath)
+		modParam, missing, werr = workshop.ModParamFromWorkshopIDs(cfg.SteamRootPath, cfg.DayZBranch, gameRoot, row.WorkshopModIDs)
 		if werr != nil {
 			return werr
 		}

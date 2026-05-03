@@ -13,6 +13,7 @@ func buildApplaunchArgv(appID, host string, gamePort int, playerName, modParam s
 	addr := net.JoinHostPort(strings.TrimSpace(host), strconv.Itoa(gamePort))
 	out := []string{
 		"-applaunch", appID,
+		"-connect=" + addr,
 		"-nolauncher",
 		"-nosplash",
 		"-skipintro",
@@ -23,7 +24,6 @@ func buildApplaunchArgv(appID, host string, gamePort int, playerName, modParam s
 	if modParam != "" {
 		out = append(out, "-mod="+modParam)
 	}
-	out = append(out, "-connect="+addr)
 	return out
 }
 

@@ -46,6 +46,8 @@
     "steamCmd": "Comando Steam",
     "steamRoot": "Carpeta raíz de Steam (workshop)",
     "steamRootPlaceholder": "ej.: ~/.local/share/Steam o ruta absoluta",
+    "dayZInstallPath": "Carpeta de instalación de DayZ (opcional)",
+    "dayZInstallPathPlaceholder": "vacío = steamapps/common/DayZ bajo la raíz de Steam",
     "dayzBranch": "Rama de DayZ",
     "stable": "Estable (221100)",
     "experimental": "Experimental (1024020)",

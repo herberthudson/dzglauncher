@@ -46,6 +46,8 @@
     "steamCmd": "Steam command",
     "steamRoot": "Steam root folder (workshop)",
     "steamRootPlaceholder": "e.g. ~/.local/share/Steam or absolute path",
+    "dayZInstallPath": "DayZ install folder (optional)",
+    "dayZInstallPathPlaceholder": "leave empty for steamapps/common/DayZ under Steam root",
     "dayzBranch": "DayZ branch",
     "stable": "Stable (221100)",
     "experimental": "Experimental (1024020)",

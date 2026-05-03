@@ -146,6 +146,15 @@ export function SettingsPage() {
           <input id="settings-steam-root" value={s.steamRootPath} onChange={bind('steamRootPath')} placeholder={t('settings.steamRootPlaceholder')} />
         </div>
         <div className="field">
+          <label htmlFor="settings-dayz-install">{t('settings.dayZInstallPath')}</label>
+          <input
+            id="settings-dayz-install"
+            value={s.dayZInstallPath || ''}
+            onChange={bind('dayZInstallPath')}
+            placeholder={t('settings.dayZInstallPathPlaceholder')}
+          />
+        </div>
+        <div className="field">
           <label htmlFor="settings-dayz-branch">{t('settings.dayzBranch')}</label>
           <DsSelect
             id="settings-dayz-branch"

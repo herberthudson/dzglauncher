@@ -154,6 +154,7 @@ export namespace domain {
 	    battlemetricsToken: string;
 	    steamLaunchCommand: string;
 	    steamRootPath: string;
+	    dayZInstallPath?: string;
 	    dayZBranch: string;
 	    fullscreen: boolean;
 	    debug: boolean;
@@ -183,6 +184,7 @@ export namespace domain {
 	        this.battlemetricsToken = source["battlemetricsToken"];
 	        this.steamLaunchCommand = source["steamLaunchCommand"];
 	        this.steamRootPath = source["steamRootPath"];
+	        this.dayZInstallPath = source["dayZInstallPath"];
 	        this.dayZBranch = source["dayZBranch"];
 	        this.fullscreen = source["fullscreen"];
 	        this.debug = source["debug"];

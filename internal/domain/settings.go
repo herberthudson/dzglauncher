@@ -87,6 +87,7 @@ type Settings struct {
 	BattlemetricsToken string        `json:"battlemetricsToken"`
 	SteamLaunchCommand string        `json:"steamLaunchCommand"`
 	SteamRootPath      string        `json:"steamRootPath"`
+	DayZInstallPath    string        `json:"dayZInstallPath,omitempty"`
 	DayZBranch         string        `json:"dayZBranch"`
 	Fullscreen         bool          `json:"fullscreen"`
 	Debug              bool          `json:"debug"`
