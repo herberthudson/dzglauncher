@@ -6,7 +6,9 @@ import {domain} from '../../../wailsjs/go/models';
 import {browseSessionPayload, loadBrowseSessionMigrate} from './browseSession';
 import {mapQuickFavError} from '../../shared/favoriteRows';
 import {DsSelect} from '../../shared/DsSelect';
+import {PageSizeInput} from '../../shared/PageSizeInput';
 import {PageHeader} from '../../shared/PageHeader';
+import {clampPageSize} from '../../shared/pageSizeConstants';
 import {formatPlayersWithQueue} from '../../shared/formatPlayersWithQueue';
 import {ServerAddressCell} from '../../shared/ServerAddressCell';
 import {ServerJoinModal} from '../../shared/ServerJoinModal';
@@ -58,18 +60,6 @@ function filterFields(f: domain.FilterState) {
 
 function patchFilter(base: domain.FilterState, patch: Partial<ReturnType<typeof filterFields>>): domain.FilterState {
   return domain.FilterState.createFrom({...filterFields(base), ...patch});
-}
-
-const PAGE_PRESETS = [10, 20, 50, 100] as const;
-
-function clampPageSize(n: number) {
-  if (!Number.isFinite(n) || n < 1) {
-    return 1;
-  }
-  if (n > 500) {
-    return 500;
-  }
-  return Math.floor(n);
 }
 
 export function ServerBrowserPage() {
@@ -254,13 +244,6 @@ export function ServerBrowserPage() {
       .finally(() => setLoading(false));
   };
 
-  const presetValue = PAGE_PRESETS.includes(pageSize as (typeof PAGE_PRESETS)[number]) ? String(pageSize) : 'custom';
-
-  const perPageSelectOptions = useMemo(
-    () => [...PAGE_PRESETS.map((n) => ({value: String(n), label: String(n)})), {value: 'custom', label: t('browse.other')}],
-    [t],
-  );
-
   const mapSelectOptions = useMemo(() => {
     const sorted = [...knownMapNames].sort((a, b) => a.localeCompare(b, undefined, {sensitivity: 'base'}));
     return [{value: '', label: t('browse.allMaps')}, ...sorted.map((m) => ({value: m, label: m}))];
@@ -335,34 +318,16 @@ export function ServerBrowserPage() {
               </p>
               <div className="browse-table-toolbar-actions">
                 <span className="browse-toolbar-label">{t('browse.perPage')}</span>
-                <DsSelect
+                <PageSizeInput
+                  id="browse-page-size"
+                  value={pageSize}
+                  disabled={loading}
                   ariaLabel={t('browse.perPage')}
-                  width="auto"
-                  className="ds-select-w-compact"
-                  value={presetValue}
-                  options={perPageSelectOptions}
-                  onChange={(v) => {
-                    if (v === 'custom') {
-                      return;
-                    }
-                    setPageSize(parseInt(v, 10));
+                  onChange={(n) => {
+                    setPageSize(n);
                     setPage(1);
                   }}
                 />
-                <label className="browse-page-size-num">
-                  <span>{t('browse.number')}</span>
-                  <input
-                    type="number"
-                    min={1}
-                    max={500}
-                    value={pageSize}
-                    onChange={(e) => {
-                      const n = clampPageSize(parseInt(e.target.value, 10));
-                      setPageSize(n);
-                      setPage(1);
-                    }}
-                  />
-                </label>
                 <div className="browse-pagination-btns">
                   <button type="button" className="btn btn-secondary" disabled={page <= 1 || loading} onClick={() => setPage(1)} aria-label={t('browse.pageFirst')}>
                     ««

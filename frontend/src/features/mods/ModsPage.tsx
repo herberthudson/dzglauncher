@@ -3,22 +3,11 @@ import {useTranslation} from 'react-i18next';
 import {ExternalLink, Package, Rows3, Trash2, X} from 'lucide-react';
 import * as App from '../../../wailsjs/go/main/App';
 import {workshop} from '../../../wailsjs/go/models';
-import {DsSelect} from '../../shared/DsSelect';
+import {PageSizeInput} from '../../shared/PageSizeInput';
 import {PageHeader} from '../../shared/PageHeader';
+import {clampPageSize} from '../../shared/pageSizeConstants';
 import {formatBytes} from '../../shared/formatBytes';
 import {workshopFolderDisplayPath} from '../../shared/workshopDisplayPath';
-
-const PAGE_PRESETS = [10, 20, 50, 100] as const;
-
-function clampPageSize(n: number) {
-  if (!Number.isFinite(n) || n < 1) {
-    return 1;
-  }
-  if (n > 500) {
-    return 500;
-  }
-  return Math.floor(n);
-}
 
 type SortCol = 'id' | 'name' | 'path' | 'size';
 
@@ -34,7 +23,7 @@ export function ModsPage() {
   const [sortCol, setSortCol] = useState<SortCol>('name');
   const [sortAsc, setSortAsc] = useState(true);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(() => clampPageSize(10));
   const [sel, setSel] = useState(() => new Set<string>());
   const [busy, setBusy] = useState(false);
 
@@ -194,13 +183,6 @@ export function ModsPage() {
     deletePaths(paths);
   };
 
-  const presetValue = PAGE_PRESETS.includes(pageSize as (typeof PAGE_PRESETS)[number]) ? String(pageSize) : 'custom';
-
-  const perPageSelectOptions = useMemo(
-    () => [...PAGE_PRESETS.map((n) => ({value: String(n), label: String(n)})), {value: 'custom', label: t('mods.other')}],
-    [t],
-  );
-
   return (
     <div>
       <PageHeader icon={Package} title={t('mods.title')} description={t('mods.subtitle')} />
@@ -248,33 +230,16 @@ export function ModsPage() {
               {t('mods.deleteSel', {count: sel.size})}
             </button>
             <span className="browse-toolbar-label">{t('browse.perPage')}</span>
-            <DsSelect
+            <PageSizeInput
+              id="mods-page-size"
+              value={pageSize}
+              disabled={busy}
               ariaLabel={t('browse.perPage')}
-              width="auto"
-              className="ds-select-w-compact"
-              value={presetValue}
-              options={perPageSelectOptions}
-              onChange={(v) => {
-                if (v === 'custom') {
-                  return;
-                }
-                setPageSize(parseInt(v, 10));
+              onChange={(n) => {
+                setPageSize(n);
                 setPage(1);
               }}
             />
-            <label className="browse-page-size-num">
-              <span>{t('browse.number')}</span>
-              <input
-                type="number"
-                min={1}
-                max={500}
-                value={pageSize}
-                onChange={(e) => {
-                  setPageSize(clampPageSize(parseInt(e.target.value, 10)));
-                  setPage(1);
-                }}
-              />
-            </label>
           </div>
         </div>
         <div className="table-wrap browse-table-scroll">

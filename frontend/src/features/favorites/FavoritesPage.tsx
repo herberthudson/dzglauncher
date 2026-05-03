@@ -4,24 +4,13 @@ import {Bookmark, Package, Play, Server, Star, Trash2} from 'lucide-react';
 import * as App from '../../../wailsjs/go/main/App';
 import {domain} from '../../../wailsjs/go/models';
 import {favoriteKeyParts, favoritesKeySet, favoritesOnlyRows, quickFavoriteEntries, quickFavoritesToRows, rowKey} from '../../shared/favoriteRows';
-import {DsSelect} from '../../shared/DsSelect';
+import {PageSizeInput} from '../../shared/PageSizeInput';
 import {PageHeader} from '../../shared/PageHeader';
+import {clampPageSize} from '../../shared/pageSizeConstants';
 import {formatPlayersWithQueue} from '../../shared/formatPlayersWithQueue';
 import {ServerAddressCell} from '../../shared/ServerAddressCell';
 import {ServerJoinModal} from '../../shared/ServerJoinModal';
 import {ServerPasswordCell} from '../../shared/ServerPasswordCell';
-
-const PAGE_PRESETS = [10, 20, 50, 100] as const;
-
-function clampPageSize(n: number) {
-  if (!Number.isFinite(n) || n < 1) {
-    return 1;
-  }
-  if (n > 500) {
-    return 500;
-  }
-  return Math.floor(n);
-}
 
 function FavoritesTableHead() {
   const {t} = useTranslation();
@@ -146,7 +135,7 @@ export function FavoritesPage() {
   const [err, setErr] = useState('');
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(() => clampPageSize(10));
   const [joinModalRow, setJoinModalRow] = useState<domain.ServerRow | null>(null);
 
   const reload = () => App.LoadSettings().then(setS);
@@ -176,11 +165,6 @@ export function FavoritesPage() {
     const start = (page - 1) * pageSize;
     return otherRows.slice(start, start + pageSize);
   }, [otherRows, page, pageSize]);
-
-  const perPageSelectOptions = useMemo(
-    () => [...PAGE_PRESETS.map((n) => ({value: String(n), label: String(n)})), {value: 'custom', label: t('browse.other')}],
-    [t],
-  );
 
   const handleRemoveFavorite = useCallback((row: domain.ServerRow, _settings: domain.Settings) => {
     App.RemoveFavorite(row.queryHost, row.gamePort, row.queryPort)
@@ -228,8 +212,6 @@ export function FavoritesPage() {
       .catch((e) => setErr(String(e)))
       .finally(() => setLoading(false));
   };
-
-  const presetValue = PAGE_PRESETS.includes(pageSize as (typeof PAGE_PRESETS)[number]) ? String(pageSize) : 'custom';
 
   const hasQuick = quickEntries.length > 0;
   const hasAnyFavorite = hasQuick || otherRows.length > 0;
@@ -293,34 +275,16 @@ export function FavoritesPage() {
               <p className="browse-page-line">{loading ? t('common.processing') : t('favorites.pageLine', {slice: pageSlice.length, total: otherRows.length})}</p>
               <div className="browse-table-toolbar-actions">
                 <span className="browse-toolbar-label">{t('browse.perPage')}</span>
-                <DsSelect
+                <PageSizeInput
+                  id="favorites-page-size"
+                  value={pageSize}
+                  disabled={loading}
                   ariaLabel={t('browse.perPage')}
-                  width="auto"
-                  className="ds-select-w-compact"
-                  value={presetValue}
-                  options={perPageSelectOptions}
-                  onChange={(v) => {
-                    if (v === 'custom') {
-                      return;
-                    }
-                    setPageSize(parseInt(v, 10));
+                  onChange={(n) => {
+                    setPageSize(n);
                     setPage(1);
                   }}
                 />
-                <label className="browse-page-size-num">
-                  <span>{t('browse.number')}</span>
-                  <input
-                    type="number"
-                    min={1}
-                    max={500}
-                    value={pageSize}
-                    onChange={(e) => {
-                      const n = clampPageSize(parseInt(e.target.value, 10));
-                      setPageSize(n);
-                      setPage(1);
-                    }}
-                  />
-                </label>
                 <div className="browse-pagination-btns">
                   <button type="button" className="btn btn-secondary" disabled={page <= 1 || loading} onClick={() => setPage(1)} aria-label={t('browse.pageFirst')}>
                     ««

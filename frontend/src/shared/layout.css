@@ -874,6 +874,37 @@ table.data tr:hover td {
   max-width: none;
 }
 
+.page-size-combo {
+  display: inline-flex;
+  align-items: stretch;
+  vertical-align: middle;
+}
+
+.page-size-combo-input {
+  width: 5.5rem;
+  min-height: 2.375rem;
+  padding: 0.45rem 0.55rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background-color: var(--bg-input);
+  color: var(--text);
+  box-sizing: border-box;
+  font-family: inherit;
+  font-size: 0.875rem;
+  line-height: 1.35;
+}
+
+.page-size-combo-input:focus-visible {
+  outline: none;
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 1px var(--border-focus);
+}
+
+.page-size-combo-input:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .browse-pagination-btns {
   display: flex;
   gap: 0.35rem;
