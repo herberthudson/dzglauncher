@@ -9,6 +9,7 @@ import {DsSelect} from '../../shared/DsSelect';
 import {PageHeader} from '../../shared/PageHeader';
 import {ServerAddressCell} from '../../shared/ServerAddressCell';
 import {ServerJoinModal} from '../../shared/ServerJoinModal';
+import {ServerPasswordCell} from '../../shared/ServerPasswordCell';
 
 function defaultFilters(): domain.FilterState {
   return domain.FilterState.createFrom({
@@ -391,6 +392,9 @@ export function ServerBrowserPage() {
                     <th scope="col" title={t('browse.thNameLong')}>
                       {t('browse.thName')}
                     </th>
+                    <th scope="col" className="server-password-th" title={t('browse.thPasswordLong')}>
+                      {t('browse.thPassword')}
+                    </th>
                     <th scope="col" title={t('browse.thMapLong')}>
                       {t('browse.thMap')}
                     </th>
@@ -427,6 +431,9 @@ export function ServerBrowserPage() {
                   {pageSlice.map((row) => (
                     <tr key={rowKey(row)}>
                       <td style={{maxWidth: '14rem', whiteSpace: 'normal'}}>{row.name}</td>
+                      <td className="server-password-td">
+                        <ServerPasswordCell row={row} />
+                      </td>
                       <td>{row.mapName}</td>
                       <td>{row.perspective}</td>
                       <td>{row.provider}</td>

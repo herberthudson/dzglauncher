@@ -9,6 +9,7 @@ import {historyEntries} from '../../shared/historyRows';
 import {PageHeader} from '../../shared/PageHeader';
 import {ServerAddressCell} from '../../shared/ServerAddressCell';
 import {ServerJoinModal} from '../../shared/ServerJoinModal';
+import {ServerPasswordCell} from '../../shared/ServerPasswordCell';
 
 const PAGE_PRESETS = [10, 20, 50, 100] as const;
 
@@ -22,29 +23,6 @@ function clampPageSize(n: number) {
   return Math.floor(n);
 }
 
-function rowWithPing(row: domain.ServerRow, ping: number): domain.ServerRow {
-  return domain.ServerRow.createFrom({
-    name: row.name,
-    mapName: row.mapName ?? '',
-    perspective: row.perspective ?? '',
-    provider: row.provider ?? '',
-    modded: !!row.modded,
-    inGameTime: row.inGameTime ?? '',
-    queueSize: row.queueSize ?? 0,
-    players: row.players ?? 0,
-    maxPlayers: row.maxPlayers ?? 0,
-    address: row.address,
-    queryPort: row.queryPort,
-    gamePort: row.gamePort,
-    queryHost: row.queryHost,
-    ping,
-    distanceLabel: row.distanceLabel ?? '',
-    workshopModIds: row.workshopModIds ? [...row.workshopModIds] : [],
-    steamId: row.steamId,
-    modNames: row.modNames ? [...row.modNames] : [],
-  });
-}
-
 export function HistoryPage() {
   const {t, i18n} = useTranslation();
   const [s, setS] = useState<domain.Settings | null>(null);
@@ -53,7 +31,7 @@ export function HistoryPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [joinModalRow, setJoinModalRow] = useState<domain.ServerRow | null>(null);
-  const [pingByKey, setPingByKey] = useState<Record<string, number>>({});
+  const [rowMergedByKey, setRowMergedByKey] = useState<Record<string, domain.ServerRow>>({});
 
   const reload = useCallback(() => {
     return App.LoadSettings()
@@ -74,7 +52,7 @@ export function HistoryPage() {
   const hist = s && Array.isArray(s.history) ? s.history : [];
 
   useEffect(() => {
-    setPingByKey({});
+    setRowMergedByKey({});
   }, [s]);
 
   const allEntries = useMemo(() => historyEntries(hist), [hist]);
@@ -120,10 +98,10 @@ export function HistoryPage() {
     setLoading(true);
     App.RefreshServersPing(rows)
       .then((updated) => {
-        setPingByKey((prev) => {
+        setRowMergedByKey((prev) => {
           const next = {...prev};
           for (const u of updated) {
-            next[rowKey(u)] = u.ping;
+            next[rowKey(u)] = u;
           }
           return next;
         });
@@ -209,6 +187,9 @@ export function HistoryPage() {
                     <th scope="col" title={t('browse.thNameLong')}>
                       {t('browse.thName')}
                     </th>
+                    <th scope="col" className="server-password-th" title={t('browse.thPasswordLong')}>
+                      {t('browse.thPassword')}
+                    </th>
                     <th scope="col" title={t('browse.thMapLong')}>
                       {t('browse.thMap')}
                     </th>
@@ -244,8 +225,8 @@ export function HistoryPage() {
                 <tbody>
                   {pageSlice.map(({row: baseRow, historyIndex, atUnix}) => {
                     const k = rowKey(baseRow);
-                    const p = pingByKey[k];
-                    const row = p != null ? rowWithPing(baseRow, p) : baseRow;
+                    const merged = rowMergedByKey[k];
+                    const row = merged ?? baseRow;
                     const when = formatConnected(atUnix);
                     return (
                       <tr key={k + ':' + historyIndex}>
@@ -256,6 +237,9 @@ export function HistoryPage() {
                               {t('history.connectedAt', {when})}
                             </div>
                           ) : null}
+                        </td>
+                        <td className="server-password-td">
+                          <ServerPasswordCell row={row} />
                         </td>
                         <td>{row.mapName}</td>
                         <td>{row.perspective}</td>

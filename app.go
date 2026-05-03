@@ -197,6 +197,8 @@ func (a *App) RefreshServersPing(rows []domain.ServerRow) ([]domain.ServerRow, e
 		}
 		out[i].Players = info.Players
 		out[i].MaxPlayers = info.MaxPlayers
+		pr := info.PasswordRequired
+		out[i].PasswordRequired = &pr
 	}
 	return out, nil
 }

@@ -448,6 +448,41 @@ table.data th {
   color: var(--text-muted);
 }
 
+th.server-password-th,
+td.server-password-td {
+  text-align: center;
+  width: 3rem;
+  max-width: 3.5rem;
+}
+
+.server-password-cell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  vertical-align: middle;
+}
+
+.server-password-locked {
+  cursor: default;
+  color: var(--danger);
+}
+
+.server-password-locked:hover,
+.server-password-locked:focus-visible {
+  filter: brightness(1.12);
+}
+
+.server-password-open {
+  cursor: default;
+  opacity: 0.88;
+}
+
+.server-password-unknown {
+  cursor: default;
+  opacity: 0.62;
+}
+
 th.mods-th-size {
   text-align: right;
 }

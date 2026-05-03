@@ -15,11 +15,12 @@ import (
 const rulesAttemptTimeout = 5 * time.Second
 
 type InfoResult struct {
-	Name       string
-	Map        string
-	Players    int
-	MaxPlayers int
-	PingMS     int
+	Name             string
+	Map              string
+	Players          int
+	MaxPlayers       int
+	PingMS           int
+	PasswordRequired bool
 }
 
 func Info(host string, queryPort int, timeout time.Duration) (InfoResult, error) {
@@ -46,17 +47,18 @@ func Info(host string, queryPort int, timeout time.Duration) (InfoResult, error)
 		ping = 1
 	}
 	return InfoResult{
-		Name:       strings.TrimSpace(si.Name),
-		Map:        strings.TrimSpace(strings.ToLower(si.Map)),
-		Players:    int(si.Players),
-		MaxPlayers: int(si.MaxPlayers),
-		PingMS:     ping,
+		Name:             strings.TrimSpace(si.Name),
+		Map:              strings.TrimSpace(strings.ToLower(si.Map)),
+		Players:          int(si.Players),
+		MaxPlayers:       int(si.MaxPlayers),
+		PingMS:           ping,
+		PasswordRequired: si.Visibility,
 	}, nil
 }
 
 type RulesResult struct {
-	Pairs            map[string]string
-	ModWorkshopIDs   []string
+	Pairs          map[string]string
+	ModWorkshopIDs []string
 }
 
 var reWorkshop = regexp.MustCompile(`\b\d{8,12}\b`)

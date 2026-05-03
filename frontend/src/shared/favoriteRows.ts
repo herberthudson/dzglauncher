@@ -28,6 +28,7 @@ export function favoriteToServerRow(f: domain.Favorite): domain.ServerRow {
     ping,
     distanceLabel: f.distanceLabel ?? '',
     workshopModIds: f.workshopModIds ? [...f.workshopModIds] : [],
+    passwordRequired: f.passwordRequired,
   });
 }
 

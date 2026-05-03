@@ -17,6 +17,7 @@ export namespace domain {
 	    ping?: number;
 	    distanceLabel?: string;
 	    workshopModIds?: string[];
+	    passwordRequired?: boolean;
 	
 	    static createFrom(source: any = {}) {
 	        return new Favorite(source);
@@ -40,6 +41,7 @@ export namespace domain {
 	        this.ping = source["ping"];
 	        this.distanceLabel = source["distanceLabel"];
 	        this.workshopModIds = source["workshopModIds"];
+	        this.passwordRequired = source["passwordRequired"];
 	    }
 	}
 	export class FilterState {
@@ -121,6 +123,7 @@ export namespace domain {
 	    steamId?: string;
 	    workshopModIds?: string[];
 	    modNames?: string[];
+	    passwordRequired?: boolean;
 	
 	    static createFrom(source: any = {}) {
 	        return new ServerRow(source);
@@ -146,6 +149,7 @@ export namespace domain {
 	        this.steamId = source["steamId"];
 	        this.workshopModIds = source["workshopModIds"];
 	        this.modNames = source["modNames"];
+	        this.passwordRequired = source["passwordRequired"];
 	    }
 	}
 	export class Settings {
