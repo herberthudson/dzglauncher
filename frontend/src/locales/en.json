@@ -163,7 +163,7 @@
     "thProvLong": "Host type or provider category (official, community, etc.).",
     "thModsLong": "Whether the server runs modifications (mods).",
     "thTimeLong": "In-game world time (day/night cycle on the map).",
-    "thPlayersLong": "Players online versus the configured player cap.",
+    "thPlayersLong": "Players online versus the cap; when the server reports a join queue via Steam or A2S, the value is shown as current/max+queue.",
     "thAddrLong": "Connection address (IP and ports).",
     "toggleAddrShow": "Show address",
     "toggleAddrHide": "Hide address",

@@ -86,6 +86,9 @@ func Scan(ctx context.Context, queryPort int) []domain.ServerRow {
 				Ping:          info.PingMS,
 				DistanceLabel: "LAN",
 			}
+			if info.QueueSizeFromInfo {
+				row.QueueSize = info.QueueSize
+			}
 			pr := info.PasswordRequired
 			row.PasswordRequired = &pr
 			mu.Lock()

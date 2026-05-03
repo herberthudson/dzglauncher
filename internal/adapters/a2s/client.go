@@ -10,17 +10,34 @@ import (
 
 	wa2s "github.com/woozymasta/a2s/pkg/a2s"
 	"github.com/woozymasta/a2s/pkg/a3sb"
+	"github.com/woozymasta/a2s/pkg/keywords"
 )
+
+const dayZAppIDStable uint64 = 221100
+const dayZAppIDExperimental uint64 = 1024020
 
 const rulesAttemptTimeout = 5 * time.Second
 
 type InfoResult struct {
-	Name             string
-	Map              string
-	Players          int
-	MaxPlayers       int
-	PingMS           int
-	PasswordRequired bool
+	Name              string
+	Map               string
+	Players           int
+	MaxPlayers        int
+	PingMS            int
+	PasswordRequired  bool
+	QueueSize         int
+	QueueSizeFromInfo bool
+}
+
+func parseDayZQueueFromInfo(si *wa2s.Info) (known bool, queue int) {
+	if si == nil || len(si.Keywords) == 0 {
+		return false, 0
+	}
+	id := si.ID
+	if id != dayZAppIDStable && id != dayZAppIDExperimental {
+		return false, 0
+	}
+	return true, int(keywords.ParseDayZ(si.Keywords).PlayersQueue)
 }
 
 func Info(host string, queryPort int, timeout time.Duration) (InfoResult, error) {
@@ -46,13 +63,16 @@ func Info(host string, queryPort int, timeout time.Duration) (InfoResult, error)
 	if ping < 1 {
 		ping = 1
 	}
+	qKnown, q := parseDayZQueueFromInfo(si)
 	return InfoResult{
-		Name:             strings.TrimSpace(si.Name),
-		Map:              strings.TrimSpace(strings.ToLower(si.Map)),
-		Players:          int(si.Players),
-		MaxPlayers:       int(si.MaxPlayers),
-		PingMS:           ping,
-		PasswordRequired: si.Visibility,
+		Name:              strings.TrimSpace(si.Name),
+		Map:               strings.TrimSpace(strings.ToLower(si.Map)),
+		Players:           int(si.Players),
+		MaxPlayers:        int(si.MaxPlayers),
+		PingMS:            ping,
+		PasswordRequired:  si.Visibility,
+		QueueSize:         q,
+		QueueSizeFromInfo: qKnown,
 	}, nil
 }
 

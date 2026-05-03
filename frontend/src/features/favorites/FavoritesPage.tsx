@@ -6,6 +6,7 @@ import {domain} from '../../../wailsjs/go/models';
 import {favoriteKeyParts, favoritesKeySet, favoritesOnlyRows, quickFavoriteEntries, quickFavoritesToRows, rowKey} from '../../shared/favoriteRows';
 import {DsSelect} from '../../shared/DsSelect';
 import {PageHeader} from '../../shared/PageHeader';
+import {formatPlayersWithQueue} from '../../shared/formatPlayersWithQueue';
 import {ServerAddressCell} from '../../shared/ServerAddressCell';
 import {ServerJoinModal} from '../../shared/ServerJoinModal';
 import {ServerPasswordCell} from '../../shared/ServerPasswordCell';
@@ -95,9 +96,7 @@ function FavoriteTableRow({row, settings, mode, quickSlotIndex, favoriteKeys, on
       <td>{row.provider}</td>
       <td>{row.modded ? t('common.yes') : t('common.no')}</td>
       <td>{row.inGameTime}</td>
-      <td>
-        {row.players}/{row.maxPlayers}
-      </td>
+      <td>{formatPlayersWithQueue(row.players, row.maxPlayers, row.queueSize)}</td>
       <td style={{maxWidth: '18rem', whiteSpace: 'normal'}}>
         <ServerAddressCell address={row.address} />
       </td>

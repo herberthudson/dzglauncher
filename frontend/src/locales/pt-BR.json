@@ -163,7 +163,7 @@
     "thProvLong": "Fornecedor: categoria do servidor (oficial, comunidade, etc.).",
     "thModsLong": "Indica se o servidor usa modificação (mods).",
     "thTimeLong": "Hora do mundo dentro do jogo (ciclo dia/noite no mapa).",
-    "thPlayersLong": "Jogadores online em relação ao limite máximo permitido.",
+    "thPlayersLong": "Jogadores online em relação ao limite; quando o servidor informa fila (Steam ou A2S), aparece como atual/máx+fila.",
     "thAddrLong": "Endereço para conexão (IP e portas).",
     "toggleAddrShow": "Mostrar endereço",
     "toggleAddrHide": "Ocultar endereço",
