@@ -6,6 +6,7 @@ import {domain} from '../../../wailsjs/go/models';
 import {browseSessionPayload, loadBrowseSessionMigrate} from './browseSession';
 import {DsSelect} from '../../shared/DsSelect';
 import {PageHeader} from '../../shared/PageHeader';
+import {ServerAddressCell} from '../../shared/ServerAddressCell';
 import {ServerJoinModal} from '../../shared/ServerJoinModal';
 
 function defaultFilters(): domain.FilterState {
@@ -409,26 +410,24 @@ export function ServerBrowserPage() {
                       <td>
                         {row.players}/{row.maxPlayers}
                       </td>
-                      <td>{row.address}</td>
+                      <td style={{maxWidth: '18rem', whiteSpace: 'normal'}}>
+                        <ServerAddressCell address={row.address} />
+                      </td>
                       <td>{row.ping}</td>
                       <td>{row.distanceLabel}</td>
                       <td>
-                        <div className="row-actions">
-                          <button type="button" className="btn btn-secondary" title={t('browse.connectTitle')} onClick={() => setJoinModalRow(row)}>
+                        <div className="row-actions row-actions-icon-only">
+                          <button type="button" className="btn btn-secondary" title={t('browse.connectTitle')} aria-label={t('browse.connect')} onClick={() => setJoinModalRow(row)}>
                             <Play size={14} strokeWidth={2} aria-hidden />
-                            {t('browse.connect')}
                           </button>
-                          <button type="button" className="btn btn-secondary" title={t('browse.favTitle')} onClick={() => App.ToggleFavoriteRow(row).catch((e) => setErr(String(e)))}>
+                          <button type="button" className="btn btn-secondary" title={t('browse.favTitle')} aria-label={t('browse.fav')} onClick={() => App.ToggleFavoriteRow(row).catch((e) => setErr(String(e)))}>
                             <Star size={14} strokeWidth={2} aria-hidden />
-                            {t('browse.fav')}
                           </button>
-                          <button type="button" className="btn btn-secondary" title={t('browse.quickFavTitle')} onClick={() => App.SetQuickFavorite(row, window.prompt(t('browse.quickFavPrompt'), row.name) || row.name).catch((e) => setErr(String(e)))}>
+                          <button type="button" className="btn btn-secondary" title={t('browse.quickFavTitle')} aria-label={t('browse.quickFav')} onClick={() => App.SetQuickFavorite(row, window.prompt(t('browse.quickFavPrompt'), row.name) || row.name).catch((e) => setErr(String(e)))}>
                             <BookmarkPlus size={14} strokeWidth={2} aria-hidden />
-                            {t('browse.quickFav')}
                           </button>
-                          <button type="button" className="btn btn-secondary" title={t('browse.modsA2STitle')} onClick={() => setJoinModalRow(row)}>
+                          <button type="button" className="btn btn-secondary" title={t('browse.modsA2STitle')} aria-label={t('browse.modsA2S')} onClick={() => setJoinModalRow(row)}>
                             <Package size={14} strokeWidth={2} aria-hidden />
-                            {t('browse.modsA2S')}
                           </button>
                         </div>
                       </td>

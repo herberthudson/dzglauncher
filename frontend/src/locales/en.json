@@ -147,6 +147,8 @@
     "thTimeLong": "In-game world time (day/night cycle on the map).",
     "thPlayersLong": "Players online versus the configured player cap.",
     "thAddrLong": "Connection address (IP and ports).",
+    "toggleAddrShow": "Show address",
+    "toggleAddrHide": "Hide address",
     "thPingLong": "Ping: A2S query round-trip time in milliseconds.",
     "thDistLong": "Approximate distance to the server based on your configured location.",
     "thActionsLong": "Buttons to open the join panel, favorite, quick favorite, and open the same join panel for mods (A2S).",

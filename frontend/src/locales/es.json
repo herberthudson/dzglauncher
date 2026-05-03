@@ -148,6 +148,8 @@
     "thTimeLong": "Hora del mundo dentro del juego (ciclo día/noche en el mapa).",
     "thPlayersLong": "Jugadores en línea respecto al máximo permitido.",
     "thAddrLong": "Dirección para conectar (IP y puertos).",
+    "toggleAddrShow": "Mostrar dirección",
+    "toggleAddrHide": "Ocultar dirección",
     "thPingLong": "Ping: tiempo de ida y vuelta de la consulta A2S en milisegundos.",
     "thDistLong": "Distancia aproximada al servidor según tu ubicación configurada.",
     "thActionsLong": "Botones para abrir el panel de entrada, favorito, favorito rápido y el mismo panel para mods (A2S).",

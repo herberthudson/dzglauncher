@@ -6,6 +6,7 @@ import {domain} from '../../../wailsjs/go/models';
 import {favoriteKey, favoriteKeyParts, favoritesToRows, rowKey} from '../../shared/favoriteRows';
 import {DsSelect} from '../../shared/DsSelect';
 import {PageHeader} from '../../shared/PageHeader';
+import {ServerAddressCell} from '../../shared/ServerAddressCell';
 import {ServerJoinModal} from '../../shared/ServerJoinModal';
 
 const PAGE_PRESETS = [10, 20, 50, 100] as const;
@@ -218,23 +219,24 @@ export function FavoritesPage() {
                       <td>
                         {row.players}/{row.maxPlayers}
                       </td>
-                      <td>{row.address}</td>
+                      <td style={{maxWidth: '18rem', whiteSpace: 'normal'}}>
+                        <ServerAddressCell address={row.address} />
+                      </td>
                       <td>{row.ping}</td>
                       <td>{row.distanceLabel}</td>
                       <td>
-                        <div className="row-actions">
-                          <button type="button" className="btn btn-secondary" title={t('favorites.connectTitle')} onClick={() => setJoinModalRow(row)}>
+                        <div className="row-actions row-actions-icon-only">
+                          <button type="button" className="btn btn-secondary" title={t('favorites.connectTitle')} aria-label={t('favorites.connect')} onClick={() => setJoinModalRow(row)}>
                             <Play size={14} strokeWidth={2} aria-hidden />
-                            {t('favorites.connect')}
                           </button>
-                          <button type="button" className="btn btn-secondary" title={t('favorites.modsA2STitle')} onClick={() => setJoinModalRow(row)}>
+                          <button type="button" className="btn btn-secondary" title={t('favorites.modsA2STitle')} aria-label={t('favorites.modsA2S')} onClick={() => setJoinModalRow(row)}>
                             <Package size={14} strokeWidth={2} aria-hidden />
-                            {t('favorites.modsA2S')}
                           </button>
                           <button
                             type="button"
                             className="btn btn-danger"
                             title={t('favorites.removeTitle')}
+                            aria-label={t('favorites.remove')}
                             onClick={() => {
                               const k = favoriteKeyParts(row.queryHost, row.gamePort, row.queryPort);
                               const matchesQuick = s.quickFavorite != null && favoriteKey(s.quickFavorite) === k;
@@ -245,7 +247,6 @@ export function FavoritesPage() {
                             }}
                           >
                             <Trash2 size={14} strokeWidth={2} aria-hidden />
-                            {t('favorites.remove')}
                           </button>
                         </div>
                       </td>
