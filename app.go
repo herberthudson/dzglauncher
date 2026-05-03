@@ -470,16 +470,12 @@ func (a *App) JoinModalWorkshopData(host string, queryPort int, gamePort int) ([
 	if err != nil {
 		return nil, err
 	}
-	remoteTU := make(map[string]int64)
-	remoteTitle := make(map[string]string)
+	remoteTU := make(map[string]int64, len(details))
 	for k, d := range details {
 		remoteTU[k] = d.TimeUpdated
-		if d.Title != "" {
-			remoteTitle[k] = d.Title
-		}
 	}
 	cache := cfg.WorkshopModTimeUpdated
-	rows := workshop.JoinModalRows(ids, installed, cache, remoteTU, remoteTitle)
+	rows := workshop.JoinModalRows(ids, installed, cache, details)
 	newCache := workshop.MergeWorkshopTimeCache(cloneInt64Map(cache), ids, installed, remoteTU)
 	cfg.WorkshopModTimeUpdated = newCache
 	if err := a.store.Save(cfg); err != nil {

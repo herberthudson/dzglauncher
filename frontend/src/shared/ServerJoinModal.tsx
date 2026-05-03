@@ -4,6 +4,33 @@ import {Check, Download, ExternalLink, Loader2, LogIn, RefreshCw, X} from 'lucid
 import * as App from '../../wailsjs/go/main/App';
 import {domain} from '../../wailsjs/go/models';
 
+const JOIN_MOD_DESC_CHUNK_CHARS = 10;
+const JOIN_MOD_DESC_MAX_LINES = 3;
+
+function steamWorkshopDescPlain(raw: string): string {
+  if (!raw) {
+    return '';
+  }
+  let s = raw.replace(/\r\n/g, '\n');
+  s = s.replace(/\[url=[^\]]*]([^\[]*)\[\/url]/gi, '$1');
+  s = s.replace(/\[[^\]]*]/g, '');
+  return s.replace(/\n{3,}/g, '\n\n').trim();
+}
+
+function formatDescChunked(compact: string, chunkLen: number, maxLines: number): {text: string; truncated: boolean} {
+  if (!compact) {
+    return {text: '', truncated: false};
+  }
+  const lines: string[] = [];
+  let i = 0;
+  while (i < compact.length && lines.length < maxLines) {
+    lines.push(compact.slice(i, i + chunkLen));
+    i += chunkLen;
+  }
+  const truncated = i < compact.length;
+  return {text: lines.join('\n') + (truncated ? '\n…' : ''), truncated};
+}
+
 export type ServerJoinModalProps = {
   row: domain.ServerRow | null;
   onClose: () => void;
@@ -19,6 +46,7 @@ export function ServerJoinModal({row, onClose, onRowPatched}: ServerJoinModalPro
   const [enrichErr, setEnrichErr] = useState('');
   const [launchErr, setLaunchErr] = useState('');
   const [modRows, setModRows] = useState<domain.WorkshopModRow[]>([]);
+  const [modFilter, setModFilter] = useState('');
 
   const load = useCallback(async () => {
     if (!row) {
@@ -29,6 +57,7 @@ export function ServerJoinModal({row, onClose, onRowPatched}: ServerJoinModalPro
     setEnrichErr('');
     setLaunchErr('');
     setModRows([]);
+    setModFilter('');
     try {
       const list = await App.JoinModalWorkshopData(row.queryHost, row.queryPort, row.gamePort);
       if (g !== fetchGenRef.current) {
@@ -86,6 +115,28 @@ export function ServerJoinModal({row, onClose, onRowPatched}: ServerJoinModalPro
     return () => window.clearTimeout(id);
   }, [row]);
 
+  const filteredModRows = useMemo(() => {
+    const q = modFilter.trim().toLowerCase();
+    if (!q) {
+      return modRows;
+    }
+    return modRows.filter((r) => {
+      const name = (r.name || '').toLowerCase();
+      const id = String(r.id ?? '').toLowerCase();
+      const statusCode = (r.status || '').toLowerCase();
+      const statusLabel =
+        r.status === 'ok'
+          ? t('joinModal.installed').toLowerCase()
+          : r.status === 'outdated'
+            ? t('joinModal.outdated').toLowerCase()
+            : r.status === 'missing'
+              ? t('joinModal.missing').toLowerCase()
+              : t('joinModal.statusUnknown').toLowerCase();
+      const desc = steamWorkshopDescPlain(r.description || '').toLowerCase();
+      return name.includes(q) || id.includes(q) || statusCode.includes(q) || statusLabel.includes(q) || desc.includes(q);
+    });
+  }, [modRows, modFilter, t]);
+
   const needsInstallOrUpdate = useMemo(
     () => modRows.some((r) => r.status === 'missing' || r.status === 'outdated'),
     [modRows],
@@ -124,7 +175,7 @@ export function ServerJoinModal({row, onClose, onRowPatched}: ServerJoinModalPro
       <button type="button" className="ds-modal-backdrop" aria-label={t('joinModal.close')} onClick={onClose} />
       <div
         ref={panelRef}
-        className="ds-modal-panel"
+        className="ds-modal-panel ds-modal-panel-join"
         role="dialog"
         aria-modal="true"
         aria-labelledby="join-modal-title"
@@ -143,6 +194,7 @@ export function ServerJoinModal({row, onClose, onRowPatched}: ServerJoinModalPro
           <span className="ds-modal-subtitle-label">{t('joinModal.server')}</span> {title}
         </p>
 
+        <div className="ds-modal-body ds-modal-body-join">
         {loading ? (
           <div className="ds-modal-loading" role="status" aria-live="polite">
             <Loader2 className="ds-modal-spinner" size={22} strokeWidth={2} aria-hidden />
@@ -156,70 +208,132 @@ export function ServerJoinModal({row, onClose, onRowPatched}: ServerJoinModalPro
         {!loading && !enrichErr && modRows.length === 0 ? <div className="msg msg-info ds-modal-msg">{t('joinModal.emptyMods')}</div> : null}
 
         {!loading && !enrichErr && modRows.length > 0 ? (
-          <div className="ds-modal-tablewrap">
-            <table className="data ds-modal-table">
-              <caption className="sr-only">{t('joinModal.tableCaption')}</caption>
-              <thead>
-                <tr>
-                  <th scope="col">{t('joinModal.colMod')}</th>
-                  <th scope="col">{t('joinModal.colStatus')}</th>
-                  <th scope="col">{t('joinModal.colAction')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {modRows.map((r) => (
-                  <tr key={r.id}>
-                    <td>
-                      <div className="ds-modal-modname">{r.name}</div>
-                    </td>
-                    <td>
-                      {r.status === 'ok' ? (
-                        <span className="ds-modal-status ds-modal-status-ok">{t('joinModal.installed')}</span>
-                      ) : r.status === 'outdated' ? (
-                        <span className="ds-modal-status ds-modal-status-miss">{t('joinModal.outdated')}</span>
-                      ) : (
-                        <span className="ds-modal-status ds-modal-status-miss">{t('joinModal.missing')}</span>
-                      )}
-                    </td>
-                    <td>
-                      <div className="ds-modal-mod-actions">
-                        <button
-                          type="button"
-                          className="btn btn-secondary ds-modal-mod-actionbtn"
-                          disabled={r.status === 'ok'}
-                          title={
-                            r.status === 'ok'
-                              ? t('joinModal.installInstalledTitle')
-                              : r.status === 'outdated'
-                                ? t('joinModal.updateTitle')
-                                : t('joinModal.installTitle')
-                          }
-                          onClick={() => installOrUpdate(r.id)}
-                        >
-                          {r.status === 'ok' ? <Check size={14} strokeWidth={2} aria-hidden /> : <Download size={14} strokeWidth={2} aria-hidden />}
-                          {r.status === 'ok' ? t('joinModal.installed') : r.status === 'outdated' ? t('joinModal.update') : t('joinModal.install')}
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-secondary ds-modal-mod-actionbtn"
-                          title={t('mods.steamPageTitle')}
-                          onClick={() => void App.WorkshopPage(r.id)}
-                        >
-                          <ExternalLink size={14} strokeWidth={2} aria-hidden />
-                          {t('mods.steam')}
-                        </button>
-                      </div>
-                    </td>
+          <>
+            <div className="ds-modal-filter">
+              <label htmlFor="join-modal-mod-filter">{t('joinModal.filterMods')}</label>
+              <input
+                id="join-modal-mod-filter"
+                type="search"
+                value={modFilter}
+                onChange={(e) => setModFilter(e.target.value)}
+                placeholder={t('joinModal.filterModsPlaceholder')}
+                autoComplete="off"
+              />
+            </div>
+            <div className="ds-modal-tablewrap">
+              <table className="data ds-modal-table ds-modal-table-join">
+                <caption className="sr-only">{t('joinModal.tableCaption')}</caption>
+                <thead>
+                  <tr>
+                    <th scope="col" title={t('joinModal.colPreviewLong')}>
+                      {t('joinModal.colPreview')}
+                    </th>
+                    <th scope="col">{t('joinModal.colMod')}</th>
+                    <th scope="col" title={t('joinModal.colDescLong')}>
+                      {t('joinModal.colDesc')}
+                    </th>
+                    <th scope="col">{t('joinModal.colStatus')}</th>
+                    <th scope="col">{t('joinModal.colAction')}</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {filteredModRows.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="ds-modal-filter-empty">
+                        {t('joinModal.filterNoResults')}
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredModRows.map((r) => {
+                      const descPlain = steamWorkshopDescPlain(r.description || '');
+                      const descCompact = descPlain.replace(/\s+/g, ' ').trim();
+                      const {text: descChunked} = formatDescChunked(
+                        descCompact,
+                        JOIN_MOD_DESC_CHUNK_CHARS,
+                        JOIN_MOD_DESC_MAX_LINES,
+                      );
+                      return (
+                      <tr key={r.id}>
+                        <td className="ds-modal-mod-preview-cell">
+                          {r.previewUrl ? (
+                            <img
+                              className="ds-modal-mod-thumb"
+                              src={r.previewUrl}
+                              alt=""
+                              loading="lazy"
+                              decoding="async"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                              }}
+                            />
+                          ) : (
+                            <span className="ds-modal-mod-thumb-ph" aria-hidden />
+                          )}
+                        </td>
+                        <td>
+                          <div className="ds-modal-modname">{r.name}</div>
+                        </td>
+                        <td className="ds-modal-mod-desc-cell">
+                          {descCompact ? (
+                            <div className="ds-modal-mod-desc" title={descPlain}>
+                              {descChunked}
+                            </div>
+                          ) : (
+                            <span className="ds-modal-mod-desc-empty">—</span>
+                          )}
+                        </td>
+                        <td>
+                          {r.status === 'ok' ? (
+                            <span className="ds-modal-status ds-modal-status-ok">{t('joinModal.installed')}</span>
+                          ) : r.status === 'outdated' ? (
+                            <span className="ds-modal-status ds-modal-status-miss">{t('joinModal.outdated')}</span>
+                          ) : (
+                            <span className="ds-modal-status ds-modal-status-miss">{t('joinModal.missing')}</span>
+                          )}
+                        </td>
+                        <td>
+                          <div className="ds-modal-mod-actions">
+                            <button
+                              type="button"
+                              className="btn btn-secondary ds-modal-mod-actionbtn"
+                              disabled={r.status === 'ok'}
+                              title={
+                                r.status === 'ok'
+                                  ? t('joinModal.installInstalledTitle')
+                                  : r.status === 'outdated'
+                                    ? t('joinModal.updateTitle')
+                                    : t('joinModal.installTitle')
+                              }
+                              onClick={() => installOrUpdate(r.id)}
+                            >
+                              {r.status === 'ok' ? <Check size={14} strokeWidth={2} aria-hidden /> : <Download size={14} strokeWidth={2} aria-hidden />}
+                              {r.status === 'ok' ? t('joinModal.installed') : r.status === 'outdated' ? t('joinModal.update') : t('joinModal.install')}
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-secondary ds-modal-mod-actionbtn"
+                              title={t('mods.steamPageTitle')}
+                              onClick={() => void App.WorkshopPage(r.id)}
+                            >
+                              <ExternalLink size={14} strokeWidth={2} aria-hidden />
+                              {t('mods.steam')}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </>
         ) : null}
 
         {!loading && !enrichErr && modRows.length > 0 && needsInstallOrUpdate ? (
           <p className="ds-modal-footnote">{t('joinModal.joinBlocked')}</p>
         ) : null}
+        </div>
 
         <div className="ds-modal-footer">
           <button type="button" className="btn btn-secondary ds-modal-footerbtn" disabled={loading} onClick={() => void load()}>

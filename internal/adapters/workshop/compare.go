@@ -3,6 +3,7 @@ package workshop
 import (
 	"strings"
 
+	"dzglauncher/internal/adapters/steam"
 	"dzglauncher/internal/domain"
 )
 
@@ -10,7 +11,7 @@ func NormWorkshopID(s string) string {
 	return strings.TrimSpace(s)
 }
 
-func JoinModalRows(serverIDs []string, installedByID map[string]Item, cache map[string]int64, remoteTU map[string]int64, remoteTitle map[string]string) []domain.WorkshopModRow {
+func JoinModalRows(serverIDs []string, installedByID map[string]Item, cache map[string]int64, remote map[string]steam.PublishedFileDetail) []domain.WorkshopModRow {
 	seen := make(map[string]struct{})
 	var rows []domain.WorkshopModRow
 	for _, raw := range serverIDs {
@@ -23,13 +24,14 @@ func JoinModalRows(serverIDs []string, installedByID map[string]Item, cache map[
 		}
 		seen[id] = struct{}{}
 		it, hasLocal := installedByID[id]
-		rTU, hasRemote := remoteTU[id]
+		detail, hasRemote := remote[id]
+		rTU := detail.TimeUpdated
 		name := id
 		if hasLocal && it.Name != "" {
 			name = it.Name
 		}
-		if t := remoteTitle[id]; strings.TrimSpace(t) != "" {
-			name = strings.TrimSpace(t)
+		if t := strings.TrimSpace(detail.Title); t != "" {
+			name = t
 		}
 		var st domain.WorkshopModStatus
 		switch {
@@ -54,9 +56,11 @@ func JoinModalRows(serverIDs []string, installedByID map[string]Item, cache map[
 			}
 		}
 		rows = append(rows, domain.WorkshopModRow{
-			ID:     id,
-			Name:   name,
-			Status: st,
+			ID:          id,
+			Name:        name,
+			Status:      st,
+			Description: detail.Description,
+			PreviewURL:  detail.PreviewURL,
 		})
 	}
 	return rows

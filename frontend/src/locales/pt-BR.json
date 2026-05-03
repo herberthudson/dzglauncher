@@ -19,6 +19,10 @@
     "loading": "A carregar mods (A2S), metadados Steam Workshop e instalação local…",
     "emptyMods": "O servidor não reportou IDs da Workshop via A2S. Podes usar Entrar na mesma (ligação sem -mod); se o jogo exigir mods, confirma o servidor ou a pasta Steam nas definições.",
     "colMod": "Mod",
+    "colPreview": "Capa",
+    "colPreviewLong": "Imagem de pré-visualização do item na Steam Workshop.",
+    "colDesc": "Descrição",
+    "colDescLong": "Texto da página do item na Steam (BBCode removido na pré-visualização).",
     "colStatus": "Estado",
     "colAction": "Ação",
     "installed": "Instalado",
@@ -37,7 +41,10 @@
     "joinBlockedVerify": "Não foi possível ler a pasta Workshop local. Configura a pasta raiz da Steam nas definições e usa Atualizar.",
     "listError": "Não foi possível listar mods instalados: {{detail}}",
     "close": "Fechar",
-    "tableCaption": "Mods do servidor, estado de instalação local e atalho para a Steam."
+    "tableCaption": "Mods do servidor: miniatura e descrição da Steam Workshop, estado local e ações.",
+    "filterMods": "Filtrar mods",
+    "filterModsPlaceholder": "Nome, ID, descrição ou estado (ex.: instalado, em falta)…",
+    "filterNoResults": "Nenhum mod corresponde à pesquisa."
   },
   "settings": {
     "title": "Configurações",

@@ -19,6 +19,10 @@
     "loading": "Loading server mods (A2S), Steam Workshop metadata, and local install…",
     "emptyMods": "This server did not report Workshop IDs via A2S. You can still Join (connect without -mod); if the game requires mods, check the server or your Steam folder in Settings.",
     "colMod": "Mod",
+    "colPreview": "Thumb",
+    "colPreviewLong": "Preview image from the Steam Workshop item page.",
+    "colDesc": "Description",
+    "colDescLong": "Workshop page text (tags stripped in the list preview).",
     "colStatus": "Status",
     "colAction": "Action",
     "installed": "Installed",
@@ -37,7 +41,10 @@
     "joinBlockedVerify": "Could not read the local Workshop folder. Set the Steam root in Settings and tap Refresh.",
     "listError": "Could not list installed mods: {{detail}}",
     "close": "Close",
-    "tableCaption": "Server mods, local install status, and Steam shortcut."
+    "tableCaption": "Server mods: Steam Workshop thumbnail and description, local status, and actions.",
+    "filterMods": "Filter mods",
+    "filterModsPlaceholder": "Name, ID, description, or status (e.g. installed, missing)…",
+    "filterNoResults": "No mods match your search."
   },
   "settings": {
     "title": "Settings",

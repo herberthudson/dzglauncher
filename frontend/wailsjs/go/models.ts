@@ -242,6 +242,8 @@ export namespace domain {
 	    id: string;
 	    name: string;
 	    status: string;
+	    description: string;
+	    previewUrl: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new WorkshopModRow(source);
@@ -252,6 +254,8 @@ export namespace domain {
 	        this.id = source["id"];
 	        this.name = source["name"];
 	        this.status = source["status"];
+	        this.description = source["description"];
+	        this.previewUrl = source["previewUrl"];
 	    }
 	}
 

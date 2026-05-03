@@ -881,6 +881,33 @@ table.data tr:hover td {
   overflow: hidden;
 }
 
+.ds-modal-panel-join {
+  width: min(100%, 56rem);
+  height: min(88vh, 36rem);
+  max-height: min(88vh, 36rem);
+}
+
+.ds-modal-body-join {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.ds-modal-body-join > .ds-modal-loading,
+.ds-modal-body-join > .ds-modal-msg {
+  flex-shrink: 0;
+}
+
+.ds-modal-panel-join .ds-modal-filter {
+  flex-shrink: 0;
+}
+
+.ds-modal-panel-join .ds-modal-footnote {
+  flex-shrink: 0;
+}
+
 .ds-modal-header {
   display: flex;
   align-items: flex-start;
@@ -943,6 +970,41 @@ table.data tr:hover td {
   margin: var(--ds-space-sm) var(--ds-space-md) 0 var(--ds-space-md);
 }
 
+.ds-modal-filter {
+  margin: var(--ds-space-sm) var(--ds-space-md) 0 var(--ds-space-md);
+}
+
+.ds-modal-filter label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: var(--ds-space-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.ds-modal-filter input {
+  width: 100%;
+  max-width: none;
+  box-sizing: border-box;
+  min-height: 2.375rem;
+  padding: 0.45rem 0.55rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background-color: var(--bg-input);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.875rem;
+}
+
+.ds-modal-filter-empty {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  padding: var(--ds-space-md) var(--ds-space-sm);
+}
+
 .ds-modal-tablewrap {
   margin: var(--ds-space-sm) var(--ds-space-md) 0 var(--ds-space-md);
   overflow: auto;
@@ -952,9 +1014,89 @@ table.data tr:hover td {
   background: var(--bg);
 }
 
+.ds-modal-panel-join .ds-modal-tablewrap {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+}
+
 .ds-modal-table {
   margin: 0;
   font-size: 0.8125rem;
+}
+
+.ds-modal-table-join {
+  table-layout: fixed;
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ds-modal-table-join th,
+.ds-modal-table-join td {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  vertical-align: top;
+}
+
+.ds-modal-table-join td:nth-child(2),
+.ds-modal-table-join td:nth-child(3),
+.ds-modal-table-join td:nth-child(4) {
+  overflow: hidden;
+}
+
+.ds-modal-table-join th:nth-child(5),
+.ds-modal-table-join td:nth-child(5) {
+  overflow: visible;
+}
+
+.ds-modal-table-join th:nth-child(1),
+.ds-modal-table-join td:nth-child(1) {
+  width: 3rem;
+  max-width: 3rem;
+  padding-left: 0.28rem;
+  padding-right: 0.22rem;
+}
+
+.ds-modal-table-join th:nth-child(2),
+.ds-modal-table-join td:nth-child(2) {
+  width: 21%;
+  min-width: 0;
+}
+
+.ds-modal-table-join th:nth-child(3),
+.ds-modal-table-join td:nth-child(3) {
+  width: 38%;
+  min-width: 0;
+}
+
+.ds-modal-table-join th:nth-child(4),
+.ds-modal-table-join td:nth-child(4) {
+  width: 4.35rem;
+  min-width: 3.85rem;
+  max-width: 4.75rem;
+}
+
+.ds-modal-table-join th:nth-child(5),
+.ds-modal-table-join td:nth-child(5) {
+  width: auto;
+  min-width: 13.25rem;
+  max-width: none;
+  white-space: nowrap;
+  text-align: right;
+  padding-left: 0.26rem;
+  padding-right: 0.3rem;
+}
+
+.ds-modal-table-join .ds-modal-mod-actions {
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+  gap: 0.3rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.ds-modal-table-join .ds-modal-mod-actionbtn {
+  flex-shrink: 0;
 }
 
 .ds-modal-table th,
@@ -963,15 +1105,88 @@ table.data tr:hover td {
   vertical-align: middle;
 }
 
+table.data.ds-modal-table-join th,
+table.data.ds-modal-table-join td {
+  padding: 0.3rem 0.26rem;
+  vertical-align: top;
+}
+
 .ds-modal-modname {
   font-weight: 500;
   color: var(--text);
   word-break: break-word;
 }
 
+.ds-modal-table-join .ds-modal-modname {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.35;
+  max-height: 2.75em;
+}
+
+.ds-modal-mod-preview-cell {
+  width: 3rem;
+  vertical-align: middle;
+}
+
+.ds-modal-table-join .ds-modal-mod-preview-cell {
+  vertical-align: top;
+}
+
+.ds-modal-mod-thumb {
+  display: block;
+  width: 2.75rem;
+  height: 2.75rem;
+  object-fit: cover;
+  border-radius: var(--radius);
+  background: var(--bg-hover);
+}
+
+.ds-modal-mod-thumb-ph {
+  display: block;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: var(--radius);
+  background: var(--border);
+  opacity: 0.35;
+}
+
+.ds-modal-mod-desc-cell {
+  min-width: 0;
+  vertical-align: top;
+}
+
+.ds-modal-mod-desc {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.35;
+  white-space: pre-line;
+  max-width: 100%;
+  max-height: 3.25rem;
+  overflow: hidden;
+}
+
+.ds-modal-mod-desc-empty {
+  color: var(--text-muted);
+  opacity: 0.55;
+  font-size: 0.8125rem;
+}
+
 .ds-modal-status {
   font-size: 0.75rem;
   font-weight: 600;
+}
+
+.ds-modal-table-join td:nth-child(4) .ds-modal-status {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.25;
+  max-height: 2.5em;
+  word-break: break-word;
 }
 
 .ds-modal-status-ok {

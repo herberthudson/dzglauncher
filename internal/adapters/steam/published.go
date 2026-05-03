@@ -16,6 +16,8 @@ type PublishedFileDetail struct {
 	PublishedFileID string
 	TimeUpdated     int64
 	Title           string
+	Description     string
+	PreviewURL      string
 }
 
 func parsePublishedFileID(v interface{}) string {
@@ -95,6 +97,8 @@ func parsePublishedDetailsJSON(body []byte) (map[string]PublishedFileDetail, err
 				PublishedFileID interface{} `json:"publishedfileid"`
 				TimeUpdated     int64       `json:"time_updated"`
 				Title           string      `json:"title"`
+				Description     string      `json:"description"`
+				PreviewURL      string      `json:"preview_url"`
 			} `json:"publishedfiledetails"`
 		} `json:"response"`
 	}
@@ -111,6 +115,8 @@ func parsePublishedDetailsJSON(body []byte) (map[string]PublishedFileDetail, err
 			PublishedFileID: pid,
 			TimeUpdated:     d.TimeUpdated,
 			Title:           strings.TrimSpace(d.Title),
+			Description:     strings.TrimSpace(d.Description),
+			PreviewURL:      strings.TrimSpace(d.PreviewURL),
 		}
 	}
 	return out, nil
