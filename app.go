@@ -393,7 +393,8 @@ func (a *App) AppendHistoryRow(row domain.ServerRow) error {
 	}
 	favhistory.AppendHistory(&cfg, domain.HistoryLine{
 		IP: row.QueryHost, GamePort: row.GamePort, QueryPort: row.QueryPort,
-		Name: row.Name, AtUnix: time.Now().Unix(),
+		Name: row.Name, MapName: row.MapName, Perspective: row.Perspective, Provider: row.Provider,
+		AtUnix: time.Now().Unix(),
 	}, 10)
 	return a.store.Save(cfg)
 }
@@ -444,7 +445,11 @@ func (a *App) LaunchConnect(row domain.ServerRow) error {
 	if qp <= 0 {
 		qp = 2305
 	}
-	h := domain.HistoryLine{IP: host, GamePort: gp, QueryPort: qp, Name: row.Name, AtUnix: time.Now().Unix()}
+	h := domain.HistoryLine{
+		IP: host, GamePort: gp, QueryPort: qp, Name: row.Name,
+		MapName: row.MapName, Perspective: row.Perspective, Provider: row.Provider,
+		AtUnix: time.Now().Unix(),
+	}
 	favhistory.AppendHistory(&cfg, h, 10)
 	return a.store.Save(cfg)
 }

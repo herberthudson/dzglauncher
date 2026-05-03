@@ -195,7 +195,7 @@ If **mutually exclusive pairs** are both in “exclude” mode (e.g. 1PP and 3PP
 ### 6.7 History
 
 - Append **lines** to a store: each successful join appends a record **at the end**.
-- **Do not** append again if the same logical row **already exists** anywhere in history.
+- If the same server key (**`IP:gameport:queryport`**) already exists, **replace** that entry with the latest snapshot (name, map, PP, provider, timestamp) instead of adding a duplicate.
 - Keep a **maximum** number of recent entries (this codebase uses **10**: before append, drop oldest from the **front** when over cap — see `favhistory.AppendHistory` in Go).
 - Explicit per-line removal.
 

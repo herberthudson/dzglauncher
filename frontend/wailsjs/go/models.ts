@@ -89,6 +89,9 @@ export namespace domain {
 	    gamePort: number;
 	    queryPort: number;
 	    name: string;
+	    mapName?: string;
+	    perspective?: string;
+	    provider?: string;
 	    atUnix: number;
 	
 	    static createFrom(source: any = {}) {
@@ -101,6 +104,9 @@ export namespace domain {
 	        this.gamePort = source["gamePort"];
 	        this.queryPort = source["queryPort"];
 	        this.name = source["name"];
+	        this.mapName = source["mapName"];
+	        this.perspective = source["perspective"];
+	        this.provider = source["provider"];
 	        this.atUnix = source["atUnix"];
 	    }
 	}

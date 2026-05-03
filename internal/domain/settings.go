@@ -77,11 +77,14 @@ func (f Favorite) ToServerRow() ServerRow {
 }
 
 type HistoryLine struct {
-	IP        string `json:"ip"`
-	GamePort  int    `json:"gamePort"`
-	QueryPort int    `json:"queryPort"`
-	Name      string `json:"name"`
-	AtUnix    int64  `json:"atUnix"`
+	IP          string `json:"ip"`
+	GamePort    int    `json:"gamePort"`
+	QueryPort   int    `json:"queryPort"`
+	Name        string `json:"name"`
+	MapName     string `json:"mapName,omitempty"`
+	Perspective string `json:"perspective,omitempty"`
+	Provider    string `json:"provider,omitempty"`
+	AtUnix      int64  `json:"atUnix"`
 }
 
 type Settings struct {

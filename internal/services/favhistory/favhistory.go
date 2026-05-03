@@ -46,8 +46,9 @@ func AppendHistory(cfg *domain.Settings, h domain.HistoryLine, max int) {
 		max = 10
 	}
 	k := HistoryKey(h)
-	for _, x := range cfg.History {
+	for i, x := range cfg.History {
 		if HistoryKey(x) == k {
+			cfg.History[i] = h
 			return
 		}
 	}

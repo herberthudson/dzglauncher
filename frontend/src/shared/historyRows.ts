@@ -5,9 +5,9 @@ export function historyLineToServerRow(h: domain.HistoryLine): domain.ServerRow 
   const nm = (h.name && h.name.trim()) || ip || '';
   return domain.ServerRow.createFrom({
     name: nm,
-    mapName: '',
-    perspective: '',
-    provider: '',
+    mapName: h.mapName ?? '',
+    perspective: h.perspective ?? '',
+    provider: h.provider ?? '',
     modded: false,
     inGameTime: '',
     queueSize: 0,
