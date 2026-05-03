@@ -2,7 +2,6 @@ package steamlaunch
 
 import (
 	"fmt"
-	"log"
 	"net"
 	"os/exec"
 	"strconv"
@@ -39,12 +38,6 @@ func ExecApplaunchDayZ(steamLaunchCmd, appID, host string, gamePort int, playerN
 	argv := buildApplaunchArgv(appID, host, gamePort, playerName, modParam)
 	parts := splitSteamLaunchCmd(steamLaunchCmd)
 	args := append(append([]string{}, parts[1:]...), argv...)
-	quoted := make([]string, 0, 1+len(args))
-	quoted = append(quoted, strconv.Quote(parts[0]))
-	for _, a := range args {
-		quoted = append(quoted, strconv.Quote(a))
-	}
-	log.Printf("steam launch: %s", strings.Join(quoted, " "))
 	cmd := exec.Command(parts[0], args...)
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("applaunch: %w", err)
