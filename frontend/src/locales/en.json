@@ -27,6 +27,7 @@
     "statusUnknown": "Unknown",
     "install": "Install",
     "installTitle": "Subscribe and download this item via Steam (Workshop)",
+    "installInstalledTitle": "This mod is already installed in your local Workshop.",
     "update": "Update",
     "updateTitle": "Subscribe and download the latest Workshop version via Steam",
     "refresh": "Refresh",

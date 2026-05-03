@@ -1,6 +1,6 @@
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {useTranslation} from 'react-i18next';
-import {Download, Loader2, LogIn, RefreshCw, X} from 'lucide-react';
+import {Check, Download, ExternalLink, Loader2, LogIn, RefreshCw, X} from 'lucide-react';
 import * as App from '../../wailsjs/go/main/App';
 import {domain} from '../../wailsjs/go/models';
 
@@ -171,7 +171,6 @@ export function ServerJoinModal({row, onClose, onRowPatched}: ServerJoinModalPro
                   <tr key={r.id}>
                     <td>
                       <div className="ds-modal-modname">{r.name}</div>
-                      <div className="ds-modal-modid">{r.id}</div>
                     </td>
                     <td>
                       {r.status === 'ok' ? (
@@ -183,19 +182,33 @@ export function ServerJoinModal({row, onClose, onRowPatched}: ServerJoinModalPro
                       )}
                     </td>
                     <td>
-                      {r.status === 'ok' ? (
-                        <span className="ds-modal-dash">—</span>
-                      ) : (
+                      <div className="ds-modal-mod-actions">
                         <button
                           type="button"
-                          className="btn btn-secondary ds-modal-actionbtn"
-                          title={r.status === 'outdated' ? t('joinModal.updateTitle') : t('joinModal.installTitle')}
+                          className="btn btn-secondary ds-modal-mod-actionbtn"
+                          disabled={r.status === 'ok'}
+                          title={
+                            r.status === 'ok'
+                              ? t('joinModal.installInstalledTitle')
+                              : r.status === 'outdated'
+                                ? t('joinModal.updateTitle')
+                                : t('joinModal.installTitle')
+                          }
                           onClick={() => installOrUpdate(r.id)}
                         >
-                          <Download size={16} strokeWidth={2} aria-hidden />
-                          {r.status === 'outdated' ? t('joinModal.update') : t('joinModal.install')}
+                          {r.status === 'ok' ? <Check size={14} strokeWidth={2} aria-hidden /> : <Download size={14} strokeWidth={2} aria-hidden />}
+                          {r.status === 'ok' ? t('joinModal.installed') : r.status === 'outdated' ? t('joinModal.update') : t('joinModal.install')}
                         </button>
-                      )}
+                        <button
+                          type="button"
+                          className="btn btn-secondary ds-modal-mod-actionbtn"
+                          title={t('mods.steamPageTitle')}
+                          onClick={() => void App.WorkshopPage(r.id)}
+                        >
+                          <ExternalLink size={14} strokeWidth={2} aria-hidden />
+                          {t('mods.steam')}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
