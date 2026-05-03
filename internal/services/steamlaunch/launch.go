@@ -1,10 +1,12 @@
 package steamlaunch
 
 import (
-	"context"
 	"fmt"
-	"os/exec"
+	"net"
+	"strconv"
 	"strings"
+
+	"dzglauncher/internal/domain"
 )
 
 func AppLaunchID(branch string) string {
@@ -16,16 +18,29 @@ func AppLaunchID(branch string) string {
 
 func BuildConnectURI(host string, gamePort int, branch string) string {
 	appid := AppLaunchID(branch)
-	return fmt.Sprintf("steam://run/%s//+connect %s:%d", appid, host, gamePort)
+	addr := net.JoinHostPort(strings.TrimSpace(host), strconv.Itoa(gamePort))
+	launch := "+connect " + addr
+	escaped := strings.ReplaceAll(launch, " ", "%20")
+	return "steam://run/" + appid + "//" + escaped
 }
 
-func Launch(ctx context.Context, cfgSteamCommand string, host string, gamePort int, branch string) error {
-	base := strings.Fields(strings.TrimSpace(cfgSteamCommand))
-	if len(base) == 0 {
-		base = []string{"steam"}
+func ConnectHostPort(row domain.ServerRow) (host string, gamePort int, err error) {
+	host = strings.TrimSpace(row.QueryHost)
+	gamePort = row.GamePort
+	if host != "" && gamePort > 0 {
+		return host, gamePort, nil
 	}
-	appid := AppLaunchID(branch)
-	args := append(append([]string{}, base...), "-applaunch", appid, "+connect", fmt.Sprintf("%s:%d", host, gamePort))
-	cmd := exec.CommandContext(ctx, args[0], args[1:]...)
-	return cmd.Start()
+	addr := strings.TrimSpace(row.Address)
+	if addr == "" {
+		return "", 0, fmt.Errorf("missing server address")
+	}
+	h, portStr, e1 := net.SplitHostPort(addr)
+	if e1 != nil {
+		return "", 0, fmt.Errorf("invalid address: %w", e1)
+	}
+	p, e2 := strconv.Atoi(portStr)
+	if e2 != nil || p <= 0 {
+		return "", 0, fmt.Errorf("invalid game port")
+	}
+	return h, p, nil
 }

@@ -22,8 +22,8 @@ export function DiscoverMapNames(arg1) {
   return window['go']['main']['App']['DiscoverMapNames'](arg1);
 }
 
-export function EnrichServerMods(arg1, arg2) {
-  return window['go']['main']['App']['EnrichServerMods'](arg1, arg2);
+export function EnrichServerMods(arg1, arg2, arg3) {
+  return window['go']['main']['App']['EnrichServerMods'](arg1, arg2, arg3);
 }
 
 export function FetchSteamServers() {
@@ -36,6 +36,10 @@ export function LaunchConnect(arg1) {
 
 export function ListWorkshopItems() {
   return window['go']['main']['App']['ListWorkshopItems']();
+}
+
+export function LoadBrowseSession() {
+  return window['go']['main']['App']['LoadBrowseSession']();
 }
 
 export function LoadSettings() {
@@ -68,6 +72,10 @@ export function RemoveHistoryIndex(arg1) {
 
 export function ResolveBattlemetricsID(arg1) {
   return window['go']['main']['App']['ResolveBattlemetricsID'](arg1);
+}
+
+export function SaveBrowseSession(arg1) {
+  return window['go']['main']['App']['SaveBrowseSession'](arg1);
 }
 
 export function SaveSettings(arg1) {

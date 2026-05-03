@@ -95,3 +95,35 @@ func (s *Store) Save(cfg domain.Settings) error {
 	}
 	return os.Rename(tmp, s.path)
 }
+
+func (s *Store) browseSessionPath() string {
+	return filepath.Join(filepath.Dir(s.path), "browsesession.json")
+}
+
+func (s *Store) SaveBrowseSessionJSON(data []byte) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	p := s.browseSessionPath()
+	if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+		return err
+	}
+	tmp := p + ".tmp"
+	if err := os.WriteFile(tmp, data, 0o600); err != nil {
+		return err
+	}
+	return os.Rename(tmp, p)
+}
+
+func (s *Store) LoadBrowseSessionJSON() ([]byte, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	p := s.browseSessionPath()
+	data, err := os.ReadFile(p)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return data, nil
+}

@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"fmt"
 	"slices"
+	"strings"
 	"sync"
 	"time"
 
@@ -183,7 +184,7 @@ func (a *App) RefreshServersPing(rows []domain.ServerRow) ([]domain.ServerRow, e
 		if out[i].QueryHost == "" || out[i].QueryPort <= 0 {
 			continue
 		}
-		info, err := a2s.Info(out[i].QueryHost, out[i].QueryPort, 900*time.Millisecond)
+		info, err := a2s.Info(out[i].QueryHost, out[i].QueryPort, 2500*time.Millisecond)
 		if err != nil {
 			continue
 		}
@@ -200,12 +201,12 @@ func (a *App) RefreshServersPing(rows []domain.ServerRow) ([]domain.ServerRow, e
 	return out, nil
 }
 
-func (a *App) EnrichServerMods(host string, queryPort int) ([]string, error) {
-	r, err := a2s.Rules(host, queryPort, 900*time.Millisecond)
+func (a *App) EnrichServerMods(host string, queryPort int, gamePort int) ([]string, error) {
+	r, err := a2s.RulesWithFallback(host, queryPort, gamePort)
 	if err != nil {
 		return nil, err
 	}
-	return a2s.WorkshopIDsFromRules(r), nil
+	return a2s.DayzWorkshopIDsFromRulesResult(r), nil
 }
 
 func (a *App) ResolveBattlemetricsID(id string) (domain.ServerRow, error) {
@@ -391,13 +392,38 @@ func (a *App) LaunchConnect(row domain.ServerRow) error {
 	if err != nil {
 		return err
 	}
-	_ = favhistory.AppendHistory
-	ctx, cancel := context.WithTimeout(a.ctx, 5*time.Second)
-	defer cancel()
-	if err := steamlaunch.Launch(ctx, cfg.SteamLaunchCommand, row.QueryHost, row.GamePort, cfg.DayZBranch); err != nil {
+	host, gp, err := steamlaunch.ConnectHostPort(row)
+	if err != nil {
 		return err
 	}
-	h := domain.HistoryLine{IP: row.QueryHost, GamePort: row.GamePort, QueryPort: row.QueryPort, Name: row.Name, AtUnix: time.Now().Unix()}
+	playerName := strings.TrimSpace(cfg.PlayerName)
+	if playerName == "" {
+		playerName = strings.TrimSpace(row.Name)
+	}
+	modParam := ""
+	if len(row.WorkshopModIDs) > 0 {
+		var missing []string
+		var werr error
+		modParam, missing, werr = workshop.ModParamFromWorkshopIDs(cfg.SteamRootPath, cfg.DayZBranch, row.WorkshopModIDs)
+		if werr != nil {
+			return werr
+		}
+		if len(missing) > 0 {
+			return fmt.Errorf("mods workshop em falta (instale na Steam): %s", strings.Join(missing, ", "))
+		}
+	}
+	appID := steamlaunch.AppLaunchID(cfg.DayZBranch)
+	if err := steamlaunch.ExecApplaunchDayZ(cfg.SteamLaunchCommand, appID, host, gp, playerName, modParam); err != nil {
+		if modParam != "" {
+			return fmt.Errorf("steam com lista de mods: %w", err)
+		}
+		a.OpenExternalURL(steamlaunch.BuildConnectURI(host, gp, cfg.DayZBranch))
+	}
+	qp := row.QueryPort
+	if qp <= 0 {
+		qp = 2305
+	}
+	h := domain.HistoryLine{IP: host, GamePort: gp, QueryPort: qp, Name: row.Name, AtUnix: time.Now().Unix()}
 	favhistory.AppendHistory(&cfg, h, 10)
 	return a.store.Save(cfg)
 }
@@ -406,11 +432,37 @@ func (a *App) OpenExternalURL(u string) {
 	if u == "" {
 		return
 	}
+	if strings.HasPrefix(strings.ToLower(strings.TrimSpace(u)), "steam://") {
+		cfg, err := a.store.Load()
+		if err == nil {
+			if err := steamlaunch.OpenSteamURI(cfg.SteamLaunchCommand, u); err == nil {
+				return
+			}
+		}
+	}
 	runtime.BrowserOpenURL(a.ctx, u)
 }
 
 func (a *App) WorkshopPage(id string) {
 	a.OpenExternalURL("steam://url/CommunityFilePage/" + id)
+}
+
+func (a *App) SaveBrowseSession(json string) error {
+	if json == "" {
+		return nil
+	}
+	return a.store.SaveBrowseSessionJSON([]byte(json))
+}
+
+func (a *App) LoadBrowseSession() (string, error) {
+	b, err := a.store.LoadBrowseSessionJSON()
+	if err != nil {
+		return "", err
+	}
+	if len(b) == 0 {
+		return "", nil
+	}
+	return string(b), nil
 }
 
 func (a *App) distanceFor(cfg *domain.Settings, serverIP string) string {

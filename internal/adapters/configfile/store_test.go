@@ -24,3 +24,19 @@ func TestStoreRoundTrip(t *testing.T) {
 		t.Fatalf("%+v", got)
 	}
 }
+
+func TestBrowseSessionJSONRoundTrip(t *testing.T) {
+	dir := t.TempDir()
+	s := NewStoreAtPath(filepath.Join(dir, "c.json"))
+	payload := []byte(`{"v":1,"filters":{},"raw":[]}`)
+	if err := s.SaveBrowseSessionJSON(payload); err != nil {
+		t.Fatal(err)
+	}
+	got, err := s.LoadBrowseSessionJSON()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(got) != string(payload) {
+		t.Fatalf("got %q", got)
+	}
+}

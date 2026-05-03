@@ -790,3 +790,195 @@ table.data tr:hover td {
 .browse-bm-field {
   margin-bottom: 0;
 }
+
+.ds-modal-root {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--ds-space-md);
+  box-sizing: border-box;
+}
+
+.ds-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.ds-modal-panel {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 32rem);
+  max-height: min(88vh, 36rem);
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-elevated);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--ds-shadow-sm);
+  overflow: hidden;
+}
+
+.ds-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--ds-space-sm);
+  padding: var(--ds-space-md) var(--ds-space-md) 0 var(--ds-space-md);
+}
+
+.ds-modal-title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.25;
+  padding-top: 0.15rem;
+}
+
+.ds-modal-iconbtn {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ds-modal-subtitle {
+  margin: 0.35rem var(--ds-space-md) 0 var(--ds-space-md);
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.ds-modal-subtitle-label {
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.ds-modal-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: var(--ds-space-md);
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.ds-modal-spinner {
+  flex-shrink: 0;
+  animation: ds-modal-spin 0.75s linear infinite;
+}
+
+@keyframes ds-modal-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.ds-modal-msg {
+  margin: var(--ds-space-sm) var(--ds-space-md) 0 var(--ds-space-md);
+}
+
+.ds-modal-tablewrap {
+  margin: var(--ds-space-sm) var(--ds-space-md) 0 var(--ds-space-md);
+  overflow: auto;
+  max-height: min(40vh, 18rem);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+}
+
+.ds-modal-table {
+  margin: 0;
+  font-size: 0.8125rem;
+}
+
+.ds-modal-table th,
+.ds-modal-table td {
+  padding: 0.45rem 0.5rem;
+  vertical-align: middle;
+}
+
+.ds-modal-modname {
+  font-weight: 500;
+  color: var(--text);
+  word-break: break-word;
+}
+
+.ds-modal-modid {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.ds-modal-status {
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.ds-modal-status-ok {
+  color: var(--accent);
+}
+
+.ds-modal-status-miss {
+  color: var(--danger);
+}
+
+.ds-modal-status-unknown {
+  color: var(--text-muted);
+}
+
+.ds-modal-dash {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.ds-modal-actionbtn {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  padding: 0.35rem 0.55rem;
+}
+
+.ds-modal-footnote {
+  margin: var(--ds-space-sm) var(--ds-space-md) 0 var(--ds-space-md);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.ds-modal-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-space-sm);
+  justify-content: flex-end;
+  align-items: center;
+  padding: var(--ds-space-md);
+  margin-top: auto;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.ds-modal-footerbtn {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.ds-modal-primary {
+  min-width: 7rem;
+  justify-content: center;
+}

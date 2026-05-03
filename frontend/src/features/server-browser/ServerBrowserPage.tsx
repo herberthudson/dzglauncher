@@ -1,11 +1,12 @@
-import {useCallback, useEffect, useMemo, useState} from 'react';
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import {BookmarkPlus, ChevronDown, ChevronUp, ListFilter, Package, Play, Radar, Server, Star} from 'lucide-react';
 import * as App from '../../../wailsjs/go/main/App';
 import {domain} from '../../../wailsjs/go/models';
+import {browseSessionPayload, loadBrowseSessionMigrate} from './browseSession';
 import {DsSelect} from '../../shared/DsSelect';
 import {PageHeader} from '../../shared/PageHeader';
-import {useA2sModsHint} from '../../shared/useA2sModsHint';
+import {ServerJoinModal} from '../../shared/ServerJoinModal';
 
 function defaultFilters(): domain.FilterState {
   return domain.FilterState.createFrom({
@@ -69,18 +70,79 @@ function clampPageSize(n: number) {
 
 export function ServerBrowserPage() {
   const {t} = useTranslation();
+  const [browseReady, setBrowseReady] = useState(false);
   const [raw, setRaw] = useState<domain.ServerRow[]>([]);
   const [filtered, setFiltered] = useState<domain.ServerRow[]>([]);
-  const [filters, setFilters] = useState(defaultFilters);
+  const [filters, setFilters] = useState(() => defaultFilters());
   const [knownMapNames, setKnownMapNames] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
   const [bmId, setBmId] = useState('');
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const [modsHint, setModsHint] = useA2sModsHint();
-  const [modsBusyKey, setModsBusyKey] = useState<string | null>(null);
+  const [pageSize, setPageSize] = useState(() => clampPageSize(10));
+  const [joinModalRow, setJoinModalRow] = useState<domain.ServerRow | null>(null);
   const [filtersListOpen, setFiltersListOpen] = useState(true);
+
+  const browseRef = useRef({
+    filters: defaultFilters(),
+    raw: [] as domain.ServerRow[],
+    page: 1,
+    pageSize: clampPageSize(10),
+    filtersListOpen: true,
+    bmId: '',
+  });
+  browseRef.current = {filters, raw, page, pageSize, filtersListOpen, bmId};
+
+  useEffect(() => {
+    let cancelled = false;
+    loadBrowseSessionMigrate()
+      .then((snap) => {
+        if (cancelled || !snap) {
+          return;
+        }
+        if (Array.isArray(snap.raw) && snap.raw.length > 0) {
+          setRaw(snap.raw.map((x) => domain.ServerRow.createFrom(x)));
+        }
+        setFilters(domain.FilterState.createFrom(snap.filters as Record<string, unknown>));
+        setBmId(snap.bmId != null ? String(snap.bmId) : '');
+        const p = snap.page;
+        if (p != null && Number.isFinite(p)) {
+          setPage(Math.max(1, Math.floor(p)));
+        }
+        const n = snap.pageSize;
+        if (n != null && Number.isFinite(n)) {
+          setPageSize(clampPageSize(n));
+        }
+        setFiltersListOpen(snap.filtersListOpen !== false);
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setBrowseReady(true);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!browseReady) {
+      return;
+    }
+    const id = window.setTimeout(() => {
+      const s = browseRef.current;
+      void App.SaveBrowseSession(
+        JSON.stringify(browseSessionPayload(filterFields(s.filters), s.raw, s.page, s.pageSize, s.filtersListOpen, s.bmId)),
+      );
+    }, 250);
+    return () => {
+      window.clearTimeout(id);
+      const s = browseRef.current;
+      void App.SaveBrowseSession(
+        JSON.stringify(browseSessionPayload(filterFields(s.filters), s.raw, s.page, s.pageSize, s.filtersListOpen, s.bmId)),
+      );
+    };
+  }, [browseReady, filters, raw, page, pageSize, filtersListOpen, bmId]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize) || 1);
 
@@ -92,6 +154,12 @@ export function ServerBrowserPage() {
     const start = (page - 1) * pageSize;
     return filtered.slice(start, start + pageSize);
   }, [filtered, page, pageSize]);
+
+  const patchJoinRow = useCallback((next: domain.ServerRow) => {
+    const rk = rowKey(next);
+    setFiltered((prev) => prev.map((r) => (rowKey(r) === rk ? next : r)));
+    setRaw((prev) => prev.map((r) => (rowKey(r) === rk ? next : r)));
+  }, []);
 
   const applyFilters = useCallback(async () => {
     const plain = filterFields(filters);
@@ -182,34 +250,6 @@ export function ServerBrowserPage() {
       .finally(() => setLoading(false));
   };
 
-  const enrichMods = (row: domain.ServerRow) => {
-    const rk = rowKey(row);
-    setErr('');
-    setModsHint(null);
-    setModsBusyKey(rk);
-    App.EnrichServerMods(row.queryHost, row.queryPort)
-      .then((ids) => {
-        const list = Array.isArray(ids) ? ids : [];
-        const next = domain.ServerRow.createFrom({...row, workshopModIds: list});
-        setFiltered((prev) => prev.map((r) => (rowKey(r) === rk ? next : r)));
-        setRaw((prev) => prev.map((r) => (rowKey(r) === rk ? next : r)));
-        const label = row.name || row.address;
-        if (!list.length) {
-          setModsHint({
-            level: 'warn',
-            text: t('browse.modsA2sNone', {name: label}),
-          });
-        } else {
-          setModsHint({
-            level: 'info',
-            text: t('browse.modsA2sOk', {count: list.length, name: label}),
-          });
-        }
-      })
-      .catch((e) => setErr(String(e)))
-      .finally(() => setModsBusyKey(null));
-  };
-
   const presetValue = PAGE_PRESETS.includes(pageSize as (typeof PAGE_PRESETS)[number]) ? String(pageSize) : 'custom';
 
   const perPageSelectOptions = useMemo(
@@ -222,11 +262,19 @@ export function ServerBrowserPage() {
     return [{value: '', label: t('browse.allMaps')}, ...sorted.map((m) => ({value: m, label: m}))];
   }, [knownMapNames, t]);
 
+  if (!browseReady) {
+    return (
+      <div>
+        <PageHeader icon={Server} title={t('browse.title')} description={t('browse.subtitle')} />
+        <p className="msg">{t('common.processing')}</p>
+      </div>
+    );
+  }
+
   return (
     <div>
       <PageHeader icon={Server} title={t('browse.title')} description={t('browse.subtitle')} />
       {err ? <div className="msg msg-error">{err}</div> : null}
-      {modsHint ? <div className={modsHint.level === 'warn' ? 'msg msg-warn' : 'msg msg-info'}>{modsHint.text}</div> : null}
 
       <div className="browse-layout">
         <div className="browse-main">
@@ -366,7 +414,7 @@ export function ServerBrowserPage() {
                       <td>{row.distanceLabel}</td>
                       <td>
                         <div className="row-actions">
-                          <button type="button" className="btn btn-secondary" title={t('browse.connectTitle')} onClick={() => App.LaunchConnect(row).catch((e) => setErr(String(e)))}>
+                          <button type="button" className="btn btn-secondary" title={t('browse.connectTitle')} onClick={() => setJoinModalRow(row)}>
                             <Play size={14} strokeWidth={2} aria-hidden />
                             {t('browse.connect')}
                           </button>
@@ -378,9 +426,9 @@ export function ServerBrowserPage() {
                             <BookmarkPlus size={14} strokeWidth={2} aria-hidden />
                             {t('browse.quickFav')}
                           </button>
-                          <button type="button" className="btn btn-secondary" disabled={modsBusyKey === rowKey(row)} title={t('browse.modsA2STitle')} onClick={() => enrichMods(row)}>
+                          <button type="button" className="btn btn-secondary" title={t('browse.modsA2STitle')} onClick={() => setJoinModalRow(row)}>
                             <Package size={14} strokeWidth={2} aria-hidden />
-                            {modsBusyKey === rowKey(row) ? t('browse.modsA2SBusy') : t('browse.modsA2S')}
+                            {t('browse.modsA2S')}
                           </button>
                         </div>
                         {row.workshopModIds && row.workshopModIds.length > 0 ? (
@@ -490,6 +538,7 @@ export function ServerBrowserPage() {
           </section>
         </aside>
       </div>
+      {joinModalRow ? <ServerJoinModal row={joinModalRow} onClose={() => setJoinModalRow(null)} onRowPatched={patchJoinRow} /> : null}
     </div>
   );
 }

@@ -13,13 +13,15 @@ export function DeleteWorkshopItems(arg1:Array<string>):Promise<void>;
 
 export function DiscoverMapNames(arg1:Array<domain.ServerRow>):Promise<Array<string>>;
 
-export function EnrichServerMods(arg1:string,arg2:number):Promise<Array<string>>;
+export function EnrichServerMods(arg1:string,arg2:number,arg3:number):Promise<Array<string>>;
 
 export function FetchSteamServers():Promise<Array<domain.ServerRow>>;
 
 export function LaunchConnect(arg1:domain.ServerRow):Promise<void>;
 
 export function ListWorkshopItems():Promise<Array<workshop.Item>>;
+
+export function LoadBrowseSession():Promise<string>;
 
 export function LoadSettings():Promise<domain.Settings>;
 
@@ -36,6 +38,8 @@ export function RemoveFavorite(arg1:string,arg2:number,arg3:number):Promise<void
 export function RemoveHistoryIndex(arg1:number):Promise<void>;
 
 export function ResolveBattlemetricsID(arg1:string):Promise<domain.ServerRow>;
+
+export function SaveBrowseSession(arg1:string):Promise<void>;
 
 export function SaveSettings(arg1:domain.Settings):Promise<void>;
 

@@ -1,4 +1,4 @@
-import {useEffect, useMemo, useState} from 'react';
+import {useCallback, useEffect, useMemo, useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import {Package, Play, Rows3, Server, Star, Trash2} from 'lucide-react';
 import * as App from '../../../wailsjs/go/main/App';
@@ -6,7 +6,7 @@ import {domain} from '../../../wailsjs/go/models';
 import {favoriteKey, favoriteKeyParts, favoritesToRows, rowKey} from '../../shared/favoriteRows';
 import {DsSelect} from '../../shared/DsSelect';
 import {PageHeader} from '../../shared/PageHeader';
-import {useA2sModsHint} from '../../shared/useA2sModsHint';
+import {ServerJoinModal} from '../../shared/ServerJoinModal';
 
 const PAGE_PRESETS = [10, 20, 50, 100] as const;
 
@@ -27,10 +27,13 @@ export function FavoritesPage() {
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [modsHint, setModsHint] = useA2sModsHint();
-  const [modsBusyKey, setModsBusyKey] = useState<string | null>(null);
+  const [joinModalRow, setJoinModalRow] = useState<domain.ServerRow | null>(null);
 
   const reload = () => App.LoadSettings().then(setS);
+
+  const patchFavoriteRow = useCallback((next: domain.ServerRow) => {
+    void App.MergeFavoriteSnapshots([next]).then(() => App.LoadSettings().then(setS));
+  }, []);
 
   useEffect(() => {
     reload().catch(() => {});
@@ -70,43 +73,12 @@ export function FavoritesPage() {
       .finally(() => setLoading(false));
   };
 
-  const enrichMods = (row: domain.ServerRow) => {
-    const rk = rowKey(row);
-    setErr('');
-    setModsHint(null);
-    setModsBusyKey(rk);
-    App.EnrichServerMods(row.queryHost, row.queryPort)
-      .then((ids) => {
-        const list = Array.isArray(ids) ? ids : [];
-        const patched = domain.ServerRow.createFrom({...row, workshopModIds: list});
-        return App.MergeFavoriteSnapshots([patched]).then(() => list);
-      })
-      .then((list) => {
-        const label = row.name || row.address;
-        if (!list.length) {
-          setModsHint({
-            level: 'warn',
-            text: t('favorites.modsA2sNone', {name: label}),
-          });
-        } else {
-          setModsHint({
-            level: 'info',
-            text: t('favorites.modsA2sOk', {count: list.length, name: label}),
-          });
-        }
-        return reload();
-      })
-      .catch((e) => setErr(String(e)))
-      .finally(() => setModsBusyKey(null));
-  };
-
   const presetValue = PAGE_PRESETS.includes(pageSize as (typeof PAGE_PRESETS)[number]) ? String(pageSize) : 'custom';
 
   return (
     <div>
       <PageHeader icon={Star} title={t('favorites.title')} description={t('favorites.subtitle')} />
       {err ? <div className="msg msg-error">{err}</div> : null}
-      {modsHint ? <div className={modsHint.level === 'warn' ? 'msg msg-warn' : 'msg msg-info'}>{modsHint.text}</div> : null}
 
       <section className="ds-card" aria-labelledby="fav-tools-title">
         <h2 id="fav-tools-title" className="ds-section-title">
@@ -251,19 +223,13 @@ export function FavoritesPage() {
                       <td>{row.distanceLabel}</td>
                       <td>
                         <div className="row-actions">
-                          <button type="button" className="btn btn-secondary" title={t('favorites.connectTitle')} onClick={() => App.LaunchConnect(row).catch((e) => setErr(String(e)))}>
+                          <button type="button" className="btn btn-secondary" title={t('favorites.connectTitle')} onClick={() => setJoinModalRow(row)}>
                             <Play size={14} strokeWidth={2} aria-hidden />
                             {t('favorites.connect')}
                           </button>
-                          <button
-                            type="button"
-                            className="btn btn-secondary"
-                            disabled={modsBusyKey === rowKey(row)}
-                            title={t('favorites.modsA2STitle')}
-                            onClick={() => enrichMods(row)}
-                          >
+                          <button type="button" className="btn btn-secondary" title={t('favorites.modsA2STitle')} onClick={() => setJoinModalRow(row)}>
                             <Package size={14} strokeWidth={2} aria-hidden />
-                            {modsBusyKey === rowKey(row) ? t('favorites.modsA2SBusy') : t('favorites.modsA2S')}
+                            {t('favorites.modsA2S')}
                           </button>
                           <button
                             type="button"
@@ -296,6 +262,7 @@ export function FavoritesPage() {
           </div>
         ) : null}
       </section>
+      {joinModalRow ? <ServerJoinModal row={joinModalRow} onClose={() => setJoinModalRow(null)} onRowPatched={patchFavoriteRow} /> : null}
     </div>
   );
 }
