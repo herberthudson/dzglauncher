@@ -16,6 +16,26 @@ func isNightRow(r domain.ServerRow) bool {
 	return gametype.IsNightInGameFromLabel(r.InGameTime)
 }
 
+func rowMatchesSearchTokens(r domain.ServerRow, query string) bool {
+	tokens := strings.Fields(strings.TrimSpace(query))
+	if len(tokens) == 0 {
+		return true
+	}
+	ln := strings.ToLower(r.Name)
+	lm := strings.ToLower(r.MapName)
+	ip := strings.ToLower(r.QueryHost + r.Address)
+	for _, tok := range tokens {
+		t := strings.ToLower(tok)
+		if t == "" {
+			continue
+		}
+		if !strings.Contains(ln, t) && !strings.Contains(lm, t) && !strings.Contains(ip, t) {
+			return false
+		}
+	}
+	return true
+}
+
 func Apply(rows []domain.ServerRow, f domain.FilterState) []domain.ServerRow {
 	out := make([]domain.ServerRow, 0, len(rows))
 	seenName := make(map[string]struct{})
@@ -65,11 +85,8 @@ func Apply(rows []domain.ServerRow, f domain.FilterState) []domain.ServerRow {
 				continue
 			}
 		}
-		if q := strings.TrimSpace(strings.ToLower(f.SearchSubstring)); q != "" {
-			ip := strings.ToLower(r.QueryHost + r.Address)
-			if !strings.Contains(strings.ToLower(r.Name), q) &&
-				!strings.Contains(strings.ToLower(r.MapName), q) &&
-				!strings.Contains(ip, q) {
+		if strings.TrimSpace(f.SearchSubstring) != "" {
+			if !rowMatchesSearchTokens(r, f.SearchSubstring) {
 				continue
 			}
 		}

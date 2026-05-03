@@ -31,3 +31,34 @@ func TestSearchSubstring(t *testing.T) {
 		t.Fatal()
 	}
 }
+
+func TestSearchTokensAnyOrder(t *testing.T) {
+	rows := []domain.ServerRow{
+		{Name: "Server A noraid pve"},
+		{Name: "Server B pve noraid"},
+		{Name: "Server C NoRaid PVE"},
+		{Name: "Server D Noraid pves"},
+		{Name: "Server E pve no raid"},
+		{Name: "Server F No-Raid"},
+		{Name: "Server G pve"},
+	}
+	f := domain.DefaultFilterState()
+	f.SearchSubstring = "noraid pve"
+	out := Apply(rows, f)
+	if len(out) != 4 {
+		t.Fatalf("want 4 got %d %+v", len(out), names(out))
+	}
+	f.SearchSubstring = "pve noraid"
+	out = Apply(rows, f)
+	if len(out) != 4 {
+		t.Fatalf("want 4 got %d", len(out))
+	}
+}
+
+func names(rows []domain.ServerRow) []string {
+	s := make([]string, len(rows))
+	for i := range rows {
+		s[i] = rows[i].Name
+	}
+	return s
+}
