@@ -215,7 +215,7 @@
   "mods": {
     "title": "Mods Workshop instalados",
     "subtitle": "Mods detectados en la carpeta Workshop de Steam configurada.",
-    "sectionOverview": "Resumen y búsqueda",
+    "sectionOverview": "Resumen",
     "sectionList": "Lista, paginación y borrado",
     "help": "Usa meta.cpp en steamapps/workshop/content/<appid>. Configura la carpeta raíz de Steam en Ajustes.",
     "totalAll": "Total en disco (todos los mods):",
@@ -247,7 +247,7 @@
     "tableCaption": "Tabla de mods de Workshop: selección, ID, nombre, tamaño, carpeta en disco y acciones.",
     "thIdLong": "ID numérico del elemento en Steam Workshop.",
     "thNameLong": "Nombre del mod en Steam.",
-    "thSizeLong": "Tamaño total de la carpeta del mod en disco.",
+    "thSizeLong": "Tamaño total de la carpeta del mod en disco. Pulse el encabezado para ordenar por tamaño.",
     "thPathLong": "Ruta de la carpeta del mod dentro de la instalación de Steam.",
     "thActionsLong": "Abrir en Steam o eliminar la carpeta del mod.",
     "thSelectColumnLong": "Seleccionar o desmarcar todas las filas filtradas en esta página.",

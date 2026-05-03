@@ -31,6 +31,16 @@ export type BrowseSessionV1 = {
   raw: Record<string, unknown>[];
 };
 
+const PING_SESSION_PLACEHOLDER = 9999;
+
+function scrubPingOnRawRows(raw: Record<string, unknown>[]) {
+  for (const row of raw) {
+    if (row && typeof row === 'object') {
+      row.ping = PING_SESSION_PLACEHOLDER;
+    }
+  }
+}
+
 function readLegacyBrowserSession(): BrowseSessionV1 | null {
   if (typeof sessionStorage === 'undefined' && typeof localStorage === 'undefined') {
     return null;
@@ -51,6 +61,7 @@ function readLegacyBrowserSession(): BrowseSessionV1 | null {
       if (!Array.isArray(o.raw)) {
         o.raw = [];
       }
+      scrubPingOnRawRows(o.raw);
       return o;
     } catch {
       continue;
@@ -68,6 +79,7 @@ export async function loadBrowseSessionMigrate(): Promise<BrowseSessionV1 | null
         if (!Array.isArray(o.raw)) {
           o.raw = [];
         }
+        scrubPingOnRawRows(o.raw);
         return o;
       }
     }
@@ -104,6 +116,7 @@ export function browseSessionPayload(
   bmId: string,
 ): BrowseSessionV1 {
   const rawArr = JSON.parse(JSON.stringify(raw)) as Record<string, unknown>[];
+  scrubPingOnRawRows(rawArr);
   return {
     v: 1,
     filters,

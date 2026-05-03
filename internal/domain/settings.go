@@ -35,7 +35,7 @@ func FavoriteFromRow(r ServerRow) Favorite {
 		QueueSize:      r.QueueSize,
 		Players:        r.Players,
 		MaxPlayers:     r.MaxPlayers,
-		Ping:           r.Ping,
+		Ping:           0,
 		DistanceLabel:  r.DistanceLabel,
 		WorkshopModIDs: append([]string(nil), r.WorkshopModIDs...),
 	}

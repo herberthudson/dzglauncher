@@ -84,6 +84,12 @@ func mergeDefaults(s domain.Settings) domain.Settings {
 		s.QuickFavorites = []domain.Favorite{}
 	}
 	favhistory.NormalizeQuickFavorites(&s)
+	for i := range s.Favorites {
+		s.Favorites[i].Ping = 0
+	}
+	for i := range s.QuickFavorites {
+		s.QuickFavorites[i].Ping = 0
+	}
 	return s
 }
 
