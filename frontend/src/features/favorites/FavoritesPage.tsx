@@ -229,7 +229,7 @@ export function FavoritesPage() {
                           <button type="button" className="btn btn-secondary" title={t('favorites.connectTitle')} aria-label={t('favorites.connect')} onClick={() => setJoinModalRow(row)}>
                             <Play size={14} strokeWidth={2} aria-hidden />
                           </button>
-                          <button type="button" className="btn btn-secondary" title={t('favorites.modsA2STitle')} aria-label={t('favorites.modsA2S')} onClick={() => setJoinModalRow(row)}>
+                          <button type="button" className="btn btn-secondary" title={t('favorites.joinPanelModsTitle')} aria-label={t('favorites.joinPanelMods')} onClick={() => setJoinModalRow(row)}>
                             <Package size={14} strokeWidth={2} aria-hidden />
                           </button>
                           <button

@@ -426,7 +426,7 @@ export function ServerBrowserPage() {
                           <button type="button" className="btn btn-secondary" title={t('browse.quickFavTitle')} aria-label={t('browse.quickFav')} onClick={() => App.SetQuickFavorite(row, window.prompt(t('browse.quickFavPrompt'), row.name) || row.name).catch((e) => setErr(String(e)))}>
                             <BookmarkPlus size={14} strokeWidth={2} aria-hidden />
                           </button>
-                          <button type="button" className="btn btn-secondary" title={t('browse.modsA2STitle')} aria-label={t('browse.modsA2S')} onClick={() => setJoinModalRow(row)}>
+                          <button type="button" className="btn btn-secondary" title={t('browse.joinPanelModsTitle')} aria-label={t('browse.joinPanelMods')} onClick={() => setJoinModalRow(row)}>
                             <Package size={14} strokeWidth={2} aria-hidden />
                           </button>
                         </div>
