@@ -17,6 +17,8 @@ export function EnrichServerMods(arg1:string,arg2:number,arg3:number):Promise<Ar
 
 export function FetchSteamServers():Promise<Array<domain.ServerRow>>;
 
+export function JoinModalWorkshopData(arg1:string,arg2:number,arg3:number):Promise<Array<domain.WorkshopModRow>>;
+
 export function LaunchConnect(arg1:domain.ServerRow):Promise<void>;
 
 export function ListWorkshopItems():Promise<Array<workshop.Item>>;
@@ -50,5 +52,7 @@ export function SetQuickFavorite(arg1:domain.ServerRow,arg2:string):Promise<void
 export function ToggleFavoriteRow(arg1:domain.ServerRow):Promise<void>;
 
 export function ValidateSteamAPIKey(arg1:string):Promise<domain.SteamKeyValidation>;
+
+export function WorkshopDownloadItem(arg1:string):Promise<void>;
 
 export function WorkshopPage(arg1:string):Promise<void>;

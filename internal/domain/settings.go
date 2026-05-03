@@ -105,6 +105,7 @@ type Settings struct {
 	Locale             string        `json:"locale"`
 	UITheme            string        `json:"uiTheme"`
 	KnownMapNames      []string      `json:"knownMapNames,omitempty"`
+	WorkshopModTimeUpdated map[string]int64 `json:"workshopModTimeUpdated,omitempty"`
 }
 
 func DefaultSettings() Settings {

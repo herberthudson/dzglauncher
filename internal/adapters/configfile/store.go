@@ -76,6 +76,9 @@ func mergeDefaults(s domain.Settings) domain.Settings {
 	if s.KnownMapNames == nil {
 		s.KnownMapNames = []string{}
 	}
+	if s.WorkshopModTimeUpdated == nil {
+		s.WorkshopModTimeUpdated = map[string]int64{}
+	}
 	return s
 }
 

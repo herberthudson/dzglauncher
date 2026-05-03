@@ -172,6 +172,7 @@ export namespace domain {
 	    locale: string;
 	    uiTheme: string;
 	    knownMapNames?: string[];
+	    workshopModTimeUpdated?: Record<string, number>;
 	
 	    static createFrom(source: any = {}) {
 	        return new Settings(source);
@@ -202,6 +203,7 @@ export namespace domain {
 	        this.locale = source["locale"];
 	        this.uiTheme = source["uiTheme"];
 	        this.knownMapNames = source["knownMapNames"];
+	        this.workshopModTimeUpdated = source["workshopModTimeUpdated"];
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {
@@ -236,6 +238,22 @@ export namespace domain {
 	        this.message = source["message"];
 	    }
 	}
+	export class WorkshopModRow {
+	    id: string;
+	    name: string;
+	    status: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new WorkshopModRow(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.name = source["name"];
+	        this.status = source["status"];
+	    }
+	}
 
 }
 
@@ -246,6 +264,7 @@ export namespace workshop {
 	    name: string;
 	    path: string;
 	    sizeBytes: number;
+	    metaTimestamp?: number;
 	
 	    static createFrom(source: any = {}) {
 	        return new Item(source);
@@ -257,6 +276,7 @@ export namespace workshop {
 	        this.name = source["name"];
 	        this.path = source["path"];
 	        this.sizeBytes = source["sizeBytes"];
+	        this.metaTimestamp = source["metaTimestamp"];
 	    }
 	}
 

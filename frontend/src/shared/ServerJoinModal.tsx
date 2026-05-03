@@ -2,22 +2,7 @@ import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import {Download, Loader2, LogIn, RefreshCw, X} from 'lucide-react';
 import * as App from '../../wailsjs/go/main/App';
-import {domain, workshop} from '../../wailsjs/go/models';
-
-function normId(s: string) {
-  return String(s).trim();
-}
-
-function buildInstalledById(items: workshop.Item[]) {
-  const m = new Map<string, workshop.Item>();
-  for (const it of items) {
-    const k = normId(it.id);
-    if (k && !m.has(k)) {
-      m.set(k, it);
-    }
-  }
-  return m;
-}
+import {domain} from '../../wailsjs/go/models';
 
 export type ServerJoinModalProps = {
   row: domain.ServerRow | null;
@@ -32,9 +17,7 @@ export function ServerJoinModal({row, onClose, onRowPatched}: ServerJoinModalPro
   const [joinBusy, setJoinBusy] = useState(false);
   const [enrichErr, setEnrichErr] = useState('');
   const [launchErr, setLaunchErr] = useState('');
-  const [listErr, setListErr] = useState('');
-  const [serverIds, setServerIds] = useState<string[]>([]);
-  const [installedById, setInstalledById] = useState<Map<string, workshop.Item>>(new Map());
+  const [modRows, setModRows] = useState<domain.WorkshopModRow[]>([]);
 
   const load = useCallback(async () => {
     if (!row) {
@@ -43,27 +26,16 @@ export function ServerJoinModal({row, onClose, onRowPatched}: ServerJoinModalPro
     setLoading(true);
     setEnrichErr('');
     setLaunchErr('');
-    setListErr('');
-    setServerIds([]);
-    setInstalledById(new Map());
-    const enrichP = App.EnrichServerMods(row.queryHost, row.queryPort, row.gamePort);
-    const listP = App.ListWorkshopItems();
+    setModRows([]);
     try {
-      const ids = await enrichP;
-      const list = Array.isArray(ids) ? ids.map((x) => normId(String(x))).filter(Boolean) : [];
-      setServerIds(list);
-      const patched = domain.ServerRow.createFrom({...row, workshopModIds: list});
+      const list = await App.JoinModalWorkshopData(row.queryHost, row.queryPort, row.gamePort);
+      const rows = Array.isArray(list) ? list.map((x) => domain.WorkshopModRow.createFrom(x)) : [];
+      setModRows(rows);
+      const ids = rows.map((r) => r.id);
+      const patched = domain.ServerRow.createFrom({...row, workshopModIds: ids});
       onRowPatched(patched);
     } catch (e) {
       setEnrichErr(String(e));
-    }
-    try {
-      const items = await listP;
-      const arr = Array.isArray(items) ? items.map((x) => workshop.Item.createFrom(x)) : [];
-      setInstalledById(buildInstalledById(arr));
-    } catch (e) {
-      setListErr(String(e));
-      setInstalledById(new Map());
     } finally {
       setLoading(false);
     }
@@ -101,22 +73,12 @@ export function ServerJoinModal({row, onClose, onRowPatched}: ServerJoinModalPro
     return () => window.clearTimeout(id);
   }, [row]);
 
-  const rows = useMemo(() => {
-    return serverIds.map((id) => {
-      const it = listErr ? undefined : installedById.get(normId(id));
-      const installed = !listErr && !!it;
-      return {id, installed, name: it?.name?.trim() || id};
-    });
-  }, [serverIds, installedById, listErr]);
+  const needsInstallOrUpdate = useMemo(
+    () => modRows.some((r) => r.status === 'missing' || r.status === 'outdated'),
+    [modRows],
+  );
 
-  const canVerifyLocal = !listErr;
-  const allKnownInstalled = serverIds.length === 0 || rows.every((r) => r.installed);
-  const joinDisabled =
-    joinBusy ||
-    loading ||
-    !!enrichErr ||
-    (serverIds.length > 0 && canVerifyLocal && !allKnownInstalled) ||
-    (serverIds.length > 0 && !canVerifyLocal);
+  const joinDisabled = joinBusy || loading || !!enrichErr || (modRows.length > 0 && needsInstallOrUpdate);
 
   const title = row ? row.name || row.address || t('joinModal.title') : t('joinModal.title');
 
@@ -125,7 +87,8 @@ export function ServerJoinModal({row, onClose, onRowPatched}: ServerJoinModalPro
   }
 
   const onJoin = () => {
-    const next = domain.ServerRow.createFrom({...row, workshopModIds: serverIds});
+    const ids = modRows.map((r) => r.id);
+    const next = domain.ServerRow.createFrom({...row, workshopModIds: ids});
     setJoinBusy(true);
     setLaunchErr('');
     App.LaunchConnect(next)
@@ -137,6 +100,10 @@ export function ServerJoinModal({row, onClose, onRowPatched}: ServerJoinModalPro
         setLaunchErr(String(e));
       })
       .finally(() => setJoinBusy(false));
+  };
+
+  const installOrUpdate = (id: string) => {
+    void App.WorkshopDownloadItem(id).catch((e: unknown) => setEnrichErr(String(e)));
   };
 
   return (
@@ -172,11 +139,10 @@ export function ServerJoinModal({row, onClose, onRowPatched}: ServerJoinModalPro
 
         {enrichErr ? <div className="msg msg-error ds-modal-msg">{enrichErr}</div> : null}
         {launchErr ? <div className="msg msg-error ds-modal-msg">{launchErr}</div> : null}
-        {listErr && serverIds.length > 0 ? <div className="msg msg-warn ds-modal-msg">{t('joinModal.listError', {detail: listErr})}</div> : null}
 
-        {!loading && !enrichErr && serverIds.length === 0 ? <div className="msg msg-info ds-modal-msg">{t('joinModal.emptyMods')}</div> : null}
+        {!loading && !enrichErr && modRows.length === 0 ? <div className="msg msg-info ds-modal-msg">{t('joinModal.emptyMods')}</div> : null}
 
-        {!loading && !enrichErr && serverIds.length > 0 ? (
+        {!loading && !enrichErr && modRows.length > 0 ? (
           <div className="ds-modal-tablewrap">
             <table className="data ds-modal-table">
               <caption className="sr-only">{t('joinModal.tableCaption')}</caption>
@@ -188,28 +154,33 @@ export function ServerJoinModal({row, onClose, onRowPatched}: ServerJoinModalPro
                 </tr>
               </thead>
               <tbody>
-                {rows.map((r) => (
+                {modRows.map((r) => (
                   <tr key={r.id}>
                     <td>
                       <div className="ds-modal-modname">{r.name}</div>
                       <div className="ds-modal-modid">{r.id}</div>
                     </td>
                     <td>
-                      {listErr ? (
-                        <span className="ds-modal-status ds-modal-status-unknown">{t('joinModal.statusUnknown')}</span>
-                      ) : r.installed ? (
+                      {r.status === 'ok' ? (
                         <span className="ds-modal-status ds-modal-status-ok">{t('joinModal.installed')}</span>
+                      ) : r.status === 'outdated' ? (
+                        <span className="ds-modal-status ds-modal-status-miss">{t('joinModal.outdated')}</span>
                       ) : (
                         <span className="ds-modal-status ds-modal-status-miss">{t('joinModal.missing')}</span>
                       )}
                     </td>
                     <td>
-                      {r.installed && !listErr ? (
+                      {r.status === 'ok' ? (
                         <span className="ds-modal-dash">—</span>
                       ) : (
-                        <button type="button" className="btn btn-secondary ds-modal-actionbtn" title={t('joinModal.installTitle')} onClick={() => void App.WorkshopPage(r.id)}>
+                        <button
+                          type="button"
+                          className="btn btn-secondary ds-modal-actionbtn"
+                          title={r.status === 'outdated' ? t('joinModal.updateTitle') : t('joinModal.installTitle')}
+                          onClick={() => installOrUpdate(r.id)}
+                        >
                           <Download size={16} strokeWidth={2} aria-hidden />
-                          {t('joinModal.install')}
+                          {r.status === 'outdated' ? t('joinModal.update') : t('joinModal.install')}
                         </button>
                       )}
                     </td>
@@ -220,10 +191,9 @@ export function ServerJoinModal({row, onClose, onRowPatched}: ServerJoinModalPro
           </div>
         ) : null}
 
-        {!loading && !enrichErr && serverIds.length > 0 && canVerifyLocal && !allKnownInstalled ? (
+        {!loading && !enrichErr && modRows.length > 0 && needsInstallOrUpdate ? (
           <p className="ds-modal-footnote">{t('joinModal.joinBlocked')}</p>
         ) : null}
-        {!loading && !enrichErr && serverIds.length > 0 && listErr ? <p className="ds-modal-footnote">{t('joinModal.joinBlockedVerify')}</p> : null}
 
         <div className="ds-modal-footer">
           <button type="button" className="btn btn-secondary ds-modal-footerbtn" disabled={loading} onClick={() => void load()}>

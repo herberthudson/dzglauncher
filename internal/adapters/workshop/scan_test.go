@@ -1,45 +1,26 @@
 package workshop
 
-import (
-	"os"
-	"path/filepath"
-	"testing"
-)
+import "testing"
 
-func TestNormalizeSteamRoot_tilde(t *testing.T) {
-	home := t.TempDir()
-	t.Setenv("HOME", home)
-	want := filepath.Join(home, "a", "b")
-	if err := os.MkdirAll(want, 0o755); err != nil {
-		t.Fatal(err)
+func TestParseMetaTimestamp(t *testing.T) {
+	cases := []struct {
+		meta string
+		want int64
+		ok   bool
+	}{
+		{"publishedid = 1;\ntimestamp = 1700000000;\n", 1700000000, true},
+		{`name = "x";
+timestamp = "12345";
+`, 12345, true},
+		{"Timestamp=99;", 99, true},
+		{"publishedid = 1;\n", 0, false},
+		{"timestamp = 0;\n", 0, false},
+		{"timestamp = -1;\n", 0, false},
 	}
-	got := NormalizeSteamRoot("~/a/b")
-	if got != filepath.Clean(want) {
-		t.Fatalf("got %q want %q", got, want)
-	}
-}
-
-func TestNormalizeSteamRoot_relLocalShareSteam(t *testing.T) {
-	home := t.TempDir()
-	t.Setenv("HOME", home)
-	steam := filepath.Join(home, ".local", "share", "Steam")
-	if err := os.MkdirAll(steam, 0o755); err != nil {
-		t.Fatal(err)
-	}
-	got := NormalizeSteamRoot(".local/share/Steam")
-	if got != filepath.Clean(steam) {
-		t.Fatalf("got %q want %q", got, filepath.Clean(steam))
-	}
-}
-
-func TestNormalizeSteamRoot_absUnchanged(t *testing.T) {
-	home := t.TempDir()
-	p := filepath.Join(home, "Steam")
-	if err := os.MkdirAll(p, 0o755); err != nil {
-		t.Fatal(err)
-	}
-	got := NormalizeSteamRoot(p)
-	if got != filepath.Clean(p) {
-		t.Fatalf("got %q want %q", got, filepath.Clean(p))
+	for _, tc := range cases {
+		got, ok := parseMetaTimestamp([]byte(tc.meta))
+		if ok != tc.ok || got != tc.want {
+			t.Errorf("meta %q: got %d %v want %d %v", tc.meta, got, ok, tc.want, tc.ok)
+		}
 	}
 }

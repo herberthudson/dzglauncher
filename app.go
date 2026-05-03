@@ -429,6 +429,86 @@ func (a *App) LaunchConnect(row domain.ServerRow) error {
 	return a.store.Save(cfg)
 }
 
+func cloneInt64Map(m map[string]int64) map[string]int64 {
+	if m == nil {
+		return make(map[string]int64)
+	}
+	out := make(map[string]int64, len(m))
+	for k, v := range m {
+		out[k] = v
+	}
+	return out
+}
+
+func (a *App) JoinModalWorkshopData(host string, queryPort int, gamePort int) ([]domain.WorkshopModRow, error) {
+	cfg, err := a.store.Load()
+	if err != nil {
+		return nil, err
+	}
+	ids, err := a.EnrichServerMods(host, queryPort, gamePort)
+	if err != nil {
+		return nil, err
+	}
+	root := workshop.WorkshopContentRoot(cfg.SteamRootPath)
+	var items []workshop.Item
+	if root != "" {
+		items, err = workshop.ListInstalled(root, workshop.DayZAppID(cfg.DayZBranch))
+		if err != nil {
+			return nil, err
+		}
+	}
+	installed := make(map[string]workshop.Item)
+	for _, it := range items {
+		k := workshop.NormWorkshopID(it.ID)
+		if k != "" {
+			installed[k] = it
+		}
+	}
+	ctx, cancel := context.WithTimeout(a.ctx, 60*time.Second)
+	defer cancel()
+	details, err := steam.GetPublishedFileDetails(ctx, nil, cfg.SteamWebAPIKey, ids)
+	if err != nil {
+		return nil, err
+	}
+	remoteTU := make(map[string]int64)
+	remoteTitle := make(map[string]string)
+	for k, d := range details {
+		remoteTU[k] = d.TimeUpdated
+		if d.Title != "" {
+			remoteTitle[k] = d.Title
+		}
+	}
+	cache := cfg.WorkshopModTimeUpdated
+	rows := workshop.JoinModalRows(ids, installed, cache, remoteTU, remoteTitle)
+	newCache := workshop.MergeWorkshopTimeCache(cloneInt64Map(cache), ids, installed, remoteTU)
+	cfg.WorkshopModTimeUpdated = newCache
+	if err := a.store.Save(cfg); err != nil {
+		return nil, err
+	}
+	return rows, nil
+}
+
+func (a *App) WorkshopDownloadItem(id string) error {
+	cfg, err := a.store.Load()
+	if err != nil {
+		return err
+	}
+	id = strings.TrimSpace(id)
+	if id == "" {
+		return fmt.Errorf("id vazio")
+	}
+	if cfg.WorkshopModTimeUpdated == nil {
+		cfg.WorkshopModTimeUpdated = map[string]int64{}
+	}
+	delete(cfg.WorkshopModTimeUpdated, id)
+	if err := a.store.Save(cfg); err != nil {
+		return err
+	}
+	appid := workshop.DayZAppID(cfg.DayZBranch)
+	u := fmt.Sprintf("steam://url/CommunityFilePage/%s+workshop_download_item %s %s", id, appid, id)
+	return steamlaunch.OpenSteamURI(cfg.SteamLaunchCommand, u)
+}
+
 func (a *App) OpenExternalURL(u string) {
 	if u == "" {
 		return

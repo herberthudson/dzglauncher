@@ -30,6 +30,10 @@ export function FetchSteamServers() {
   return window['go']['main']['App']['FetchSteamServers']();
 }
 
+export function JoinModalWorkshopData(arg1, arg2, arg3) {
+  return window['go']['main']['App']['JoinModalWorkshopData'](arg1, arg2, arg3);
+}
+
 export function LaunchConnect(arg1) {
   return window['go']['main']['App']['LaunchConnect'](arg1);
 }
@@ -96,6 +100,10 @@ export function ToggleFavoriteRow(arg1) {
 
 export function ValidateSteamAPIKey(arg1) {
   return window['go']['main']['App']['ValidateSteamAPIKey'](arg1);
+}
+
+export function WorkshopDownloadItem(arg1) {
+  return window['go']['main']['App']['WorkshopDownloadItem'](arg1);
 }
 
 export function WorkshopPage(arg1) {
