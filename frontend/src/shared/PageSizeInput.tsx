@@ -1,4 +1,4 @@
-import {useId} from 'react';
+import {For} from 'solid-js';
 import {clampPageSize, PAGE_PRESET_SIZES} from './pageSizeConstants';
 
 export type PageSizeInputProps = {
@@ -7,27 +7,31 @@ export type PageSizeInputProps = {
   onChange: (n: number) => void;
   disabled?: boolean;
   ariaLabel?: string;
+  class?: string;
   className?: string;
 };
 
-export function PageSizeInput({id, value, onChange, disabled, ariaLabel, className}: PageSizeInputProps) {
-  const uid = useId();
-  const listId = `page-size-dl-${uid.replace(/:/g, '')}`;
+export function PageSizeInput(props: PageSizeInputProps) {
+  const listId = `page-size-dl-${Math.random().toString(36).slice(2, 9)}`;
+  const comboClass = () => {
+    const c = props.class ?? props.className;
+    return c ? `page-size-combo ${c}` : 'page-size-combo';
+  };
   return (
-    <span className={className ? `page-size-combo ${className}` : 'page-size-combo'}>
+    <span class={comboClass()}>
       <input
-        id={id}
+        id={props.id}
         type="number"
         min={1}
         max={500}
         step={1}
         list={listId}
-        value={value}
-        disabled={disabled}
-        aria-label={ariaLabel}
-        className="page-size-combo-input"
-        onChange={(e) => {
-          const raw = e.target.value;
+        value={props.value}
+        disabled={props.disabled}
+        aria-label={props.ariaLabel}
+        class="page-size-combo-input"
+        onInput={(e) => {
+          const raw = e.currentTarget.value;
           if (raw === '') {
             return;
           }
@@ -35,24 +39,22 @@ export function PageSizeInput({id, value, onChange, disabled, ariaLabel, classNa
           if (!Number.isFinite(n)) {
             return;
           }
-          onChange(clampPageSize(n));
+          props.onChange(clampPageSize(n));
         }}
         onBlur={(e) => {
-          const raw = e.target.value.trim();
+          const raw = e.currentTarget.value.trim();
           const n = parseInt(raw, 10);
           if (!Number.isFinite(n)) {
             return;
           }
           const c = clampPageSize(n);
-          if (c !== value) {
-            onChange(c);
+          if (c !== props.value) {
+            props.onChange(c);
           }
         }}
       />
       <datalist id={listId}>
-        {PAGE_PRESET_SIZES.map((n) => (
-          <option key={n} value={n} />
-        ))}
+        <For each={PAGE_PRESET_SIZES}>{(n) => <option value={n} />}</For>
       </datalist>
     </span>
   );

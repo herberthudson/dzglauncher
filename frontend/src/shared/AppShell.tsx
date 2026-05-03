@@ -1,50 +1,48 @@
-import {NavLink, Outlet} from 'react-router-dom';
-import {useTranslation} from 'react-i18next';
-import {Clock, Package, Server, Settings, Star} from 'lucide-react';
+import {A} from '@solidjs/router';
+import {useTranslation} from 'solid-i18next';
+import {Clock, Package, Server, Settings, Star} from 'lucide-solid';
 import './layout.css';
 
-export function AppShell() {
-  const {t} = useTranslation();
+export function AppShell(props: {children?: any}) {
+  const [t] = useTranslation();
   return (
-    <div className="shell">
-      <nav className="shell-nav" aria-label={t('nav.ariaMain')}>
-        <span className="shell-brand">dzglauncher</span>
-        <div className="shell-nav-links">
-          <NavLink to="/browse" className={({isActive}) => (isActive ? 'active' : '')}>
-            <span className="nav-link-inner">
+    <div class="shell">
+      <nav class="shell-nav" aria-label={t('nav.ariaMain')}>
+        <span class="shell-brand">dzglauncher</span>
+        <div class="shell-nav-links">
+          <A href="/browse" class="nav-link" activeClass="active" end={false}>
+            <span class="nav-link-inner">
               <Server size={18} strokeWidth={1.75} aria-hidden />
               <span>{t('nav.servers')}</span>
             </span>
-          </NavLink>
-          <NavLink to="/settings" className={({isActive}) => (isActive ? 'active' : '')}>
-            <span className="nav-link-inner">
+          </A>
+          <A href="/settings" class="nav-link" activeClass="active">
+            <span class="nav-link-inner">
               <Settings size={18} strokeWidth={1.75} aria-hidden />
               <span>{t('nav.settings')}</span>
             </span>
-          </NavLink>
-          <NavLink to="/favorites" className={({isActive}) => (isActive ? 'active' : '')}>
-            <span className="nav-link-inner">
+          </A>
+          <A href="/favorites" class="nav-link" activeClass="active">
+            <span class="nav-link-inner">
               <Star size={18} strokeWidth={1.75} aria-hidden />
               <span>{t('nav.favorites')}</span>
             </span>
-          </NavLink>
-          <NavLink to="/history" className={({isActive}) => (isActive ? 'active' : '')}>
-            <span className="nav-link-inner">
+          </A>
+          <A href="/history" class="nav-link" activeClass="active">
+            <span class="nav-link-inner">
               <Clock size={18} strokeWidth={1.75} aria-hidden />
               <span>{t('nav.history')}</span>
             </span>
-          </NavLink>
-          <NavLink to="/mods" className={({isActive}) => (isActive ? 'active' : '')}>
-            <span className="nav-link-inner">
+          </A>
+          <A href="/mods" class="nav-link" activeClass="active">
+            <span class="nav-link-inner">
               <Package size={18} strokeWidth={1.75} aria-hidden />
               <span>{t('nav.modsWorkshop')}</span>
             </span>
-          </NavLink>
+          </A>
         </div>
       </nav>
-      <main className="shell-main">
-        <Outlet />
-      </main>
+      <main class="shell-main">{props.children}</main>
     </div>
   );
 }

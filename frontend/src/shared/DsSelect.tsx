@@ -1,38 +1,42 @@
-import {useCallback, useEffect, useId, useLayoutEffect, useRef, useState} from 'react';
-import {createPortal} from 'react-dom';
-import {ChevronDown} from 'lucide-react';
+import {createRenderEffect, createMemo, createSignal, For, onCleanup, Show} from 'solid-js';
+import {Portal} from 'solid-js/web';
+import {ChevronDown} from 'lucide-solid';
 
 export type DsSelectOption = {value: string; label: string};
 
-type DsSelectProps = {
+export type DsSelectProps = {
   id?: string;
   value: string;
   options: DsSelectOption[];
   onChange: (value: string) => void;
   disabled?: boolean;
   ariaLabel?: string;
+  class?: string;
   className?: string;
   width?: 'full' | 'auto';
 };
 
-export function DsSelect({id, value, options, onChange, disabled, ariaLabel, className, width = 'full'}: DsSelectProps) {
-  const [open, setOpen] = useState(false);
-  const [highlight, setHighlight] = useState(0);
-  const [panelRect, setPanelRect] = useState<{top: number; left: number; width: number; maxH: number} | null>(null);
-  const rootRef = useRef<HTMLDivElement>(null);
-  const btnRef = useRef<HTMLButtonElement>(null);
-  const panelRef = useRef<HTMLDivElement>(null);
-  const uid = useId();
+export function DsSelect(props: DsSelectProps) {
+  const width = () => props.width ?? 'full';
+  const extraClass = () => props.class ?? props.className ?? '';
+  const [open, setOpen] = createSignal(false);
+  const [highlight, setHighlight] = createSignal(0);
+  const [panelRect, setPanelRect] = createSignal<{top: number; left: number; width: number; maxH: number} | null>(null);
+  let rootRef: HTMLDivElement | undefined;
+  let btnRef: HTMLButtonElement | undefined;
+  let panelRef: HTMLDivElement | undefined;
+  const uid = `ds-${Math.random().toString(36).slice(2, 10)}`;
   const listboxId = `${uid}-lb`;
 
-  const selIndex = Math.max(
-    0,
-    options.findIndex((o) => o.value === value),
-  );
-  const displayLabel = options[selIndex]?.label ?? options[0]?.label ?? '';
+  const selIndex = () =>
+    Math.max(
+      0,
+      props.options.findIndex((o) => o.value === props.value),
+    );
+  const displayLabel = () => props.options[selIndex()]?.label ?? props.options[0]?.label ?? '';
 
-  const updatePanelRect = useCallback(() => {
-    const el = btnRef.current;
+  const updatePanelRect = () => {
+    const el = btnRef;
     if (!el) {
       return;
     }
@@ -40,62 +44,63 @@ export function DsSelect({id, value, options, onChange, disabled, ariaLabel, cla
     const spaceBelow = window.innerHeight - r.bottom - 8;
     const maxH = Math.min(280, Math.max(120, spaceBelow));
     setPanelRect({top: r.bottom + 2, left: r.left, width: r.width, maxH});
-  }, []);
+  };
 
-  useLayoutEffect(() => {
-    if (!open) {
+  createRenderEffect(() => {
+    if (!open()) {
       setPanelRect(null);
       return;
     }
-    setHighlight(selIndex);
+    setHighlight(selIndex());
     updatePanelRect();
     const onScroll = () => updatePanelRect();
     const onResize = () => updatePanelRect();
     window.addEventListener('scroll', onScroll, true);
     window.addEventListener('resize', onResize);
-    return () => {
+    onCleanup(() => {
       window.removeEventListener('scroll', onScroll, true);
       window.removeEventListener('resize', onResize);
-    };
-  }, [open, selIndex, updatePanelRect]);
+    });
+  });
 
-  useEffect(() => {
-    if (!open) {
+  createRenderEffect(() => {
+    if (!open()) {
       return;
     }
     const onDoc = (e: MouseEvent) => {
       const t = e.target as Node;
-      if (rootRef.current?.contains(t) || panelRef.current?.contains(t)) {
+      if (rootRef?.contains(t) || panelRef?.contains(t)) {
         return;
       }
       setOpen(false);
     };
     document.addEventListener('mousedown', onDoc);
-    return () => document.removeEventListener('mousedown', onDoc);
-  }, [open]);
+    onCleanup(() => document.removeEventListener('mousedown', onDoc));
+  });
 
-  useEffect(() => {
-    if (!open) {
+  createRenderEffect(() => {
+    if (!open()) {
       return;
     }
+    const opts = props.options;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault();
         setOpen(false);
-        btnRef.current?.focus();
+        btnRef?.focus();
         return;
       }
       if (e.key === 'ArrowDown') {
         e.preventDefault();
-        if (options.length === 0) {
+        if (opts.length === 0) {
           return;
         }
-        setHighlight((h) => Math.min(h + 1, options.length - 1));
+        setHighlight((h) => Math.min(h + 1, opts.length - 1));
         return;
       }
       if (e.key === 'ArrowUp') {
         e.preventDefault();
-        if (options.length === 0) {
+        if (opts.length === 0) {
           return;
         }
         setHighlight((h) => Math.max(h - 1, 0));
@@ -103,102 +108,112 @@ export function DsSelect({id, value, options, onChange, disabled, ariaLabel, cla
       }
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
-        if (options.length === 0) {
+        if (opts.length === 0) {
           return;
         }
-        const opt = options[highlight];
+        const opt = opts[highlight()];
         if (opt) {
-          onChange(opt.value);
+          props.onChange(opt.value);
         }
         setOpen(false);
-        btnRef.current?.focus();
+        btnRef?.focus();
       }
     };
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [open, highlight, options, onChange]);
+    onCleanup(() => window.removeEventListener('keydown', onKey));
+  });
 
   const pick = (v: string) => {
-    onChange(v);
+    props.onChange(v);
     setOpen(false);
-    btnRef.current?.focus();
+    btnRef?.focus();
   };
 
   const toggle = () => {
-    if (disabled) {
+    if (props.disabled) {
       return;
     }
     setOpen((o) => !o);
   };
 
-  const wrapClass = `ds-select${width === 'auto' ? ' ds-select-auto' : ''}${className ? ` ${className}` : ''}`;
+  const wrapClass = () =>
+    `ds-select${width() === 'auto' ? ' ds-select-auto' : ''}${extraClass() ? ` ${extraClass()}` : ''}`;
 
-  const panel =
-    open && panelRect
-      ? createPortal(
-          <div
-            ref={panelRef}
-            id={listboxId}
-            role="listbox"
-            className="ds-select-panel"
-            style={{
-              position: 'fixed',
-              top: panelRect.top,
-              left: panelRect.left,
-              width: panelRect.width,
-              maxHeight: panelRect.maxH,
-              zIndex: 10000,
-            }}
-          >
-            {options.map((opt, i) => (
-              <div
-                key={opt.value}
-                role="option"
-                aria-selected={opt.value === value}
-                className={`ds-select-option${i === highlight ? ' ds-select-option-active' : ''}${opt.value === value ? ' ds-select-option-selected' : ''}`}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  pick(opt.value);
-                }}
-                onMouseEnter={() => setHighlight(i)}
-              >
-                {opt.label}
-              </div>
-            ))}
-          </div>,
-          document.body,
-        )
-      : null;
+  const portalData = createMemo(() => {
+    if (!open()) {
+      return null;
+    }
+    return panelRect();
+  });
 
   return (
-    <div ref={rootRef} className={wrapClass}>
+    <div ref={(el) => (rootRef = el)} class={wrapClass()}>
       <button
-        ref={btnRef}
+        ref={(el) => (btnRef = el)}
         type="button"
-        id={id}
-        className="ds-select-trigger"
-        disabled={disabled}
-        aria-label={ariaLabel}
-        aria-expanded={open}
+        id={props.id}
+        class="ds-select-trigger"
+        disabled={props.disabled}
+        aria-label={props.ariaLabel}
+        aria-expanded={open()}
         aria-controls={listboxId}
         aria-haspopup="listbox"
         onClick={toggle}
         onKeyDown={(e) => {
-          if (disabled) {
+          if (props.disabled) {
             return;
           }
           if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            if (!open) {
+            if (!open()) {
               setOpen(true);
             }
           }
         }}
       >
-        <span className="ds-select-value">{displayLabel}</span>
-        <ChevronDown size={16} strokeWidth={2} className="ds-select-chevron" aria-hidden />
+        <span class="ds-select-value">{displayLabel()}</span>
+        <ChevronDown size={16} strokeWidth={2} class="ds-select-chevron" aria-hidden />
       </button>
-      {panel}
+      <Portal mount={document.body}>
+        <Show when={portalData()}>
+          {(pr) => {
+            const r = typeof pr === 'function' ? (pr as () => {top: number; left: number; width: number; maxH: number})() : pr;
+            return (
+            <div
+              ref={(el) => (panelRef = el)}
+              id={listboxId}
+              role="listbox"
+              class="ds-select-panel"
+              style={{
+                position: 'fixed',
+                top: `${r.top}px`,
+                left: `${r.left}px`,
+                width: `${r.width}px`,
+                'max-height': `${r.maxH}px`,
+                'z-index': '10000',
+              }}
+            >
+              <For each={props.options}>
+                {(opt, i) => (
+                  <div
+                    role="option"
+                    aria-selected={opt.value === props.value}
+                    class={`ds-select-option${i() === highlight() ? ' ds-select-option-active' : ''}${opt.value === props.value ? ' ds-select-option-selected' : ''}`}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      pick(opt.value);
+                    }}
+                    onMouseEnter={() => setHighlight(i())}
+                  >
+                    {opt.label}
+                  </div>
+                )}
+              </For>
+            </div>
+            );
+          }}
+        </Show>
+      </Portal>
     </div>
   );
 }

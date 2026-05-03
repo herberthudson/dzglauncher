@@ -1,11 +1,11 @@
-import {useEffect} from 'react';
+import {onCleanup, onMount} from 'solid-js';
 import * as App from '../../wailsjs/go/main/App';
 import {i18n} from './i18n';
 import {resolveLocale} from './resolveLocale';
 import {applyThemeToDocument} from '../theme/resolveTheme';
 
-export function I18nSync({children}: {children: React.ReactNode}) {
-  useEffect(() => {
+export function I18nSync(props: {children: any}) {
+  onMount(() => {
     let ok = true;
     App.LoadSettings()
       .then((s) => {
@@ -17,9 +17,9 @@ export function I18nSync({children}: {children: React.ReactNode}) {
         applyThemeToDocument(s.uiTheme);
       })
       .catch(() => {});
-    return () => {
+    onCleanup(() => {
       ok = false;
-    };
-  }, []);
-  return <>{children}</>;
+    });
+  });
+  return <>{props.children}</>;
 }

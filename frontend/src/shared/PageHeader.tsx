@@ -1,20 +1,21 @@
-import type {LucideIcon} from 'lucide-react';
+import type {Component} from 'solid-js';
 
 type PageHeaderProps = {
-  icon: LucideIcon;
+  icon: Component<{size?: number; strokeWidth?: number; class?: string; 'aria-hidden'?: boolean}>;
   title: string;
   description?: string;
 };
 
-export function PageHeader({icon: Icon, title, description}: PageHeaderProps) {
+export function PageHeader(props: PageHeaderProps) {
+  const Icon = props.icon;
   return (
-    <header className="page-header">
-      <div className="page-header-icon" aria-hidden>
+    <header class="page-header">
+      <div class="page-header-icon" aria-hidden>
         <Icon size={26} strokeWidth={1.65} />
       </div>
-      <div className="page-header-text">
-        <h1 className="page-header-title">{title}</h1>
-        {description ? <p className="page-header-desc">{description}</p> : null}
+      <div class="page-header-text">
+        <h1 class="page-header-title">{props.title}</h1>
+        {props.description ? <p class="page-header-desc">{props.description}</p> : null}
       </div>
     </header>
   );

@@ -1,6 +1,6 @@
-import {useCallback, useEffect, useMemo, useState} from 'react';
-import {useTranslation} from 'react-i18next';
-import {BookmarkPlus, Clock, Package, Play, Server, Trash2} from 'lucide-react';
+import {createEffect, createMemo, createSignal, For, onMount, Show} from 'solid-js';
+import {useTranslation} from 'solid-i18next';
+import {BookmarkPlus, Clock, Package, Play, Server, Trash2} from 'lucide-solid';
 import * as App from '../../../wailsjs/go/main/App';
 import {domain} from '../../../wailsjs/go/models';
 import {mapQuickFavError, rowKey} from '../../shared/favoriteRows';
@@ -13,73 +13,87 @@ import {ServerAddressCell} from '../../shared/ServerAddressCell';
 import {ServerJoinModal} from '../../shared/ServerJoinModal';
 import {ServerPasswordCell} from '../../shared/ServerPasswordCell';
 
-export function HistoryPage() {
-  const {t, i18n} = useTranslation();
-  const [s, setS] = useState<domain.Settings | null>(null);
-  const [err, setErr] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(() => clampPageSize(10));
-  const [joinModalRow, setJoinModalRow] = useState<domain.ServerRow | null>(null);
-  const [rowMergedByKey, setRowMergedByKey] = useState<Record<string, domain.ServerRow>>({});
+export default function HistoryPage() {
+  const [t, i18n] = useTranslation();
+  const [s, setS] = createSignal<domain.Settings | null>(null);
+  const [err, setErr] = createSignal('');
+  const [loading, setLoading] = createSignal(false);
+  const [page, setPage] = createSignal(1);
+  const [pageSize, setPageSize] = createSignal(clampPageSize(10));
+  const [joinModalRow, setJoinModalRow] = createSignal<domain.ServerRow | null>(null);
+  const [rowMergedByKey, setRowMergedByKey] = createSignal<Record<string, domain.ServerRow>>({});
 
-  const reload = useCallback(() => {
-    return App.LoadSettings()
+  const reload = () =>
+    App.LoadSettings()
       .then((v) => {
         setErr('');
-        setS(v);
+        setS(domain.Settings.createFrom(v as object));
       })
       .catch((e: unknown) => {
         setErr(String(e));
         setS(null);
       });
-  }, []);
 
-  useEffect(() => {
-    reload();
-  }, [reload]);
+  onMount(() => {
+    void reload();
+  });
 
-  const hist = s && Array.isArray(s.history) ? s.history : [];
+  const hist = () => (s() && Array.isArray(s()!.history) ? s()!.history : []);
 
-  useEffect(() => {
-    setRowMergedByKey({});
-  }, [s]);
+  const allEntries = createMemo(() => historyEntries(hist()));
 
-  const allEntries = useMemo(() => historyEntries(hist), [hist]);
-
-  const totalPages = Math.max(1, Math.ceil(allEntries.length / pageSize) || 1);
-
-  useEffect(() => {
-    setPage((p) => Math.min(Math.max(1, p), totalPages));
-  }, [allEntries.length, pageSize, totalPages]);
-
-  const pageSlice = useMemo(() => {
-    const start = (page - 1) * pageSize;
-    return allEntries.slice(start, start + pageSize);
-  }, [allEntries, page, pageSize]);
-
-  const formatConnected = useCallback(
-    (atUnix: number) => {
-      if (!atUnix) {
-        return '';
-      }
-      const d = new Date(atUnix * 1000);
-      return d.toLocaleString(i18n.language, {dateStyle: 'short', timeStyle: 'short'});
-    },
-    [i18n.language],
+  const historyFingerprint = createMemo(() =>
+    allEntries()
+      .map((e) => `${e.historyIndex}:${rowKey(e.row)}`)
+      .join('|'),
   );
 
-  const noopPatch = useCallback((_next: domain.ServerRow) => {}, []);
+  createEffect(() => {
+    historyFingerprint();
+    setRowMergedByKey({});
+  });
 
-  if (!s) {
-    return <p>{t('common.loading')}</p>;
-  }
+  const totalPages = createMemo(() => Math.max(1, Math.ceil(allEntries().length / pageSize()) || 1));
+
+  createEffect(() => {
+    const tp = totalPages();
+    setPage((p) => Math.min(Math.max(1, p), tp));
+  });
+
+  const pageSlice = createMemo(() => {
+    void rowMergedByKey();
+    const start = (page() - 1) * pageSize();
+    return allEntries().slice(start, start + pageSize());
+  });
+
+  const pageSliceRows = createMemo(() => {
+    const m = rowMergedByKey();
+    return pageSlice().map((e) => {
+      const k = rowKey(e.row);
+      return {
+        historyIndex: e.historyIndex,
+        atUnix: e.atUnix,
+        row: domain.ServerRow.createFrom((m[k] ?? e.row) as object),
+      };
+    });
+  });
+
+  const formatConnected = (atUnix: number) => {
+    if (!atUnix) {
+      return '';
+    }
+    const d = new Date(atUnix * 1000);
+    return d.toLocaleString(i18n().language, {dateStyle: 'short', timeStyle: 'short'});
+  };
+
+  const noopPatch = (_next: domain.ServerRow) => {};
 
   const ping = () => {
-    if (pageSlice.length === 0) {
+    const sl = pageSlice();
+    if (sl.length === 0) {
       return;
     }
-    const rows = pageSlice.map((e) => e.row);
+    const rows = sl.map((e) => e.row);
     setLoading(true);
     App.RefreshServersPing(rows)
       .then((updated) => {
@@ -96,153 +110,182 @@ export function HistoryPage() {
   };
 
   return (
-    <div>
-      <PageHeader icon={Clock} title={t('history.title')} description={t('history.subtitle')} />
-      {err ? <div className="msg msg-error">{err}</div> : null}
+    <>
+      <Show when={!s()}>
+        <p>{t('common.loading')}</p>
+      </Show>
+      <Show when={s()}>
+        <div>
+          <PageHeader icon={Clock} title={t('history.title')} description={t('history.subtitle')} />
+          <Show when={!!err()}>
+            <div class="msg msg-error">{err()}</div>
+          </Show>
 
-      <section className="ds-card browse-table-card" aria-labelledby="hist-table-title">
-        <h2 id="hist-table-title" className="ds-section-title">
-          <Server size={16} strokeWidth={1.75} aria-hidden />
-          {t('history.tableTitle')}
-        </h2>
-        {allEntries.length === 0 ? <p style={{marginTop: 0}}>{t('history.empty')}</p> : null}
-        {allEntries.length > 0 ? (
-          <>
-            <div className="browse-table-toolbar">
-              <p className="browse-page-line">{loading ? t('common.processing') : t('history.pageLine', {slice: pageSlice.length, total: allEntries.length})}</p>
-              <div className="browse-table-toolbar-actions">
-                <span className="browse-toolbar-label">{t('browse.perPage')}</span>
-                <PageSizeInput
-                  id="history-page-size"
-                  value={pageSize}
-                  disabled={loading}
-                  ariaLabel={t('browse.perPage')}
-                  onChange={(n) => {
-                    setPageSize(n);
-                    setPage(1);
-                  }}
-                />
-                <div className="browse-pagination-btns">
-                  <button type="button" className="btn btn-secondary" disabled={page <= 1 || loading} onClick={() => setPage(1)} aria-label={t('browse.pageFirst')}>
-                    ««
-                  </button>
-                  <button type="button" className="btn btn-secondary" disabled={page <= 1 || loading} onClick={() => setPage((p) => p - 1)} aria-label={t('browse.pagePrev')}>
-                    ‹
-                  </button>
-                  <span className="browse-page-indicator" aria-live="polite">
-                    {page} / {totalPages}
-                  </span>
-                  <button type="button" className="btn btn-secondary" disabled={page >= totalPages || loading} onClick={() => setPage((p) => p + 1)} aria-label={t('browse.pageNext')}>
-                    ›
-                  </button>
-                  <button type="button" className="btn btn-secondary" disabled={page >= totalPages || loading} onClick={() => setPage(totalPages)} aria-label={t('browse.pageLast')}>
-                    »»
-                  </button>
+          <section class="ds-card browse-table-card" aria-labelledby="hist-table-title">
+            <h2 id="hist-table-title" class="ds-section-title">
+              <Server size={16} strokeWidth={1.75} aria-hidden />
+              {t('history.tableTitle')}
+            </h2>
+            {allEntries().length === 0 ? <p style={{'margin-top': 0}}>{t('history.empty')}</p> : null}
+            {allEntries().length > 0 ? (
+              <>
+                <div class="browse-table-toolbar">
+                  <p class="browse-page-line">
+                    {loading() ? t('common.processing') : t('history.pageLine', {slice: pageSlice().length, total: allEntries().length})}
+                  </p>
+                  <div class="browse-table-toolbar-actions">
+                    <span class="browse-toolbar-label">{t('browse.perPage')}</span>
+                    <PageSizeInput
+                      id="history-page-size"
+                      value={pageSize()}
+                      disabled={loading()}
+                      ariaLabel={t('browse.perPage')}
+                      onChange={(n) => {
+                        setPageSize(n);
+                        setPage(1);
+                      }}
+                    />
+                    <div class="browse-pagination-btns">
+                      <button type="button" class="btn btn-secondary" disabled={page() <= 1 || loading()} onClick={() => setPage(1)} aria-label={t('browse.pageFirst')}>
+                        ««
+                      </button>
+                      <button type="button" class="btn btn-secondary" disabled={page() <= 1 || loading()} onClick={() => setPage((p) => p - 1)} aria-label={t('browse.pagePrev')}>
+                        ‹
+                      </button>
+                      <span class="browse-page-indicator" aria-live="polite">
+                        {page()} / {totalPages()}
+                      </span>
+                      <button type="button" class="btn btn-secondary" disabled={page() >= totalPages() || loading()} onClick={() => setPage((p) => p + 1)} aria-label={t('browse.pageNext')}>
+                        ›
+                      </button>
+                      <button type="button" class="btn btn-secondary" disabled={page() >= totalPages() || loading()} onClick={() => setPage(totalPages())} aria-label={t('browse.pageLast')}>
+                        »»
+                      </button>
+                    </div>
+                    <button type="button" class="btn btn-secondary" disabled={loading() || pageSlice().length === 0} onClick={ping} title={t('favorites.refreshPingTitle')}>
+                      {t('favorites.refreshPing')}
+                    </button>
+                  </div>
                 </div>
-                <button type="button" className="btn btn-secondary" disabled={loading || pageSlice.length === 0} onClick={ping} title={t('favorites.refreshPingTitle')}>
-                  {t('favorites.refreshPing')}
-                </button>
-              </div>
-            </div>
-            <div className="table-wrap browse-table-scroll">
-              <table className="data">
-                <caption className="sr-only">{t('history.tableCaption')}</caption>
-                <thead>
-                  <tr>
-                    <th scope="col" title={t('browse.thNameLong')}>
-                      {t('browse.thName')}
-                    </th>
-                    <th scope="col" className="server-password-th" title={t('browse.thPasswordLong')}>
-                      {t('browse.thPassword')}
-                    </th>
-                    <th scope="col" title={t('browse.thMapLong')}>
-                      {t('browse.thMap')}
-                    </th>
-                    <th scope="col" title={t('browse.thPPLong')}>
-                      {t('browse.thPP')}
-                    </th>
-                    <th scope="col" title={t('browse.thProvLong')}>
-                      {t('browse.thProv')}
-                    </th>
-                    <th scope="col" title={t('browse.thModsLong')}>
-                      {t('browse.thMods')}
-                    </th>
-                    <th scope="col" title={t('browse.thTimeLong')}>
-                      {t('browse.thTime')}
-                    </th>
-                    <th scope="col" title={t('browse.thPlayersLong')}>
-                      {t('browse.thPlayers')}
-                    </th>
-                    <th scope="col" title={t('browse.thAddrLong')}>
-                      {t('browse.thAddr')}
-                    </th>
-                    <th scope="col" title={t('browse.thPingLong')}>
-                      {t('browse.thPing')}
-                    </th>
-                    <th scope="col" title={t('browse.thDistLong')}>
-                      {t('browse.thDist')}
-                    </th>
-                    <th scope="col" title={t('browse.thActionsLong')}>
-                      {t('browse.thActions')}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pageSlice.map(({row: baseRow, historyIndex, atUnix}) => {
-                    const k = rowKey(baseRow);
-                    const merged = rowMergedByKey[k];
-                    const row = merged ?? baseRow;
-                    const when = formatConnected(atUnix);
-                    return (
-                      <tr key={k + ':' + historyIndex}>
-                        <td style={{maxWidth: '14rem', whiteSpace: 'normal'}}>
-                          <div>{row.name}</div>
-                          {when ? (
-                            <div style={{fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.15rem'}} title={t('history.connectedAtTitle')}>
-                              {t('history.connectedAt', {when})}
-                            </div>
-                          ) : null}
-                        </td>
-                        <td className="server-password-td">
-                          <ServerPasswordCell row={row} />
-                        </td>
-                        <td>{row.mapName}</td>
-                        <td>{row.perspective}</td>
-                        <td>{row.provider}</td>
-                        <td>{row.modded ? t('common.yes') : t('common.no')}</td>
-                        <td>{row.inGameTime}</td>
-                        <td>{formatPlayersWithQueue(row.players, row.maxPlayers, row.queueSize)}</td>
-                        <td style={{maxWidth: '18rem', whiteSpace: 'normal'}}>
-                          <ServerAddressCell address={row.address} />
-                        </td>
-                        <td>{row.ping}</td>
-                        <td>{row.distanceLabel}</td>
-                        <td>
-                          <div className="row-actions row-actions-icon-only">
-                            <button type="button" className="btn btn-secondary" title={t('favorites.connectTitle')} aria-label={t('favorites.connect')} onClick={() => setJoinModalRow(row)}>
-                              <Play size={14} strokeWidth={2} aria-hidden />
-                            </button>
-                            <button type="button" className="btn btn-secondary" title={t('favorites.joinPanelModsTitle')} aria-label={t('favorites.joinPanelMods')} onClick={() => setJoinModalRow(row)}>
-                              <Package size={14} strokeWidth={2} aria-hidden />
-                            </button>
-                            <button type="button" className="btn btn-secondary" title={t('browse.quickFavTitle')} aria-label={t('browse.quickFav')} onClick={() => App.SetQuickFavorite(row, window.prompt(t('browse.quickFavPrompt'), row.name) || row.name).catch((e) => setErr(mapQuickFavError(String(e), t)))}>
-                              <BookmarkPlus size={14} strokeWidth={2} aria-hidden />
-                            </button>
-                            <button type="button" className="btn btn-danger" title={t('history.deleteTitle')} aria-label={t('history.delete')} onClick={() => App.RemoveHistoryIndex(historyIndex).then(reload).catch((e) => setErr(String(e)))}>
-                              <Trash2 size={14} strokeWidth={2} aria-hidden />
-                            </button>
-                          </div>
-                        </td>
+                <div class="table-wrap browse-table-scroll">
+                  <table class="data">
+                    <caption class="sr-only">{t('history.tableCaption')}</caption>
+                    <thead>
+                      <tr>
+                        <th scope="col" title={t('browse.thNameLong')}>
+                          {t('browse.thName')}
+                        </th>
+                        <th scope="col" class="server-password-th" title={t('browse.thPasswordLong')}>
+                          {t('browse.thPassword')}
+                        </th>
+                        <th scope="col" title={t('browse.thMapLong')}>
+                          {t('browse.thMap')}
+                        </th>
+                        <th scope="col" title={t('browse.thPPLong')}>
+                          {t('browse.thPP')}
+                        </th>
+                        <th scope="col" title={t('browse.thProvLong')}>
+                          {t('browse.thProv')}
+                        </th>
+                        <th scope="col" title={t('browse.thModsLong')}>
+                          {t('browse.thMods')}
+                        </th>
+                        <th scope="col" title={t('browse.thTimeLong')}>
+                          {t('browse.thTime')}
+                        </th>
+                        <th scope="col" title={t('browse.thPlayersLong')}>
+                          {t('browse.thPlayers')}
+                        </th>
+                        <th scope="col" title={t('browse.thAddrLong')}>
+                          {t('browse.thAddr')}
+                        </th>
+                        <th scope="col" title={t('browse.thPingLong')}>
+                          {t('browse.thPing')}
+                        </th>
+                        <th scope="col" title={t('browse.thDistLong')}>
+                          {t('browse.thDist')}
+                        </th>
+                        <th scope="col" title={t('browse.thActionsLong')}>
+                          {t('browse.thActions')}
+                        </th>
                       </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </>
-        ) : null}
-      </section>
-      {joinModalRow ? <ServerJoinModal row={joinModalRow} onClose={() => setJoinModalRow(null)} onRowPatched={noopPatch} /> : null}
-    </div>
+                    </thead>
+                    <tbody>
+                      <For each={pageSliceRows()}>
+                        {(e) => {
+                          const row = e.row;
+                          const when = formatConnected(e.atUnix);
+                          return (
+                            <tr>
+                              <td style={{'max-width': '14rem', 'white-space': 'normal'}}>
+                                <div>{row.name}</div>
+                                {when ? (
+                                  <div style={{'font-size': '0.7rem', color: 'var(--text-muted)', 'margin-top': '0.15rem'}} title={t('history.connectedAtTitle')}>
+                                    {t('history.connectedAt', {when})}
+                                  </div>
+                                ) : null}
+                              </td>
+                              <td class="server-password-td">
+                                <ServerPasswordCell row={row} />
+                              </td>
+                              <td>{row.mapName}</td>
+                              <td>{row.perspective}</td>
+                              <td>{row.provider}</td>
+                              <td>{row.modded ? t('common.yes') : t('common.no')}</td>
+                              <td>{row.inGameTime}</td>
+                              <td>{formatPlayersWithQueue(row.players, row.maxPlayers, row.queueSize)}</td>
+                              <td style={{'max-width': '18rem', 'white-space': 'normal'}}>
+                                <ServerAddressCell address={row.address} />
+                              </td>
+                              <td>{row.ping}</td>
+                              <td>{row.distanceLabel}</td>
+                              <td>
+                                <div class="row-actions row-actions-icon-only">
+                                  <button type="button" class="btn btn-secondary" title={t('favorites.connectTitle')} aria-label={t('favorites.connect')} onClick={() => setJoinModalRow(row)}>
+                                    <Play size={14} strokeWidth={2} aria-hidden />
+                                  </button>
+                                  <button type="button" class="btn btn-secondary" title={t('favorites.joinPanelModsTitle')} aria-label={t('favorites.joinPanelMods')} onClick={() => setJoinModalRow(row)}>
+                                    <Package size={14} strokeWidth={2} aria-hidden />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    class="btn btn-secondary"
+                                    title={t('browse.quickFavTitle')}
+                                    aria-label={t('browse.quickFav')}
+                                    onClick={() =>
+                                      App.SetQuickFavorite(row, window.prompt(t('browse.quickFavPrompt'), row.name) || row.name).catch((e) =>
+                                        setErr(mapQuickFavError(String(e), t)),
+                                      )
+                                    }
+                                  >
+                                    <BookmarkPlus size={14} strokeWidth={2} aria-hidden />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    class="btn btn-danger"
+                                    title={t('history.deleteTitle')}
+                                    aria-label={t('history.delete')}
+                                    onClick={() => App.RemoveHistoryIndex(e.historyIndex).then(reload).catch((e) => setErr(String(e)))}
+                                  >
+                                    <Trash2 size={14} strokeWidth={2} aria-hidden />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        }}
+                      </For>
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            ) : null}
+          </section>
+          <Show when={joinModalRow()}>
+            <ServerJoinModal row={joinModalRow()} onClose={() => setJoinModalRow(null)} onRowPatched={noopPatch} />
+          </Show>
+        </div>
+      </Show>
+    </>
   );
 }

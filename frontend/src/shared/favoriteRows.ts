@@ -8,6 +8,10 @@ export function favoriteKeyParts(ip: string, gamePort: number, queryPort: number
   return (ip || '').trim().toLowerCase() + ':' + gamePort + ':' + queryPort;
 }
 
+export function favRowKey(r: domain.ServerRow): string {
+  return favoriteKeyParts(r.queryHost, r.gamePort, r.queryPort);
+}
+
 export function favoriteToServerRow(f: domain.Favorite): domain.ServerRow {
   const nm = (f.name && f.name.trim()) || (f.label && f.label.trim()) || f.ip || '';
   const ping = f.ping != null && f.ping > 0 ? f.ping : 9999;

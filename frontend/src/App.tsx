@@ -1,30 +1,32 @@
-import {BrowserRouter, Navigate, Route, Routes} from 'react-router-dom';
+import {lazy} from 'solid-js';
+import {Navigate, Route, Router} from '@solidjs/router';
 import {AppShell} from './shared/AppShell';
-import {SettingsPage} from './features/settings/SettingsPage';
-import {ServerBrowserPage} from './features/server-browser/ServerBrowserPage';
-import {FavoritesPage} from './features/favorites/FavoritesPage';
-import {HistoryPage} from './features/history/HistoryPage';
-import {ModsPage} from './features/mods/ModsPage';
 import {I18nSync} from './i18n/I18nSync';
 import './theme/app.css';
 
-function App() {
+const ServerBrowserPage = lazy(() => import('./features/server-browser/ServerBrowserPage'));
+const SettingsPage = lazy(() => import('./features/settings/SettingsPage'));
+const FavoritesPage = lazy(() => import('./features/favorites/FavoritesPage'));
+const HistoryPage = lazy(() => import('./features/history/HistoryPage'));
+const ModsPage = lazy(() => import('./features/mods/ModsPage'));
+
+function RootLayout(props: {children?: any}) {
   return (
-    <BrowserRouter>
-      <I18nSync>
-        <Routes>
-          <Route path="/" element={<AppShell />}>
-            <Route index element={<Navigate to="/browse" replace />} />
-            <Route path="browse" element={<ServerBrowserPage />} />
-            <Route path="settings" element={<SettingsPage />} />
-            <Route path="favorites" element={<FavoritesPage />} />
-            <Route path="history" element={<HistoryPage />} />
-            <Route path="mods" element={<ModsPage />} />
-          </Route>
-        </Routes>
-      </I18nSync>
-    </BrowserRouter>
+    <I18nSync>
+      <AppShell>{props.children}</AppShell>
+    </I18nSync>
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <Router root={RootLayout}>
+      <Route path="/" component={() => <Navigate href="/browse" />} />
+      <Route path="/browse" component={ServerBrowserPage} />
+      <Route path="/settings" component={SettingsPage} />
+      <Route path="/favorites" component={FavoritesPage} />
+      <Route path="/history" component={HistoryPage} />
+      <Route path="/mods" component={ModsPage} />
+    </Router>
+  );
+}

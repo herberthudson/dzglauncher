@@ -1,6 +1,6 @@
 # dzglauncher
 
-Desktop client to browse DayZ servers, manage favorites (including up to **five quick favorites**), connection history, Steam Workshop mods, and launches via Steam. **Linux-first**, built with **Wails v2** (Go + React/TypeScript).
+Desktop client to browse DayZ servers, manage favorites (including up to **five quick favorites**), connection history, Steam Workshop mods, and launches via Steam. **Linux-first**, built with **Wails v2** (Go + SolidJS/TypeScript).
 
 License: **Apache License 2.0** — see [`LICENSE`](LICENSE).
 
@@ -80,7 +80,7 @@ dzglauncher/
 │   ├── services/          # Use cases (Steam browser, filters, geo, launch, favorites/history)
 │   ├── adapters/          # HTTP, files, A2S, Steam API, Workshop, LAN, Battlemetrics
 │   └── ports/             # Interfaces (e.g. config store)
-├── frontend/              # React 18 + TypeScript + Vite + react-router-dom + i18next
+├── frontend/              # SolidJS + TypeScript + Vite + @solidjs/router + i18next
 ├── data/                  # Embedded data (e.g. DB-IP sample ranges)
 ├── build/                 # Wails packaging assets
 └── docs/                  # Documentation

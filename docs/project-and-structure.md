@@ -8,9 +8,9 @@ This document describes **what exists in this repository**: languages, main libr
 |-------|------------|
 | Desktop shell | [Wails v2](https://wails.io/) (`github.com/wailsapp/wails/v2`) — Go 1.23+, native webview, generated bindings to the frontend. |
 | Backend / domain | Go, module `dzglauncher`, packages under `internal/`. |
-| UI | React 18, TypeScript, [Vite 3](https://vitejs.dev/), [react-router-dom](https://reactrouter.com/) v6. |
-| i18n | [i18next](https://www.i18next.com/) + `react-i18next` (locales under `frontend/src/locales/`). |
-| Icons | [lucide-react](https://lucide.dev/). |
+| UI | SolidJS 1.9, TypeScript, [Vite 5](https://vitejs.dev/), [@solidjs/router](https://docs.solidjs.com/solid-router). |
+| i18n | [i18next](https://www.i18next.com/) + [solid-i18next](https://www.npmjs.com/package/solid-i18next) (locales under `frontend/src/locales/`). |
+| Icons | [lucide-solid](https://lucide.dev/). |
 | Styling | CSS theme variables (`frontend/src/theme/`, `frontend/src/shared/layout.css`). |
 
 ### Platform scope
@@ -34,7 +34,7 @@ HTTP to Steam Web API, Battlemetrics, Workshop filesystem access, and JSON persi
 ### Repository root
 
 - **`main.go`** — `wails.Run`, embed `frontend/dist`, `App` registered in `Bind`.
-- **`app.go`** — `App` struct and dependencies; exported methods are the React-facing API (settings, Steam browser, ping, favorites, launch, etc.).
+- **`app.go`** — `App` struct and dependencies; exported methods are the UI-facing API (settings, Steam browser, ping, favorites, launch, etc.).
 - **`wails.json`** — binary name, npm frontend commands, author, Linux build tag `webkit2_41`.
 
 ### `internal/domain/`
@@ -69,7 +69,7 @@ Small interfaces (e.g. `ConfigStore`) for tests and dependency inversion.
 
 ### `frontend/src/`
 
-- **`App.tsx`** — routes: `/browse`, `/settings`, `/favorites`, `/history`, `/mods`.
+- **`App.tsx`** — `Router` + `Route` paths: `/browse`, `/settings`, `/favorites`, `/history`, `/mods` (layout via `Router` `root`).
 - **`features/*`** — one folder per screen (`server-browser`, `settings`, `favorites`, `history`, `mods`).
 - **`shared/`** — reusable pieces (`AppShell`, tables, modals, `favoriteRows`, etc.).
 - **`i18n/`** — i18n bootstrap.
