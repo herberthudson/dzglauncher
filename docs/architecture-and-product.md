@@ -222,9 +222,7 @@ Dimensions an equivalent client should persist (format free: file, local DB, etc
 - **Identity:** in-game display name.
 - **Keys:** Steam Web API (minimum length validation and test request); Battlemetrics (optional; HTTP validation).
 - **Steam client:** preferred command (native vs sandboxed).
-- **Window:** fullscreen vs last size.
 - **Paths:** Steam install, product branch (**stable** default for legacy configs).
-- **Behavior:** debug mode; **automatic mod install** vs manual.
 - **Servers:** **favorites** list; **quick favorites** list (up to five entries); **history** of recent joins.
 - **Caches:** local coordinates, API cooldown, cached lists for responsive UI.
 

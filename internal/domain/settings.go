@@ -95,9 +95,6 @@ type Settings struct {
 	SteamRootPath          string           `json:"steamRootPath"`
 	DayZInstallPath        string           `json:"dayZInstallPath,omitempty"`
 	DayZBranch             string           `json:"dayZBranch"`
-	Fullscreen             bool             `json:"fullscreen"`
-	Debug                  bool             `json:"debug"`
-	ModInstallAuto         bool             `json:"modInstallAuto"`
 	Favorites              []Favorite       `json:"favorites"`
 	QuickFavorite          *Favorite        `json:"quickFavorite,omitempty"`
 	QuickFavoriteLabel     string           `json:"quickFavoriteLabel"`

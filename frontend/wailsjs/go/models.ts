@@ -166,9 +166,6 @@ export namespace domain {
 	    steamRootPath: string;
 	    dayZInstallPath?: string;
 	    dayZBranch: string;
-	    fullscreen: boolean;
-	    debug: boolean;
-	    modInstallAuto: boolean;
 	    favorites: Favorite[];
 	    quickFavorite?: Favorite;
 	    quickFavoriteLabel: string;
@@ -198,9 +195,6 @@ export namespace domain {
 	        this.steamRootPath = source["steamRootPath"];
 	        this.dayZInstallPath = source["dayZInstallPath"];
 	        this.dayZBranch = source["dayZBranch"];
-	        this.fullscreen = source["fullscreen"];
-	        this.debug = source["debug"];
-	        this.modInstallAuto = source["modInstallAuto"];
 	        this.favorites = this.convertValues(source["favorites"], Favorite);
 	        this.quickFavorite = this.convertValues(source["quickFavorite"], Favorite);
 	        this.quickFavoriteLabel = source["quickFavoriteLabel"];

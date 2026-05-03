@@ -1,6 +1,6 @@
 import {useEffect, useState} from 'react';
 import {useTranslation} from 'react-i18next';
-import {Gamepad2, Globe, MapPin, SlidersHorizontal, ToggleLeft} from 'lucide-react';
+import {Gamepad2, Globe, MapPin, SlidersHorizontal} from 'lucide-react';
 import * as App from '../../../wailsjs/go/main/App';
 import {domain} from '../../../wailsjs/go/models';
 import {i18n} from '../../i18n/i18n';
@@ -191,31 +191,11 @@ export function SettingsPage() {
         </div>
       </section>
 
-      <section className="ds-card" aria-labelledby="settings-section-options">
-        <h2 id="settings-section-options" className="ds-section-title">
-          <ToggleLeft size={16} strokeWidth={1.75} aria-hidden />
-          {t('settings.sectionOptions')}
-        </h2>
-        <div className="checkbox-stack">
-          <label className="checkbox-row">
-            <input type="checkbox" checked={s.fullscreen} onChange={bind('fullscreen')} />
-            <span>{t('settings.fullscreen')}</span>
-          </label>
-          <label className="checkbox-row">
-            <input type="checkbox" checked={s.debug} onChange={bind('debug')} />
-            <span>{t('settings.debug')}</span>
-          </label>
-          <label className="checkbox-row">
-            <input type="checkbox" checked={s.modInstallAuto} onChange={bind('modInstallAuto')} />
-            <span>{t('settings.modInstallAuto')}</span>
-          </label>
-        </div>
-        <div className="toolbar" style={{marginTop: 'var(--ds-space-lg)'}}>
-          <button type="button" className="btn" onClick={save}>
-            {t('settings.save')}
-          </button>
-        </div>
-      </section>
+      <div className="toolbar" style={{marginTop: 'var(--ds-space-lg)'}}>
+        <button type="button" className="btn" onClick={save}>
+          {t('settings.save')}
+        </button>
+      </div>
     </div>
   );
 }
