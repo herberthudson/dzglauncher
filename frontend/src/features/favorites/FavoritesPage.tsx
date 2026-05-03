@@ -248,11 +248,6 @@ export function FavoritesPage() {
                             {t('favorites.remove')}
                           </button>
                         </div>
-                        {row.workshopModIds && row.workshopModIds.length > 0 ? (
-                          <div style={{fontSize: '0.65rem', color: 'var(--text-muted)', maxWidth: '14rem'}}>{row.workshopModIds.join(', ')}</div>
-                        ) : row.workshopModIds && row.workshopModIds.length === 0 ? (
-                          <div style={{fontSize: '0.65rem', color: 'var(--text-muted)', maxWidth: '14rem'}}>{t('favorites.rulesNoWorkshop')}</div>
-                        ) : null}
                       </td>
                     </tr>
                   );
