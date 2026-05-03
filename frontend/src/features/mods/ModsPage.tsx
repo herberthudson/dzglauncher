@@ -1,6 +1,6 @@
 import {useEffect, useMemo, useState} from 'react';
 import {useTranslation} from 'react-i18next';
-import {ExternalLink, Package, Rows3, Trash2} from 'lucide-react';
+import {ExternalLink, Package, Rows3, Trash2, X} from 'lucide-react';
 import * as App from '../../../wailsjs/go/main/App';
 import {workshop} from '../../../wailsjs/go/models';
 import {DsSelect} from '../../shared/DsSelect';
@@ -233,7 +233,12 @@ export function ModsPage() {
         <div className="browse-table-toolbar browse-toolbar-split-search">
           <div className="field browse-search-field">
             <label htmlFor="mods-search">{t('mods.searchLabel')}</label>
-            <input id="mods-search" value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} placeholder={t('mods.filterPh')} autoComplete="off" />
+            <div className="browse-field-input-row">
+              <input id="mods-search" value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} placeholder={t('mods.filterPh')} autoComplete="off" />
+              <button type="button" className="btn btn-secondary browse-input-clear" disabled={!q.trim()} aria-label={t('common.clearField')} onClick={() => { setQ(''); setPage(1); }}>
+                <X size={16} strokeWidth={2} aria-hidden />
+              </button>
+            </div>
           </div>
           <div className="browse-table-toolbar-actions browse-toolbar-actions-trailing">
             <button type="button" className="btn btn-secondary" disabled={busy || sorted.length === 0} onClick={toggleSelectAllFiltered}>

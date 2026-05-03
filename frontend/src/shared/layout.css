@@ -701,6 +701,41 @@ table.data tr:hover td {
   margin-bottom: 0;
 }
 
+.browse-field-input-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0.35rem;
+  max-width: 36rem;
+  width: 100%;
+}
+
+.field .browse-field-input-row > input {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: auto;
+  max-width: none;
+}
+
+.field .browse-field-input-row .browse-field-input-grow {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: none;
+  width: 100%;
+}
+
+.field .browse-field-input-row .browse-field-input-grow .ds-select {
+  max-width: none;
+}
+
+.browse-input-clear {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.375rem;
+  padding: 0.35rem 0.5rem;
+}
+
 .browse-map-field {
   flex: 0 1 14rem;
   min-width: 10rem;

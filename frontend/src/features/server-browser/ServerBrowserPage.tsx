@@ -1,6 +1,6 @@
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {useTranslation} from 'react-i18next';
-import {BookmarkPlus, ChevronDown, ChevronUp, ListFilter, Package, Play, Radar, Server, Star} from 'lucide-react';
+import {BookmarkPlus, ChevronDown, ChevronUp, ListFilter, Package, Play, Radar, Server, Star, X} from 'lucide-react';
 import * as App from '../../../wailsjs/go/main/App';
 import {domain} from '../../../wailsjs/go/models';
 import {browseSessionPayload, loadBrowseSessionMigrate} from './browseSession';
@@ -284,11 +284,35 @@ export function ServerBrowserPage() {
             <div className="browse-search-row">
               <div className="field browse-search-field">
                 <label htmlFor="browse-search">{t('browse.searchLabel')}</label>
-                <input id="browse-search" value={filters.searchSubstring} onChange={(e) => setFilters(patchFilter(filters, {searchSubstring: e.target.value}))} />
+                <div className="browse-field-input-row">
+                  <input id="browse-search" value={filters.searchSubstring} onChange={(e) => setFilters(patchFilter(filters, {searchSubstring: e.target.value}))} />
+                  <button
+                    type="button"
+                    className="btn btn-secondary browse-input-clear"
+                    disabled={!filters.searchSubstring}
+                    aria-label={t('common.clearField')}
+                    onClick={() => setFilters(patchFilter(filters, {searchSubstring: ''}))}
+                  >
+                    <X size={16} strokeWidth={2} aria-hidden />
+                  </button>
+                </div>
               </div>
               <div className="field browse-map-field">
                 <label htmlFor="browse-map">{t('browse.map')}</label>
-                <DsSelect id="browse-map" value={filters.mapEquals} options={mapSelectOptions} onChange={(v) => setFilters(patchFilter(filters, {mapEquals: v}))} />
+                <div className="browse-field-input-row">
+                  <div className="browse-field-input-grow">
+                    <DsSelect id="browse-map" value={filters.mapEquals} options={mapSelectOptions} onChange={(v) => setFilters(patchFilter(filters, {mapEquals: v}))} />
+                  </div>
+                  <button
+                    type="button"
+                    className="btn btn-secondary browse-input-clear"
+                    disabled={!filters.mapEquals}
+                    aria-label={t('common.clearField')}
+                    onClick={() => setFilters(patchFilter(filters, {mapEquals: ''}))}
+                  >
+                    <X size={16} strokeWidth={2} aria-hidden />
+                  </button>
+                </div>
               </div>
               <div className="browse-search-actions">
                 <button type="button" className="btn" disabled={loading} onClick={fetchSteam}>
@@ -524,7 +548,12 @@ export function ServerBrowserPage() {
               </button>
               <div className="field browse-bm-field">
                 <label htmlFor="browse-bm-id">{t('browse.bmIdLabel')}</label>
-                <input id="browse-bm-id" value={bmId} onChange={(e) => setBmId(e.target.value)} placeholder={t('browse.bmPlaceholder')} autoComplete="off" />
+                <div className="browse-field-input-row">
+                  <input id="browse-bm-id" value={bmId} onChange={(e) => setBmId(e.target.value)} placeholder={t('browse.bmPlaceholder')} autoComplete="off" />
+                  <button type="button" className="btn btn-secondary browse-input-clear" disabled={!bmId.trim()} aria-label={t('common.clearField')} onClick={() => setBmId('')}>
+                    <X size={16} strokeWidth={2} aria-hidden />
+                  </button>
+                </div>
               </div>
               <button type="button" className="btn btn-secondary" disabled={loading} onClick={resolveBm}>
                 {t('browse.resolveId')}

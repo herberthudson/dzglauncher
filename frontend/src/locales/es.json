@@ -11,7 +11,8 @@
     "loading": "Cargando…",
     "processing": "Procesando…",
     "yes": "sí",
-    "no": "no"
+    "no": "no",
+    "clearField": "Limpiar campo"
   },
   "joinModal": {
     "title": "Entrar al servidor",

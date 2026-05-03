@@ -11,7 +11,8 @@
     "loading": "Loading…",
     "processing": "Processing…",
     "yes": "yes",
-    "no": "no"
+    "no": "no",
+    "clearField": "Clear field"
   },
   "joinModal": {
     "title": "Join server",
