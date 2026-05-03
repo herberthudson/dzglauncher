@@ -8,6 +8,7 @@ import (
 
 	"dzglauncher/internal/domain"
 	"dzglauncher/internal/ports"
+	"dzglauncher/internal/services/favhistory"
 )
 
 type Store struct {
@@ -79,6 +80,10 @@ func mergeDefaults(s domain.Settings) domain.Settings {
 	if s.WorkshopModTimeUpdated == nil {
 		s.WorkshopModTimeUpdated = map[string]int64{}
 	}
+	if s.QuickFavorites == nil {
+		s.QuickFavorites = []domain.Favorite{}
+	}
+	favhistory.NormalizeQuickFavorites(&s)
 	return s
 }
 

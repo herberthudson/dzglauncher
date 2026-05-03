@@ -31,25 +31,51 @@ export function favoriteToServerRow(f: domain.Favorite): domain.ServerRow {
   });
 }
 
-export function favoritesToRows(s: domain.Settings): domain.ServerRow[] {
-  const out: domain.ServerRow[] = [];
-  const seen = new Set<string>();
+export function quickFavoritesList(s: domain.Settings): domain.Favorite[] {
+  const q = Array.isArray(s.quickFavorites) ? s.quickFavorites : [];
+  if (q.length > 0) {
+    return q.slice(0, 5);
+  }
   if (s.quickFavorite) {
-    out.push(favoriteToServerRow(s.quickFavorite));
-    seen.add(favoriteKey(s.quickFavorite));
+    return [s.quickFavorite];
   }
+  return [];
+}
+
+export function quickFavoritesToRows(s: domain.Settings): domain.ServerRow[] {
+  return quickFavoritesList(s).map(favoriteToServerRow);
+}
+
+export function quickFavoriteEntries(s: domain.Settings): {index: number; row: domain.ServerRow}[] {
+  return quickFavoritesList(s).map((f, i) => ({index: i, row: favoriteToServerRow(f)}));
+}
+
+export function favoritesOnlyRows(s: domain.Settings): domain.ServerRow[] {
   const favs = Array.isArray(s.favorites) ? s.favorites : [];
-  for (const f of favs) {
-    const k = favoriteKey(f);
-    if (seen.has(k)) {
-      continue;
-    }
-    out.push(favoriteToServerRow(f));
-    seen.add(k);
+  return favs.map(favoriteToServerRow);
+}
+
+export function favoritesToRows(s: domain.Settings): domain.ServerRow[] {
+  return favoritesOnlyRows(s);
+}
+
+export function favoritesKeySet(s: domain.Settings): Set<string> {
+  const set = new Set<string>();
+  for (const f of s.favorites || []) {
+    set.add(favoriteKey(f));
   }
-  return out;
+  return set;
 }
 
 export function rowKey(r: domain.ServerRow) {
   return r.queryHost + ':' + r.queryPort + ':' + r.address;
+}
+
+export const QUICK_FAV_LIMIT = 'QUICK_FAV_LIMIT';
+
+export function mapQuickFavError(err: string, t: (key: string) => string): string {
+  if (err.includes(QUICK_FAV_LIMIT)) {
+    return t('favorites.quickFavLimit');
+  }
+  return err;
 }

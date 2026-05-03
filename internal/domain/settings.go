@@ -95,6 +95,7 @@ type Settings struct {
 	Favorites          []Favorite    `json:"favorites"`
 	QuickFavorite      *Favorite     `json:"quickFavorite,omitempty"`
 	QuickFavoriteLabel string        `json:"quickFavoriteLabel"`
+	QuickFavorites     []Favorite    `json:"quickFavorites,omitempty"`
 	History            []HistoryLine `json:"history"`
 	SteamCooldownUntil int64         `json:"steamCooldownUntil"`
 	GeoIPDatabasePath  string        `json:"geoIpDatabasePath"`
@@ -114,6 +115,7 @@ func DefaultSettings() Settings {
 		DayZBranch:         "stable",
 		LANQueryPort:       2305,
 		Favorites:          []Favorite{},
+		QuickFavorites:     []Favorite{},
 		History:            []HistoryLine{},
 		UITheme:            "flat-dark-theme",
 	}

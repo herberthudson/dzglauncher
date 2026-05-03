@@ -573,26 +573,6 @@ table.data tr:hover td {
   border: 1px solid rgba(16, 124, 16, 0.35);
 }
 
-.history-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.history-item {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--ds-space-sm);
-  padding: var(--ds-space-sm) 0;
-  border-bottom: 1px solid var(--border);
-  font-size: 0.875rem;
-}
-
-.history-item:last-child {
-  border-bottom: none;
-}
-
 .sr-only {
   position: absolute;
   width: 1px;

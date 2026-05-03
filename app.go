@@ -330,15 +330,15 @@ func (a *App) MergeFavoriteSnapshots(rows []domain.ServerRow) error {
 			cfg.Favorites[i].Label = lbl
 		}
 	}
-	if cfg.QuickFavorite != nil {
-		k := favhistory.FavoriteKey(*cfg.QuickFavorite)
+	for i := range cfg.QuickFavorites {
+		k := favhistory.FavoriteKey(cfg.QuickFavorites[i])
 		if r, ok := by[k]; ok {
-			lbl := cfg.QuickFavorite.Label
-			ql := cfg.QuickFavoriteLabel
+			lbl := cfg.QuickFavorites[i].Label
 			nf := domain.FavoriteFromRow(r)
-			nf.Label = lbl
-			cfg.QuickFavorite = &nf
-			cfg.QuickFavoriteLabel = ql
+			if strings.TrimSpace(lbl) != "" {
+				nf.Label = lbl
+			}
+			cfg.QuickFavorites[i] = nf
 		}
 	}
 	return a.store.Save(cfg)
@@ -349,10 +349,29 @@ func (a *App) SetQuickFavorite(row domain.ServerRow, label string) error {
 	if err != nil {
 		return err
 	}
+	if err := favhistory.UpsertQuickFavorite(&cfg, row, label); err != nil {
+		return err
+	}
+	return a.store.Save(cfg)
+}
+
+func (a *App) AddFavoriteRow(row domain.ServerRow) error {
+	cfg, err := a.store.Load()
+	if err != nil {
+		return err
+	}
 	f := domain.FavoriteFromRow(row)
-	f.Label = label
-	cfg.QuickFavorite = &f
-	cfg.QuickFavoriteLabel = label
+	favhistory.AddFavoriteIfMissing(&cfg, f)
+	return a.store.Save(cfg)
+}
+
+func (a *App) RemoveQuickFavoriteIndex(index int) error {
+	cfg, err := a.store.Load()
+	if err != nil {
+		return err
+	}
+	favhistory.NormalizeQuickFavorites(&cfg)
+	favhistory.RemoveQuickFavoriteAt(&cfg, index)
 	return a.store.Save(cfg)
 }
 
@@ -361,8 +380,7 @@ func (a *App) ClearQuickFavorite() error {
 	if err != nil {
 		return err
 	}
-	cfg.QuickFavorite = nil
-	cfg.QuickFavoriteLabel = ""
+	favhistory.ClearQuickFavorites(&cfg)
 	return a.store.Save(cfg)
 }
 

@@ -4,6 +4,7 @@ import {BookmarkPlus, ChevronDown, ChevronUp, ListFilter, Package, Play, Radar, 
 import * as App from '../../../wailsjs/go/main/App';
 import {domain} from '../../../wailsjs/go/models';
 import {browseSessionPayload, loadBrowseSessionMigrate} from './browseSession';
+import {mapQuickFavError} from '../../shared/favoriteRows';
 import {DsSelect} from '../../shared/DsSelect';
 import {PageHeader} from '../../shared/PageHeader';
 import {ServerAddressCell} from '../../shared/ServerAddressCell';
@@ -423,7 +424,7 @@ export function ServerBrowserPage() {
                           <button type="button" className="btn btn-secondary" title={t('browse.favTitle')} aria-label={t('browse.fav')} onClick={() => App.ToggleFavoriteRow(row).catch((e) => setErr(String(e)))}>
                             <Star size={14} strokeWidth={2} aria-hidden />
                           </button>
-                          <button type="button" className="btn btn-secondary" title={t('browse.quickFavTitle')} aria-label={t('browse.quickFav')} onClick={() => App.SetQuickFavorite(row, window.prompt(t('browse.quickFavPrompt'), row.name) || row.name).catch((e) => setErr(String(e)))}>
+                          <button type="button" className="btn btn-secondary" title={t('browse.quickFavTitle')} aria-label={t('browse.quickFav')} onClick={() => App.SetQuickFavorite(row, window.prompt(t('browse.quickFavPrompt'), row.name) || row.name).catch((e) => setErr(mapQuickFavError(String(e), t)))}>
                             <BookmarkPlus size={14} strokeWidth={2} aria-hidden />
                           </button>
                           <button type="button" className="btn btn-secondary" title={t('browse.joinPanelModsTitle')} aria-label={t('browse.joinPanelMods')} onClick={() => setJoinModalRow(row)}>

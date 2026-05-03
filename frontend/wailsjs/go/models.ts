@@ -162,6 +162,7 @@ export namespace domain {
 	    favorites: Favorite[];
 	    quickFavorite?: Favorite;
 	    quickFavoriteLabel: string;
+	    quickFavorites?: Favorite[];
 	    history: HistoryLine[];
 	    steamCooldownUntil: number;
 	    geoIpDatabasePath: string;
@@ -193,6 +194,7 @@ export namespace domain {
 	        this.favorites = this.convertValues(source["favorites"], Favorite);
 	        this.quickFavorite = this.convertValues(source["quickFavorite"], Favorite);
 	        this.quickFavoriteLabel = source["quickFavoriteLabel"];
+	        this.quickFavorites = this.convertValues(source["quickFavorites"], Favorite);
 	        this.history = this.convertValues(source["history"], HistoryLine);
 	        this.steamCooldownUntil = source["steamCooldownUntil"];
 	        this.geoIpDatabasePath = source["geoIpDatabasePath"];

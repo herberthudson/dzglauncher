@@ -6,7 +6,9 @@ function maskAddress(addr: string): string {
   if (!addr) {
     return '';
   }
-  return addr.replace(/[^:]/g, '*');
+  const sensitive = (addr.match(/[^:]/g) || []).length;
+  const n = Math.min(5, Math.max(sensitive, 1));
+  return '*'.repeat(n);
 }
 
 export function ServerAddressCell({address}: {address: string}) {

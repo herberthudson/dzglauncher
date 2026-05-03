@@ -3,6 +3,8 @@
 import {domain} from '../models';
 import {workshop} from '../models';
 
+export function AddFavoriteRow(arg1:domain.ServerRow):Promise<void>;
+
 export function AppendHistoryRow(arg1:domain.ServerRow):Promise<void>;
 
 export function ApplyServerFilters(arg1:Array<domain.ServerRow>,arg2:domain.FilterState):Promise<Array<domain.ServerRow>>;
@@ -38,6 +40,8 @@ export function RefreshServersPing(arg1:Array<domain.ServerRow>):Promise<Array<d
 export function RemoveFavorite(arg1:string,arg2:number,arg3:number):Promise<void>;
 
 export function RemoveHistoryIndex(arg1:number):Promise<void>;
+
+export function RemoveQuickFavoriteIndex(arg1:number):Promise<void>;
 
 export function ResolveBattlemetricsID(arg1:string):Promise<domain.ServerRow>;
 
