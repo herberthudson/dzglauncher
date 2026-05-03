@@ -13,6 +13,7 @@ export type ServerJoinModalProps = {
 export function ServerJoinModal({row, onClose, onRowPatched}: ServerJoinModalProps) {
   const {t} = useTranslation();
   const panelRef = useRef<HTMLDivElement>(null);
+  const fetchGenRef = useRef(0);
   const [loading, setLoading] = useState(false);
   const [joinBusy, setJoinBusy] = useState(false);
   const [enrichErr, setEnrichErr] = useState('');
@@ -23,21 +24,30 @@ export function ServerJoinModal({row, onClose, onRowPatched}: ServerJoinModalPro
     if (!row) {
       return;
     }
+    const g = ++fetchGenRef.current;
     setLoading(true);
     setEnrichErr('');
     setLaunchErr('');
     setModRows([]);
     try {
       const list = await App.JoinModalWorkshopData(row.queryHost, row.queryPort, row.gamePort);
+      if (g !== fetchGenRef.current) {
+        return;
+      }
       const rows = Array.isArray(list) ? list.map((x) => domain.WorkshopModRow.createFrom(x)) : [];
       setModRows(rows);
       const ids = rows.map((r) => r.id);
       const patched = domain.ServerRow.createFrom({...row, workshopModIds: ids});
       onRowPatched(patched);
     } catch (e) {
+      if (g !== fetchGenRef.current) {
+        return;
+      }
       setEnrichErr(String(e));
     } finally {
-      setLoading(false);
+      if (g === fetchGenRef.current) {
+        setLoading(false);
+      }
     }
   }, [row, onRowPatched]);
 
@@ -46,6 +56,9 @@ export function ServerJoinModal({row, onClose, onRowPatched}: ServerJoinModalPro
       return;
     }
     void load();
+    return () => {
+      fetchGenRef.current++;
+    };
   }, [row, load]);
 
   useEffect(() => {
