@@ -1,19 +1,125 @@
-# README
+# dzglauncher
 
-## About
+Desktop client to browse DayZ servers, manage favorites (including up to **five quick favorites**), connection history, Steam Workshop mods, and launches via Steam. **Linux-first**, built with **Wails v2** (Go + React/TypeScript).
 
-This is the official Wails React-TS template.
+License: **Apache License 2.0** — see [`LICENSE`](LICENSE).
 
-You can configure the project by editing `wails.json`. More information about the project settings can be found
-here: https://wails.io/docs/reference/project-config
+## Platform support
 
-## Live Development
+Development and day-to-day validation target **Linux only**. Wails can produce binaries for **Windows** and **macOS**, but this repository **does not claim** those builds are tested, supported, or free of platform-specific issues. Treat non-Linux targets as **best-effort** until someone exercises and documents them.
 
-To run in live development mode, run `wails dev` in the project directory. This will run a Vite development
-server that will provide very fast hot reload of your frontend changes. If you want to develop in a browser
-and have access to your Go methods, there is also a dev server that runs on http://localhost:34115. Connect
-to this in your browser, and you can call your Go code from devtools.
+## Requirements
 
-## Building
+### Development toolchain
 
-To build a redistributable, production mode package, use `wails build`.
+| Tool | Suggested version | Notes |
+|------|-------------------|-------|
+| [Go](https://go.dev/dl/) | **1.23+** (matches `go.mod`) | Backend compile and runtime. |
+| [Node.js](https://nodejs.org/) | **18 LTS** or newer | `npm install` and frontend build (`vite`, `tsc`). |
+| [Wails CLI](https://wails.io/docs/gettingstarted/installation) | **v2** (e.g. 2.12.x) | `wails dev` and `wails build`. Install: `go install github.com/wailsapp/wails/v2/cmd/wails@latest`. |
+
+### Wails platform dependencies
+
+Wails hosts the UI in a native webview. Always follow the official guide: [Getting Started — Installation](https://wails.io/docs/gettingstarted/installation).
+
+Typical expectations:
+
+- **Linux:** **GTK3** and **WebKit2GTK** dev packages (e.g. Debian/Ubuntu: `libgtk-3-dev`, `libwebkit2gtk-4.1-dev`; names vary by distro). Build tools: `gcc`, `pkg-config`.
+- **Windows:** [WebView2 Runtime](https://developer.microsoft.com/microsoft-edge/webview2/) (often preinstalled); MSVC or equivalent per Wails docs.
+- **macOS:** Xcode / command-line tools.
+
+This repo sets `"build:tags": "webkit2_41"` in [`wails.json`](wails.json) to align with WebKit2GTK versions used on Linux builds. Cross-compiling or building on Windows/macOS is possible with Wails; see **Platform support** above regarding testing.
+
+### Runtime / keys (app behavior)
+
+- **Steam Web API key** — required for the Steam master-list browser (see in-app settings and [`docs/architecture-and-product.md`](docs/architecture-and-product.md)).
+- **Steam client** and **DayZ** install — for joining and Workshop.
+- **Battlemetrics** (optional) — ID-based flows and optional fallbacks (see architecture doc).
+
+## Quick start
+
+From the repository root:
+
+```bash
+wails dev
+```
+
+This runs the frontend npm install as configured in `wails.json`, starts Vite in dev mode, and rebuilds Go with reload where applicable.
+
+Optional manual frontend build:
+
+```bash
+cd frontend && npm install && npm run build
+```
+
+## Production build
+
+```bash
+wails build
+```
+
+Binaries and bundles land under `build/bin/` (standard Wails layout). Windows/macOS icons and metadata live under [`build/`](build/README.md). If you build for a non-Linux OS, treat the output as **untested** by this project (see **Platform support**).
+
+## Documentation
+
+Index: [`docs/README.md`](docs/README.md).
+
+| Document | Contents |
+|----------|----------|
+| [`docs/architecture-and-product.md`](docs/architecture-and-product.md) | Domain, integrations (Steam, A2S, Battlemetrics, geo), product rules — stack-agnostic. |
+| [`docs/project-and-structure.md`](docs/project-and-structure.md) | Folders, languages, libraries, layer boundaries. |
+| [`docs/design-system.md`](docs/design-system.md) | CSS themes, tokens, and UI components. |
+
+## Repository layout
+
+```
+dzglauncher/
+├── main.go, app.go          # Wails entry and API exposed to the frontend
+├── internal/
+│   ├── domain/              # Domain models and rules (Settings, server row, quick fav caps, …)
+│   ├── services/          # Use cases (Steam browser, filters, geo, launch, favorites/history)
+│   ├── adapters/          # HTTP, files, A2S, Steam API, Workshop, LAN, Battlemetrics
+│   └── ports/             # Interfaces (e.g. config store)
+├── frontend/              # React 18 + TypeScript + Vite + react-router-dom + i18next
+├── data/                  # Embedded data (e.g. DB-IP sample ranges)
+├── build/                 # Wails packaging assets
+└── docs/                  # Documentation
+```
+
+Persisted settings: JSON at `dzglauncher/config.json` inside the OS user config directory (e.g. `$XDG_CONFIG_HOME` on Linux, equivalent paths on macOS/Windows).
+
+## Frontend scripts
+
+```bash
+cd frontend
+npm run lint    # tsc --noEmit
+npm run build   # tsc && vite build
+npm run dev     # Vite only (no Wails; limited for UI-only work)
+```
+
+## Go tests
+
+```bash
+go test ./...
+```
+
+## Implemented highlights
+
+- Steam master-list server browser with filters, search, and map selection.
+- Live server metadata and ping refresh via **A2S** (incl. DayZ rules / mod list where available).
+- **Favorites** plus up to **five quick favorites**, deduplicated **history**, and Workshop-oriented **mods** workflow.
+- Settings for Steam Web API key, Steam launch command, install paths, DayZ branch, i18n, and in-app **dark/light** theme switch for the bundled flat themes.
+- JSON settings under the OS config directory; Apache 2.0 license; English docs under [`docs/`](docs/README.md).
+
+## Roadmap / open work
+
+Rough edges and missing product work (code stubs or partial UI may exist; this is what still needs ownership, UX polish, and **Linux-focused** testing):
+
+- **Battlemetrics** — token field and ID resolution exist, but end-to-end flows (errors, fallbacks, discoverability) are not finished or systematically tested.
+- **LAN** — subnet scan API exists; a first-class LAN experience (UX, edge cases, validation on real networks) is still open.
+- **Geolocation** — bundled DB-IP sample plus optional user database path; client location refresh, accuracy, and distance labelling need a coherent product pass and tests.
+- **Themes without a rebuild** — adding a new look still means shipping new CSS under `frontend/src/theme/themes/`, wiring `@import` in `app.css`, and rebuilding; **runtime-loaded user themes** (pick a file or folder, no developer build) are not implemented.
+
+## Third-party credits
+
+Third-party libraries and data keep their own licenses (e.g. Wails, `github.com/woozymasta/a2s`, system WebKit/GTK). Geo database attribution follows project notes in [`docs/architecture-and-product.md`](docs/architecture-and-product.md).

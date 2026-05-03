@@ -1,26 +1,30 @@
 # Design system (frontend)
 
-Este projeto usa **tokens estruturais** + **temas por ficheiro CSS** com variáveis semânticas. Os componentes React não fixam cores hex; usam classes em `src/shared/layout.css` e variáveis definidas no tema ativo.
+UI stack: **React 18**, **TypeScript**, **Vite 3**, **react-router-dom** v6, **i18next** / **react-i18next**, and **lucide-react** icons. The Wails binary embeds the output of `npm run build` (`frontend/dist`).
 
-## Ficheiros
+The project uses **structural tokens** + **per-theme CSS files** with semantic variables. React components avoid raw hex; they use classes in `src/shared/layout.css` and variables from the active theme.
 
-| Ficheiro | Função |
-|----------|--------|
-| `frontend/src/theme/tokens.css` | Espaçamentos, raios, sombras, tipografia base (sem cores de marca). |
-| `frontend/src/theme/themes/flat-dark-theme.css` | Tema escuro plano: superfícies escuras, acento azul, texto claro. |
-| `frontend/src/theme/themes/flat-light-theme.css` | Tema claro plano (mesmas variáveis semânticas). |
-| `frontend/src/theme/app.css` | Ponto de entrada: importa tokens e **todos** os temas. |
-| `frontend/src/shared/layout.css` | Componentes UI (`.btn`, `.ds-card`, `.shell-nav`, tabelas, mensagens). |
+## Files
 
-## Ativar um tema
+| File | Role |
+|------|------|
+| `frontend/src/theme/tokens.css` | Spacing, radii, shadows, base typography (no brand colors). |
+| `frontend/src/theme/themes/flat-dark-theme.css` | Flat dark theme: dark surfaces, blue accent, light text. |
+| `frontend/src/theme/themes/flat-light-theme.css` | Flat light theme (same semantic variables). |
+| `frontend/src/theme/app.css` | Entry point: imports tokens and **all** themes. |
+| `frontend/src/shared/layout.css` | UI primitives (`.btn`, `.ds-card`, `.shell-nav`, tables, messages). |
 
-1. Em **Configurações** do app escolha o tema (persistido em `uiTheme` no JSON) ou edite `index.html`: `data-theme="flat-dark-theme"` ou `data-theme="flat-light-theme"`.
+## Enabling a theme
 
-2. Ou importe apenas um ficheiro de tema em `app.css` (substituindo os `@import` atuais) se quiser **sem** alternância por atributo.
+1. In the app **Settings**, pick a theme (persisted as `uiTheme` in JSON) or edit `index.html`: `data-theme="flat-dark-theme"` or `data-theme="flat-light-theme"`.
 
-O valor guardado nas definições (`flat-dark-theme` / `flat-light-theme`) é aplicado ao `<html>` na arranque e ao gravar.
+2. Or import only one theme file in `app.css` (replacing current `@import`s) if you want a build **without** attribute switching.
 
-Cada tema deve declarar o **mesmo conjunto** de variáveis usadas em `layout.css`, por exemplo:
+The stored value (`flat-dark-theme` / `flat-light-theme`) is applied on `<html>` at startup and when saving.
+
+**Limitation:** only those bundled themes are supported without changing source. **User-supplied themes loaded at runtime** (no edit to `app.css` / no app rebuild) are not implemented yet; see the root [README.md](../README.md) roadmap.
+
+Each theme must declare the **same set** of variables consumed by `layout.css`, for example:
 
 - `--bg`, `--bg-elevated`, `--bg-hover`, `--bg-input`
 - `--border`, `--border-focus`
@@ -28,27 +32,27 @@ Cada tema deve declarar o **mesmo conjunto** de variáveis usadas em `layout.css
 - `--accent`, `--accent-hover`, `--accent-muted`
 - `--danger`, `--radius`, `--font`, `--table-row-hover`, `--nav-active-bg`, `--nav-active-text`, `--page-header-icon-bg`
 
-## Novos temas
+## New themes
 
-1. Crie `frontend/src/theme/themes/<nome>.css` com:
+1. Create `frontend/src/theme/themes/<name>.css` with:
 
    ```css
-   html[data-theme="nome"] {
+   html[data-theme="name"] {
      --bg: ...;
-     /* restantes */
+     /* remaining variables */
    }
    ```
 
-2. Adicione `@import "./themes/<nome>.css";` em `app.css`.
+2. Add `@import "./themes/<name>.css";` in `app.css`.
 
-3. Defina `data-theme="nome"` no `<html>` (ou alterne em runtime com `document.documentElement.dataset.theme = 'nome'`).
+3. Set `data-theme="name"` on `<html>` (or at runtime: `document.documentElement.dataset.theme = 'name'`).
 
-## Componentes
+## Components
 
-- **`.ds-card`**: bloco de conteúdo com borda e fundo elevado.
-- **`.ds-section-title`**: título de secção (maiúsculas discretas); pode incluir ícone `lucide-react` ao lado.
-- **`PageHeader`**: cabeçalho de página com ícone, título e descrição opcional (`src/shared/PageHeader.tsx`).
+- **`.ds-card`**: bordered elevated surface.
+- **`.ds-section-title`**: section title (subtle caps); may pair with a `lucide-react` icon.
+- **`PageHeader`**: page header with icon, title, optional description (`src/shared/PageHeader.tsx`).
 
-## Ícones
+## Icons
 
-Biblioteca: **`lucide-react`**. Preferir ícones SVG consistentes em vez de emoji em navegação e cabeçalhos.
+Library: **`lucide-react`**. Prefer consistent SVG icons instead of emoji in navigation and headers.
