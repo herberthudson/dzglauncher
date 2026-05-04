@@ -2,7 +2,7 @@ import type {JSX} from 'solid-js';
 import {A} from '@solidjs/router';
 import {useTranslation} from 'solid-i18next';
 import {Clock, Package, Server, Settings, Star} from 'lucide-solid';
-import {cn} from '@/lib/utils';
+import dzglLogo from '@/assets/dzgl-logo.png';
 
 const navLinkClass =
   'rounded-md border border-transparent px-3 py-2 text-[0.8125rem] text-muted-foreground no-underline transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background';
@@ -17,7 +17,15 @@ export function AppShell(props: {children?: JSX.Element}) {
         class="flex min-h-nav flex-wrap items-center gap-x-2 gap-y-1 border-b border-border bg-card px-4 shadow-ds"
         aria-label={t('nav.ariaMain')}
       >
-        <span class="mr-3 py-2 text-sm font-semibold tracking-wide text-muted-foreground">dzglauncher</span>
+        <span class="relative mr-3 inline-block h-9 w-[7.125rem] shrink-0 overflow-hidden rounded border border-border/50 bg-card/40">
+          <img
+            src={dzglLogo}
+            alt="dzglauncher"
+            title="dzglauncher"
+            class="absolute left-1/2 top-1/2 block h-[148%] w-[94%] max-w-none -translate-x-1/2 -translate-y-1/2 object-contain object-center"
+            decoding="async"
+          />
+        </span>
         <div class="flex flex-1 flex-wrap items-center gap-1">
           <A href="/browse" class={navLinkClass} activeClass={navLinkActiveClass} end={false}>
             <span class="inline-flex items-center gap-1.5">

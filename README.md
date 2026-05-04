@@ -60,6 +60,8 @@ wails build
 
 Binaries and bundles land under `build/bin/` (standard Wails layout). Windows/macOS icons and metadata live under [`build/`](build/README.md). If you build for a non-Linux OS, treat the output as **untested** by this project (see **Platform support**).
 
+Linux release archives (zip, tar.gz, AppImage) and `SHA256SUMS` are built by [`.github/workflows/release-linux.yml`](.github/workflows/release-linux.yml) on version tags `v*`. After downloading the three files into the same directory, run `sha256sum -c SHA256SUMS` to verify them.
+
 ## Documentation
 
 Index: [`docs/README.md`](docs/README.md).

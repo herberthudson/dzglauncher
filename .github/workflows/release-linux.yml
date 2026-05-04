@@ -1,0 +1,145 @@
+name: Release Linux
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Versão sem prefixo v (ex. 1.2.3)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+env:
+  APPIMAGE_EXTRACT_AND_RUN: 1
+
+jobs:
+  release-linux:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolver versão
+        id: ver
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${GITHUB_REF_TYPE}" = tag ]; then
+            V="${GITHUB_REF_NAME}"
+          else
+            V="${{ github.event.inputs.version }}"
+          fi
+          V="${V#v}"
+          if [ -z "${V}" ]; then
+            echo "Versão vazia" >&2
+            exit 1
+          fi
+          echo "version=${V}" >> "${GITHUB_OUTPUT}"
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Dependências do sistema
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential pkg-config \
+            libgtk-3-dev \
+            libwebkit2gtk-4.1-dev \
+            libgirepository1.0-dev \
+            librsvg2-dev
+
+      - name: Wails CLI
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.12.0
+
+      - name: wails build
+        run: |
+          set -euo pipefail
+          echo "$(go env GOPATH)/bin" >> "${GITHUB_PATH}"
+          wails build
+
+      - name: Arquivos dist (zip e tar.gz)
+        env:
+          VERSION: ${{ steps.ver.outputs.version }}
+        run: |
+          set -euo pipefail
+          mkdir -p staging dist
+          cp build/bin/dzglauncher staging/dzglauncher
+          cp LICENSE README.md staging/
+          strip staging/dzglauncher 2>/dev/null || true
+          ( cd staging && zip -r9 "../dist/dzglauncher-${VERSION}-linux-amd64.zip" dzglauncher LICENSE README.md )
+          tar -C staging -czvf "dist/dzglauncher-${VERSION}-linux-amd64.tar.gz" dzglauncher LICENSE README.md
+
+      - name: Ferramentas AppImage
+        run: |
+          set -euo pipefail
+          mkdir -p tools
+          cd tools
+          curl -fsSLO https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+          curl -fsSLO https://raw.githubusercontent.com/linuxdeploy/linuxdeploy-plugin-gtk/master/linuxdeploy-plugin-gtk.sh
+          mv linuxdeploy-plugin-gtk.sh linuxdeploy-plugin-gtk
+          chmod +x linuxdeploy-plugin-gtk
+          curl -fsSLO https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
+          chmod +x linuxdeploy-x86_64.AppImage appimagetool-x86_64.AppImage
+
+      - name: AppImage
+        env:
+          VERSION: ${{ steps.ver.outputs.version }}
+        run: |
+          set -euo pipefail
+          strip build/bin/dzglauncher 2>/dev/null || true
+          rm -rf AppDir
+          mkdir -p AppDir
+          cd tools
+          ./linuxdeploy-x86_64.AppImage \
+            --appdir ../AppDir \
+            --executable ../build/bin/dzglauncher \
+            --desktop-file ../packaging/linux/dzglauncher.desktop \
+            --icon-file ../packaging/linux/icons/hicolor/256x256/apps/dzglauncher.png \
+            --plugin gtk
+          export ARCH=x86_64
+          export VERSION="${VERSION}"
+          ./appimagetool-x86_64.AppImage ../AppDir "../dist/dzglauncher-${VERSION}-x86_64.AppImage"
+
+      - name: SHA256SUMS
+        env:
+          VERSION: ${{ steps.ver.outputs.version }}
+        run: |
+          set -euo pipefail
+          cd dist
+          sha256sum \
+            "dzglauncher-${VERSION}-linux-amd64.zip" \
+            "dzglauncher-${VERSION}-linux-amd64.tar.gz" \
+            "dzglauncher-${VERSION}-x86_64.AppImage" \
+            > SHA256SUMS
+          sha256sum -c SHA256SUMS
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dzglauncher-linux-${{ steps.ver.outputs.version }}
+          path: dist/*
+
+      - name: GitHub Release
+        if: github.ref_type == 'tag' && startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/SHA256SUMS
+            dist/dzglauncher-${{ steps.ver.outputs.version }}-linux-amd64.zip
+            dist/dzglauncher-${{ steps.ver.outputs.version }}-linux-amd64.tar.gz
+            dist/dzglauncher-${{ steps.ver.outputs.version }}-x86_64.AppImage
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

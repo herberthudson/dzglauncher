@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=dzglauncher
+Comment=Browse DayZ servers, favorites, Workshop mods, and launch via Steam
+Exec=dzglauncher
+Icon=dzglauncher
+Categories=Game;
+Terminal=false
+StartupWMClass=dzglauncher

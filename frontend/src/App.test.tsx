@@ -24,11 +24,11 @@ beforeEach(() => {
 
 describe('App', () => {
   it('renderiza marca e navegação', () => {
-    const {getByText} = render(() => (
+    const {getByRole} = render(() => (
       <I18nextProvider i18n={i18n}>
         <App />
       </I18nextProvider>
     ));
-    expect(getByText('dzglauncher')).toBeDefined();
+    expect(getByRole('img', {name: 'dzglauncher'})).toBeDefined();
   });
 });
