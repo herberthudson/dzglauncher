@@ -1,54 +1,83 @@
 # dzglauncher
 
-Desktop client to browse DayZ servers, manage favorites (including up to **five quick favorites**), connection history, Steam Workshop mods, and launches via Steam. **Linux-first**, built with **Wails v2** (Go + SolidJS/TypeScript).
+Desktop client for **DayZ**: browse servers (including Steam master list), manage **favorites** (up to five quick slots), **history**, **Steam Workshop** mods, and launch the game via **Steam**. **Linux-first**, built with [**Wails v2**](https://wails.io/) (Go backend + **SolidJS** / TypeScript frontend).
 
-License: **Apache License 2.0** — see [`LICENSE`](LICENSE).
+---
 
-## Project maintenance (read first)
+## Project maintenance — read this first
 
-This repository is a **personal** project. The author **does not** promise to review feature ideas, reproduce bug reports, or merge pull requests on any timeline. Issues and PRs may stay open without reply, be **closed without a fix or merge**, or be handled **only if** it is convenient — there is **no obligation** to implement requests or maintain compatibility with your environment. Use the code and releases **as-is**; if you need guaranteed support, fork and maintain your own copy.
+This repository is a **personal** project. The maintainer **does not** commit to reviewing feature ideas, reproducing bugs, or merging pull requests on any schedule. Issues and pull requests may receive **no reply**, be **closed without a fix or merge**, or be handled **only when convenient**. There is **no obligation** to implement requests or keep compatibility with your distro, hardware, or workflow.
 
-## Platform support
+**Use the code and releases as-is.** If you need predictable support or timelines, **fork** the repository and maintain your own copy.
 
-Development and day-to-day validation target **Linux only**. Wails can produce binaries for **Windows** and **macOS**, but this repository **does not claim** those builds are tested, supported, or free of platform-specific issues. Treat non-Linux targets as **best-effort** until someone exercises and documents them.
+---
+
+## Table of contents
+
+- [Overview](#overview)
+- [Features](#features)
+- [Requirements](#requirements)
+- [How to run and build](#how-to-run-and-build)
+- [Changelog](#changelog)
+- [Documentation](#documentation)
+- [Repository layout](#repository-layout)
+- [TODO](#todo)
+- [License and third-party credits](#license-and-third-party-credits)
+
+---
+
+## Overview
+
+dzglauncher connects to public server lists and live **A2S** metadata where available, stores settings in a JSON file under the OS config directory (e.g. `$XDG_CONFIG_HOME/dzglauncher/config.json` on Linux), and focuses on a **single-player-style** desktop workflow rather than a hosted service.
+
+**Platforms:** day-to-day development and validation target **Linux only**. Wails can build for **Windows** and **macOS**; this repo **does not** claim those targets are tested or supported—treat them as **best-effort** unless someone documents real usage.
+
+---
+
+## Features
+
+- Steam master-list browser with filters, search, and map selection.
+- Live server metadata and ping refresh via **A2S** (including DayZ rules / mod list where the server exposes them).
+- **Favorites**, up to **five quick favorites**, deduplicated **history**, and Workshop-oriented **mods** flows.
+- Settings: Steam Web API key, Steam launch command, install paths, DayZ branch, i18n, built-in **dark/light** themes, optional **external CSS overlay** (`uiExternalThemePath` + `ReadUIThemeFile`).
+
+---
 
 ## Requirements
 
-### Development toolchain
+### Toolchain (to develop or compile from source)
 
-| Tool | Suggested version | Notes |
-|------|-------------------|-------|
-| [Go](https://go.dev/dl/) | **1.23+** (matches `go.mod`) | Backend compile and runtime. |
-| [Node.js](https://nodejs.org/) | **18 LTS** or newer | `npm install` and frontend build (`vite`, `tsc`). |
-| [Wails CLI](https://wails.io/docs/gettingstarted/installation) | **v2** (e.g. 2.12.x) | `wails dev` and `wails build`. Install: `go install github.com/wailsapp/wails/v2/cmd/wails@latest`. |
+| Tool | Version | Role |
+|------|---------|------|
+| [Go](https://go.dev/dl/) | **1.23+** (see `go.mod`) | Backend compile and runtime |
+| [Node.js](https://nodejs.org/) | **18 LTS** or newer | Frontend install and build (`vite`, `tsc`) |
+| [Wails CLI v2](https://wails.io/docs/gettingstarted/installation) | e.g. **2.12.x** | `wails dev` / `wails build` — install: `go install github.com/wailsapp/wails/v2/cmd/wails@latest` |
 
-### Wails platform dependencies
+Wails embeds the UI in a **native webview**. On Linux you need **GTK 3** and **WebKit2GTK 4.1** development packages plus a C toolchain (`gcc`, `pkg-config`). This repo sets `"build:tags": "webkit2_41"` in [`wails.json`](wails.json). For other OS expectations, follow the official [Wails installation](https://wails.io/docs/gettingstarted/installation) guide.
 
-Wails hosts the UI in a native webview. Always follow the official guide: [Getting Started — Installation](https://wails.io/docs/gettingstarted/installation).
+### Linux: system libraries for running a release binary or building locally
 
-Typical expectations:
+Official **zip** and **tar.gz** builds are **dynamically linked** against GTK 3 and WebKit2GTK 4.1 from **your** distribution—you must install the **runtime** packages before running `dzglauncher`.
 
-- **Linux:** **GTK3** and **WebKit2GTK** dev packages (e.g. Debian/Ubuntu: `libgtk-3-dev`, `libwebkit2gtk-4.1-dev`; names vary by distro). Build tools: `gcc`, `pkg-config`.
-- **Windows:** [WebView2 Runtime](https://developer.microsoft.com/microsoft-edge/webview2/) (often preinstalled); MSVC or equivalent per Wails docs.
-- **macOS:** Xcode / command-line tools.
-
-This repo sets `"build:tags": "webkit2_41"` in [`wails.json`](wails.json) to align with WebKit2GTK versions used on Linux builds. Cross-compiling or building on Windows/macOS is possible with Wails; see **Platform support** above regarding testing.
-
-### Linux system packages (run the binary or build locally)
-
-The Linux **zip/tar.gz** binary expects **GTK3** and **WebKit2GTK 4.1** from the distro (dynamic linking). Install runtime packages before running `dzglauncher`. For full commands (Arch-based, Ubuntu/Debian, Fedora) and separate **build** dependencies for `wails build` / `wails dev`, see **[`docs/linux-dependencies.md`](docs/linux-dependencies.md)**.
-
-| Family | Runtime (examples) |
-|--------|---------------------|
+| Family | Example install |
+|--------|------------------|
 | **Arch-based** (Arch, CachyOS, Manjaro, …) | `sudo pacman -S --needed gtk3 webkit2gtk-4.1` |
 | **Ubuntu / Debian** | `sudo apt-get install -y libgtk-3-0 libwebkit2gtk-4.1-0` |
 | **Fedora** | `sudo dnf install gtk3 webkit2gtk4.1` |
 
-### Linux window icon (taskbar, overview, Wayland)
+**Build** from source on Linux needs the matching **-dev** / **-devel** packages as well—exact names and extra packages are in **[`docs/linux-dependencies.md`](docs/linux-dependencies.md)**.
 
-Wails passes your PNG to GTK (`gtk_window_set_icon`). On **X11**, that is often enough. On **Wayland** (default on many desktops), the compositor usually takes the window/taskbar icon from a **`.desktop` file** plus the **freedesktop icon theme** (`Icon=dzglauncher` → `hicolor/.../dzglauncher.png`), not from GTK’s window icon alone. If you only run `./build/bin/dzglauncher` without installing those pieces, you may still see a **generic or WebKit-style fallback** (e.g. a “W”-like placeholder), even though the app embeds a custom icon.
+### What you need to use the app (behavior, not compile)
 
-To get the correct icon in the shell while developing, install the entry and icons into your user prefix (paths match [`packaging/linux/dzglauncher.desktop`](packaging/linux/dzglauncher.desktop) and `packaging/linux/icons/`):
+- **Steam Web API key** — required for the Steam master-list browser (configure in-app; see [`docs/architecture-and-product.md`](docs/architecture-and-product.md)).
+- **Steam** client and **DayZ** installed — for joining servers and Workshop.
+- **Battlemetrics** (optional) — some ID-based flows and fallbacks; see architecture doc.
+
+### Optional: correct window icon on Linux (Wayland / taskbar)
+
+GTK sets a window icon, but on **Wayland** many shells use the **`.desktop` file** and **freedesktop icon theme** instead. If you only run `./build/bin/dzglauncher`, you may see a generic placeholder even though the app ships a PNG.
+
+To install the user-level entry and icon (paths match [`packaging/linux/dzglauncher.desktop`](packaging/linux/dzglauncher.desktop) and [`packaging/linux/icons/`](packaging/linux/icons/)):
 
 ```bash
 mkdir -p ~/.local/share/applications ~/.local/share/icons/hicolor/256x256/apps
@@ -57,15 +86,13 @@ cp packaging/linux/icons/hicolor/256x256/apps/dzglauncher.png ~/.local/share/ico
 gtk-update-icon-cache ~/.local/share/icons/hicolor 2>/dev/null || true
 ```
 
-Adjust the `Exec=` line in the copied `.desktop` if your binary is not on `PATH` (use the full path to `dzglauncher`).
+If `dzglauncher` is not on your `PATH`, edit `~/.local/share/applications/dzglauncher.desktop` and set `Exec=` to the **full path** of the binary.
 
-### Runtime / keys (app behavior)
+---
 
-- **Steam Web API key** — required for the Steam master-list browser (see in-app settings and [`docs/architecture-and-product.md`](docs/architecture-and-product.md)).
-- **Steam client** and **DayZ** install — for joining and Workshop.
-- **Battlemetrics** (optional) — ID-based flows and optional fallbacks (see architecture doc).
+## How to run and build
 
-## Quick start
+### Full app in development (hot reload)
 
 From the repository root:
 
@@ -73,84 +100,107 @@ From the repository root:
 wails dev
 ```
 
-This runs the frontend npm install as configured in `wails.json`, starts Vite in dev mode, and rebuilds Go with reload where applicable.
+This runs `npm install` for the frontend as configured in `wails.json`, starts Vite, and rebuilds the Go side when needed.
 
-Optional manual frontend build:
-
-```bash
-cd frontend && npm install && npm run build
-```
-
-## Production build
+### Production build (local)
 
 ```bash
 wails build
 ```
 
-Binaries and bundles land under `build/bin/` (standard Wails layout). Windows/macOS icons and metadata live under [`build/`](build/README.md). If you build for a non-Linux OS, treat the output as **untested** by this project (see **Platform support**).
+Output is under **`build/bin/`** (Wails default). Extra Windows/macOS assets live under [`build/`](build/README.md). Non-Linux outputs are **untested** by this project—see [Overview](#overview).
 
-Linux release archives (**zip** and **tar.gz**) and `SHA256SUMS` are built by [`.github/workflows/release-linux.yml`](.github/workflows/release-linux.yml) on version tags `v*`. Both archives include `dzglauncher`, `LICENSE`, `README.md`, and a `share/` tree with [`packaging/linux/dzglauncher.desktop`](packaging/linux/dzglauncher.desktop) under `share/applications/` and the PNG icon under `share/icons/hicolor/256x256/apps/` (freedesktop layout for copying into `~/.local/share/`). After downloading `SHA256SUMS` together with the zip and tar.gz into the same directory, run `sha256sum -c SHA256SUMS` to verify them.
+### Optional: frontend without Wails
 
-## Documentation
-
-Index: [`docs/README.md`](docs/README.md).
-
-| Document | Contents |
-|----------|----------|
-| [`docs/architecture-and-product.md`](docs/architecture-and-product.md) | Domain, integrations (Steam, A2S, Battlemetrics, geo), product rules — stack-agnostic. |
-| [`docs/project-and-structure.md`](docs/project-and-structure.md) | Folders, languages, libraries, layer boundaries. |
-| [`docs/design-system.md`](docs/design-system.md) | Tailwind, CSS tokens, built-in themes, external theme overlay, UI components. |
-
-## Repository layout
-
-```
-dzglauncher/
-├── main.go, app.go          # Wails entry and API exposed to the frontend
-├── internal/
-│   ├── domain/              # Domain models and rules (Settings, server row, quick fav caps, …)
-│   ├── services/          # Use cases (Steam browser, filters, geo, launch, favorites/history)
-│   ├── adapters/          # HTTP, files, A2S, Steam API, Workshop, LAN, Battlemetrics
-│   └── ports/             # Interfaces (e.g. config store)
-├── frontend/              # SolidJS + TypeScript + Vite + @solidjs/router + i18next
-├── data/                  # Embedded data (e.g. DB-IP sample ranges)
-├── build/                 # Wails packaging assets
-└── docs/                  # Documentation
-```
-
-Persisted settings: JSON at `dzglauncher/config.json` inside the OS user config directory (e.g. `$XDG_CONFIG_HOME` on Linux, equivalent paths on macOS/Windows).
-
-## Frontend scripts
+From the `frontend/` directory, run `npm install` once, then use whichever you need:
 
 ```bash
 cd frontend
-npm run lint    # tsc --noEmit
-npm run build   # tsc && vite build
-npm run dev     # Vite only (no Wails; limited for UI-only work)
+npm install
+npm run dev
+npm run lint
+npm run build
 ```
 
-## Go tests
+`npm run dev` starts **Vite only** (no Wails; limited for UI-only work). `npm run lint` runs the TypeScript check. `npm run build` runs `tsc` and `vite build` (the same style of frontend build Wails uses in production).
+
+### Tests (Go)
+
+From the repository root:
 
 ```bash
 go test ./...
 ```
 
-## Implemented highlights
+### Linux release archives (from GitHub)
 
-- Steam master-list server browser with filters, search, and map selection.
-- Live server metadata and ping refresh via **A2S** (incl. DayZ rules / mod list where available).
-- **Favorites** plus up to **five quick favorites**, deduplicated **history**, and Workshop-oriented **mods** workflow.
-- Settings for Steam Web API key, Steam launch command, install paths, DayZ branch, i18n, bundled **dark/light** themes, and optional **external CSS overlay** path (`uiExternalThemePath` + `ReadUIThemeFile`).
-- JSON settings under the OS config directory; Apache 2.0 license; English docs under [`docs/`](docs/README.md).
+On tags `v*`, [`.github/workflows/release-linux.yml`](.github/workflows/release-linux.yml) publishes:
 
-## Roadmap / open work
+- **`dzglauncher-<version>-linux-amd64.zip`**
+- **`dzglauncher-<version>-linux-amd64.tar.gz`**
+- **`SHA256SUMS`**
 
-Rough edges and missing product work (code stubs or partial UI may exist; this is what still needs ownership, UX polish, and **Linux-focused** testing):
+Each archive contains the `dzglauncher` binary, `LICENSE`, `README.md`, and a **`share/`** tree (`share/applications/dzglauncher.desktop`, `share/icons/hicolor/256x256/apps/dzglauncher.png`) so you can merge into `~/.local/share/` if you want menu integration.
 
-- **Battlemetrics** — token field and ID resolution exist, but end-to-end flows (errors, fallbacks, discoverability) are not finished or systematically tested.
-- **LAN** — subnet scan API exists; a first-class LAN experience (UX, edge cases, validation on real networks) is still open.
-- **Geolocation** — bundled DB-IP sample plus optional user database path; client location refresh, accuracy, and distance labelling need a coherent product pass and tests.
-- **Themes without a rebuild** — bundled themes still ship with the app; **optional runtime CSS overlay**: set an absolute file path in Settings (`uiExternalThemePath`); the app reads the file via Wails and injects it after built-in theme variables so you can override tokens without a developer build of the theme files themselves.
+Download the two archives and `SHA256SUMS` into one directory, then:
 
-## Third-party credits
+```bash
+sha256sum -c SHA256SUMS
+```
 
-Third-party libraries and data keep their own licenses (e.g. Wails, `github.com/woozymasta/a2s`, system WebKit/GTK). Geo database attribution follows project notes in [`docs/architecture-and-product.md`](docs/architecture-and-product.md).
+Browse and download assets from **[Releases](https://github.com/herberthudson/dzglauncher/releases)**.
+
+---
+
+## Changelog
+
+Version-to-version notes live in **[`CHANGELOG.md`](CHANGELOG.md)**. Binary releases and checksums are on **[GitHub Releases](https://github.com/herberthudson/dzglauncher/releases)**.
+
+---
+
+## Documentation
+
+| Document | Contents |
+|----------|----------|
+| [`docs/README.md`](docs/README.md) | Index of all docs |
+| [`docs/architecture-and-product.md`](docs/architecture-and-product.md) | Domain, Steam / A2S / Battlemetrics / geo, product rules |
+| [`docs/project-and-structure.md`](docs/project-and-structure.md) | Folders, stack, layer boundaries |
+| [`docs/design-system.md`](docs/design-system.md) | Tailwind, tokens, themes, UI components |
+| [`docs/linux-dependencies.md`](docs/linux-dependencies.md) | Linux runtime vs build packages by distro |
+
+---
+
+## Repository layout
+
+```
+dzglauncher/
+├── main.go, app.go       # Wails entry and APIs exposed to the frontend
+├── internal/
+│   ├── domain/           # Models and rules (settings, server row, quick fav caps, …)
+│   ├── services/         # Use cases (browser, filters, geo, launch, favorites/history)
+│   ├── adapters/         # HTTP, files, A2S, Steam API, Workshop, LAN, Battlemetrics
+│   └── ports/            # Interfaces (e.g. config store)
+├── frontend/             # SolidJS + TypeScript + Vite + @solidjs/router + i18next
+├── data/                 # Embedded data (e.g. DB-IP sample ranges)
+├── build/                # Wails packaging assets (icons, platform metadata)
+├── packaging/linux/      # .desktop and icons for Linux packaging
+└── docs/                 # Markdown documentation
+```
+
+---
+
+## TODO
+
+Open work (may include stubs or partial UI). Mark an item when it is implemented or no longer applicable.
+
+- [ ] **Battlemetrics** — finish end-to-end flows (errors, fallbacks, discoverability); token field and ID resolution already exist.
+- [ ] **LAN** — first-class UX and validation on real networks beyond the current subnet scan API.
+- [ ] **Geolocation** — coherent product pass and tests for client location, accuracy, and distance labels (bundled DB-IP sample + optional user database path).
+- [ ] **Runtime theme overlay** — document and harden the optional CSS overlay path (`uiExternalThemePath`) so tokens can be overridden without rebuilding shipped theme sources.
+
+---
+
+## License and third-party credits
+
+- **License:** **Apache License 2.0** — full text in [`LICENSE`](LICENSE).
+- **Third-party:** Libraries and embedded data keep their own licenses (e.g. Wails, [`github.com/woozymasta/a2s`](https://github.com/woozymasta/a2s), system GTK/WebKit). Geo database attribution is described in [`docs/architecture-and-product.md`](docs/architecture-and-product.md).
