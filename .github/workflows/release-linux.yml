@@ -76,12 +76,14 @@ jobs:
           VERSION: ${{ steps.ver.outputs.version }}
         run: |
           set -euo pipefail
-          mkdir -p staging dist
+          mkdir -p staging/share/applications staging/share/icons/hicolor/256x256/apps dist
           cp build/bin/dzglauncher staging/dzglauncher
           cp LICENSE README.md staging/
+          cp packaging/linux/dzglauncher.desktop staging/share/applications/
+          cp packaging/linux/icons/hicolor/256x256/apps/dzglauncher.png staging/share/icons/hicolor/256x256/apps/
           strip staging/dzglauncher 2>/dev/null || true
-          ( cd staging && zip -r9 "../dist/dzglauncher-${VERSION}-linux-amd64.zip" dzglauncher LICENSE README.md )
-          tar -C staging -czvf "dist/dzglauncher-${VERSION}-linux-amd64.tar.gz" dzglauncher LICENSE README.md
+          ( cd staging && zip -r9 "../dist/dzglauncher-${VERSION}-linux-amd64.zip" dzglauncher LICENSE README.md share )
+          tar -C staging -czvf "dist/dzglauncher-${VERSION}-linux-amd64.tar.gz" dzglauncher LICENSE README.md share
 
       - name: Download AppImage tooling
         run: |
@@ -110,6 +112,19 @@ jobs:
             --desktop-file ../packaging/linux/dzglauncher.desktop \
             --icon-file ../packaging/linux/icons/hicolor/256x256/apps/dzglauncher.png \
             --plugin gtk
+          cd ..
+          WK_SRC=/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1
+          WK_DST=AppDir/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1
+          if [ -d "$WK_SRC" ]; then
+            mkdir -p "$WK_DST"
+            cp -a "${WK_SRC}/." "$WK_DST/"
+          else
+            echo "WebKit helper directory missing at $WK_SRC" >&2
+            exit 1
+          fi
+          cp packaging/linux/appimage/AppRun AppDir/AppRun
+          chmod +x AppDir/AppRun
+          cd tools
           export ARCH=x86_64
           export VERSION="${VERSION}"
           ./appimagetool-x86_64.AppImage ../AppDir "../dist/dzglauncher-${VERSION}-x86_64.AppImage"
