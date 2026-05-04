@@ -66,6 +66,10 @@ export function OpenExternalURL(arg1) {
   return window['go']['main']['App']['OpenExternalURL'](arg1);
 }
 
+export function ReadUIThemeFile(arg1) {
+  return window['go']['main']['App']['ReadUIThemeFile'](arg1);
+}
+
 export function RefreshServersPing(arg1) {
   return window['go']['main']['App']['RefreshServersPing'](arg1);
 }

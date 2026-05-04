@@ -3,10 +3,16 @@ import {useTranslation} from 'solid-i18next';
 import {Gamepad2, Globe, MapPin, SlidersHorizontal} from 'lucide-solid';
 import * as App from '../../../wailsjs/go/main/App';
 import {domain} from '../../../wailsjs/go/models';
+import {AlertError, AlertSuccess} from '@/components/ui/alert';
+import {Button} from '@/components/ui/button';
+import {Card, CardTitle} from '@/components/ui/card';
+import {Input} from '@/components/ui/input';
+import {Label} from '@/components/ui/label';
 import {i18n} from '../../i18n/i18n';
 import {resolveLocale} from '../../i18n/resolveLocale';
-import {applyThemeToDocument, resolveTheme} from '../../theme/resolveTheme';
-import {DsSelect} from '../../shared/DsSelect';
+import {applyFullThemeFromSettings} from '../../theme/applyFullTheme';
+import {resolveTheme} from '../../theme/resolveTheme';
+import {DsSelect} from '@/components/ui/select';
 import {PageHeader} from '../../shared/PageHeader';
 
 export default function SettingsPage() {
@@ -20,7 +26,7 @@ export default function SettingsPage() {
     App.LoadSettings()
       .then((st) => {
         setS(st);
-        applyThemeToDocument(st.uiTheme);
+        void applyFullThemeFromSettings(st.uiTheme, st.uiExternalThemePath);
       })
       .catch((e: unknown) => setMsg(String(e)));
   });
@@ -54,7 +60,16 @@ export default function SettingsPage() {
     }
     const theme = resolveTheme(themeRaw);
     setS(domain.Settings.createFrom({...cur, uiTheme: theme}));
-    applyThemeToDocument(theme);
+    void applyFullThemeFromSettings(theme, cur.uiExternalThemePath);
+  };
+
+  const applyExternalPath = (path: string) => {
+    const cur = s();
+    if (!cur) {
+      return;
+    }
+    setS(domain.Settings.createFrom({...cur, uiExternalThemePath: path}));
+    void applyFullThemeFromSettings(cur.uiTheme, path);
   };
 
   const save = () => {
@@ -65,7 +80,7 @@ export default function SettingsPage() {
     App.SaveSettings(cur)
       .then(() => {
         void i18n.changeLanguage(resolveLocale(cur.locale || '', navigator.language));
-        applyThemeToDocument(cur.uiTheme);
+        void applyFullThemeFromSettings(cur.uiTheme, cur.uiExternalThemePath);
         setOkMsg(t('settings.saved'));
         setMsg('');
       })
@@ -94,25 +109,25 @@ export default function SettingsPage() {
   return (
     <>
       <Show when={!s()}>
-        <p>{t('common.loading')}</p>
+        <p class="text-muted-foreground">{t('common.loading')}</p>
       </Show>
       <Show when={s()}>
         <div>
           <PageHeader icon={SlidersHorizontal} title={t('settings.title')} description={t('settings.subtitle')} />
           <Show when={!!msg()}>
-            <div class="msg msg-error">{msg()}</div>
+            <AlertError>{msg()}</AlertError>
           </Show>
           <Show when={!!okMsg()}>
-            <div class="msg msg-success">{okMsg()}</div>
+            <AlertSuccess>{okMsg()}</AlertSuccess>
           </Show>
 
-          <section class="ds-card" aria-labelledby="settings-section-app">
-            <h2 id="settings-section-app" class="ds-section-title">
+          <Card aria-labelledby="settings-section-app">
+            <CardTitle id="settings-section-app">
               <Globe size={16} strokeWidth={1.75} aria-hidden />
               {t('settings.sectionApp')}
-            </h2>
-            <div class="field">
-              <label for="settings-locale">{t('settings.language')}</label>
+            </CardTitle>
+            <div class="mb-2">
+              <Label for="settings-locale">{t('settings.language')}</Label>
               <DsSelect
                 id="settings-locale"
                 value={s()!.locale || 'auto'}
@@ -125,8 +140,8 @@ export default function SettingsPage() {
                 onChange={applyLocale}
               />
             </div>
-            <div class="field">
-              <label for="settings-ui-theme">{t('settings.theme')}</label>
+            <div class="mb-2">
+              <Label for="settings-ui-theme">{t('settings.theme')}</Label>
               <DsSelect
                 id="settings-ui-theme"
                 value={resolveTheme(s()!.uiTheme)}
@@ -137,24 +152,34 @@ export default function SettingsPage() {
                 onChange={applyTheme}
               />
             </div>
-            <div class="field">
-              <label for="settings-player">{t('settings.playerName')}</label>
-              <input id="settings-player" value={s()!.playerName} onInput={bind('playerName')} autocomplete="username" />
+            <div class="mb-2">
+              <Label for="settings-external-theme">{t('settings.externalThemePath')}</Label>
+              <Input
+                id="settings-external-theme"
+                value={s()!.uiExternalThemePath || ''}
+                placeholder={t('settings.externalThemePlaceholder')}
+                onInput={(e) => applyExternalPath(e.currentTarget.value)}
+                autocomplete="off"
+              />
             </div>
-          </section>
+            <div class="mb-0">
+              <Label for="settings-player">{t('settings.playerName')}</Label>
+              <Input id="settings-player" value={s()!.playerName} onInput={bind('playerName')} autocomplete="username" />
+            </div>
+          </Card>
 
-          <section class="ds-card" aria-labelledby="settings-section-steam">
-            <h2 id="settings-section-steam" class="ds-section-title">
+          <Card aria-labelledby="settings-section-steam">
+            <CardTitle id="settings-section-steam">
               <Gamepad2 size={16} strokeWidth={1.75} aria-hidden />
               {t('settings.sectionSteam')}
-            </h2>
-            <div class="field">
-              <label for="settings-steam-key">{t('settings.steamApiKey')}</label>
-              <input id="settings-steam-key" type="password" value={s()!.steamWebApiKey} onInput={bind('steamWebApiKey')} autocomplete="off" />
+            </CardTitle>
+            <div class="mb-2">
+              <Label for="settings-steam-key">{t('settings.steamApiKey')}</Label>
+              <Input id="settings-steam-key" type="password" value={s()!.steamWebApiKey} onInput={bind('steamWebApiKey')} autocomplete="off" />
             </div>
-            <div class="field">
-              <label for="settings-key-test">{t('settings.testKey')}</label>
-              <input
+            <div class="mb-2">
+              <Label for="settings-key-test">{t('settings.testKey')}</Label>
+              <Input
                 id="settings-key-test"
                 value={keyTest()}
                 onInput={(e) => setKeyTest(e.currentTarget.value)}
@@ -162,34 +187,44 @@ export default function SettingsPage() {
                 autocomplete="off"
               />
             </div>
-            <div class="toolbar toolbar-tight">
-              <button type="button" class="btn btn-secondary" onClick={testKey}>
+            <div class="mb-2 flex flex-wrap gap-1">
+              <Button variant="secondary" onClick={testKey}>
                 {t('settings.validateKey')}
-              </button>
+              </Button>
             </div>
-            <div class="field">
-              <label for="settings-bm">{t('settings.bmToken')}</label>
-              <input id="settings-bm" type="password" value={s()!.battlemetricsToken} onInput={bind('battlemetricsToken')} autocomplete="off" />
+            <div class="mb-2">
+              <Label for="settings-bm">{t('settings.bmToken')}</Label>
+              <Input id="settings-bm" type="password" value={s()!.battlemetricsToken} onInput={bind('battlemetricsToken')} autocomplete="off" />
             </div>
-            <div class="field">
-              <label for="settings-steam-cmd">{t('settings.steamCmd')}</label>
-              <input id="settings-steam-cmd" value={s()!.steamLaunchCommand} onInput={bind('steamLaunchCommand')} placeholder={t('settings.steamCmdPlaceholder')} />
+            <div class="mb-2">
+              <Label for="settings-steam-cmd">{t('settings.steamCmd')}</Label>
+              <Input
+                id="settings-steam-cmd"
+                value={s()!.steamLaunchCommand}
+                onInput={bind('steamLaunchCommand')}
+                placeholder={t('settings.steamCmdPlaceholder')}
+              />
             </div>
-            <div class="field">
-              <label for="settings-steam-root">{t('settings.steamRoot')}</label>
-              <input id="settings-steam-root" value={s()!.steamRootPath} onInput={bind('steamRootPath')} placeholder={t('settings.steamRootPlaceholder')} />
+            <div class="mb-2">
+              <Label for="settings-steam-root">{t('settings.steamRoot')}</Label>
+              <Input
+                id="settings-steam-root"
+                value={s()!.steamRootPath}
+                onInput={bind('steamRootPath')}
+                placeholder={t('settings.steamRootPlaceholder')}
+              />
             </div>
-            <div class="field">
-              <label for="settings-dayz-install">{t('settings.dayZInstallPath')}</label>
-              <input
+            <div class="mb-2">
+              <Label for="settings-dayz-install">{t('settings.dayZInstallPath')}</Label>
+              <Input
                 id="settings-dayz-install"
                 value={s()!.dayZInstallPath || ''}
                 onInput={bind('dayZInstallPath')}
                 placeholder={t('settings.dayZInstallPathPlaceholder')}
               />
             </div>
-            <div class="field">
-              <label for="settings-dayz-branch">{t('settings.dayzBranch')}</label>
+            <div class="mb-0">
+              <Label for="settings-dayz-branch">{t('settings.dayzBranch')}</Label>
               <DsSelect
                 id="settings-dayz-branch"
                 value={s()!.dayZBranch}
@@ -205,20 +240,20 @@ export default function SettingsPage() {
                 }}
               />
             </div>
-          </section>
+          </Card>
 
-          <section class="ds-card" aria-labelledby="settings-section-network">
-            <h2 id="settings-section-network" class="ds-section-title">
+          <Card aria-labelledby="settings-section-network">
+            <CardTitle id="settings-section-network">
               <MapPin size={16} strokeWidth={1.75} aria-hidden />
               {t('settings.sectionNetwork')}
-            </h2>
-            <div class="field">
-              <label for="settings-geo">{t('settings.geoCsv')}</label>
-              <input id="settings-geo" value={s()!.geoIpDatabasePath} onInput={bind('geoIpDatabasePath')} placeholder={t('settings.geoCsvPlaceholder')} />
+            </CardTitle>
+            <div class="mb-2">
+              <Label for="settings-geo">{t('settings.geoCsv')}</Label>
+              <Input id="settings-geo" value={s()!.geoIpDatabasePath} onInput={bind('geoIpDatabasePath')} placeholder={t('settings.geoCsvPlaceholder')} />
             </div>
-            <div class="field">
-              <label for="settings-lat">{t('settings.clientLat')}</label>
-              <input
+            <div class="mb-2">
+              <Label for="settings-lat">{t('settings.clientLat')}</Label>
+              <Input
                 id="settings-lat"
                 type="number"
                 step="any"
@@ -231,9 +266,9 @@ export default function SettingsPage() {
                 }}
               />
             </div>
-            <div class="field">
-              <label for="settings-lon">{t('settings.clientLon')}</label>
-              <input
+            <div class="mb-2">
+              <Label for="settings-lon">{t('settings.clientLon')}</Label>
+              <Input
                 id="settings-lon"
                 type="number"
                 step="any"
@@ -246,9 +281,9 @@ export default function SettingsPage() {
                 }}
               />
             </div>
-            <div class="field">
-              <label for="settings-lan-port">{t('settings.lanQuery')}</label>
-              <input
+            <div class="mb-0">
+              <Label for="settings-lan-port">{t('settings.lanQuery')}</Label>
+              <Input
                 id="settings-lan-port"
                 type="number"
                 value={s()!.lanQueryPort}
@@ -260,12 +295,10 @@ export default function SettingsPage() {
                 }}
               />
             </div>
-          </section>
+          </Card>
 
-          <div class="toolbar" style={{'margin-top': 'var(--ds-space-lg)'}}>
-            <button type="button" class="btn" onClick={save}>
-              {t('settings.save')}
-            </button>
+          <div class="mt-4 flex flex-wrap gap-2">
+            <Button onClick={save}>{t('settings.save')}</Button>
           </div>
         </div>
       </Show>

@@ -8,6 +8,13 @@ import {PageHeader} from '../../shared/PageHeader';
 import {clampPageSize} from '../../shared/pageSizeConstants';
 import {formatBytes} from '../../shared/formatBytes';
 import {workshopFolderDisplayPath} from '../../shared/workshopDisplayPath';
+import {AlertError} from '@/components/ui/alert';
+import {Button} from '@/components/ui/button';
+import {Card, CardTitle} from '@/components/ui/card';
+import {Input} from '@/components/ui/input';
+import {Label} from '@/components/ui/label';
+import {Table, TableBody, TableCaption, TableCell, TableHead, TableRow, TableScroll} from '@/components/ui/table';
+import {TableCheckbox} from '@/components/ui/checkbox';
 
 type SortCol = 'id' | 'name' | 'path' | 'size';
 
@@ -95,6 +102,17 @@ export default function ModsPage() {
 
   const allFilteredSelected = () => sorted().length > 0 && sorted().every((m) => sel().has(m.path));
 
+  const selectAllTriState = createMemo(() => {
+    const sr = sorted();
+    if (sr.length === 0) {
+      return {checked: false, indeterminate: false};
+    }
+    const n = sel();
+    const all = sr.every((m) => n.has(m.path));
+    const some = sr.some((m) => n.has(m.path));
+    return {checked: all, indeterminate: !all && some};
+  });
+
   const toggleSort = (col: SortCol) => () => {
     if (sortCol() === col) {
       setSortAsc((v) => !v);
@@ -105,47 +123,47 @@ export default function ModsPage() {
     setPage(1);
   };
 
-  const thSort = (col: SortCol, label: string, longDesc: string, thClassName?: string) => (
-    <th
+  const thSort = (col: SortCol, label: string, longDesc: string, extraThClass?: string) => (
+    <TableHead
       scope="col"
       title={longDesc}
-      class={thClassName}
+      class={extraThClass}
       aria-sort={sortCol() === col ? (sortAsc() ? 'ascending' : 'descending') : undefined}
     >
-      <button
-        type="button"
-        class="btn btn-secondary"
-        style={{font: 'inherit', padding: '0.15rem 0.35rem'}}
+      <Button
+        variant="secondary"
+        size="sm"
+        class="min-h-6 px-1 py-0.5 text-[inherit] font-[inherit]"
         onClick={toggleSort(col)}
         title={`${longDesc} (${t('mods.sortTitle')})`}
         aria-label={`${label}: ${longDesc}. ${t('mods.sortAria')}`}
       >
         {label}
         {sortCol() === col ? (sortAsc() ? ' ▲' : ' ▼') : ''}
-      </button>
-    </th>
+      </Button>
+    </TableHead>
   );
 
-  const toggleSelectAllFiltered = () => {
+  const onSelectAllChange = (checked: boolean) => {
+    const sr = sorted();
     setSel((prev) => {
       const n = new Set(prev);
-      const sr = sorted();
-      if (sr.length > 0 && sr.every((m) => n.has(m.path))) {
-        sr.forEach((m) => n.delete(m.path));
-      } else {
+      if (checked) {
         sr.forEach((m) => n.add(m.path));
+      } else {
+        sr.forEach((m) => n.delete(m.path));
       }
       return n;
     });
   };
 
-  const toggleRow = (path: string) => {
+  const onRowCheckChange = (path: string) => (checked: boolean) => {
     setSel((prev) => {
       const next = new Set(prev);
-      if (next.has(path)) {
-        next.delete(path);
-      } else {
+      if (checked) {
         next.add(path);
+      } else {
+        next.delete(path);
       }
       return next;
     });
@@ -191,39 +209,40 @@ export default function ModsPage() {
     <div>
       <PageHeader icon={Package} title={t('mods.title')} description={t('mods.subtitle')} />
       <Show when={!!err()}>
-        <div class="msg msg-error">{err()}</div>
+        <AlertError>{err()}</AlertError>
       </Show>
 
-      <section class="ds-card" aria-labelledby="mods-overview-title">
-        <h2 id="mods-overview-title" class="ds-section-title">
+      <Card aria-labelledby="mods-overview-title">
+        <CardTitle id="mods-overview-title">
           <Package size={16} strokeWidth={1.75} aria-hidden />
           {t('mods.sectionOverview')}
-        </h2>
+        </CardTitle>
         {items().length > 0 ? (
-          <p style={{'font-size': '0.875rem', color: 'var(--text-muted)', 'margin-top': 0, 'margin-bottom': 'var(--ds-space-md)'}}>
-            {t('mods.totalAll')} <strong style={{color: 'var(--text)'}}>{formatBytes(totalBytesAll())}</strong>
+          <p class="mb-3 mt-0 text-sm text-muted-foreground">
+            {t('mods.totalAll')} <strong class="text-foreground">{formatBytes(totalBytesAll())}</strong>
             {q().trim() && sorted().length !== items().length ? (
               <>
                 {' '}
-                · {t('mods.filtered')} <strong style={{color: 'var(--text)'}}>{formatBytes(totalBytesFiltered())}</strong> ({t('mods.modsCount', {count: sorted().length})})
+                · {t('mods.filtered')} <strong class="text-foreground">{formatBytes(totalBytesFiltered())}</strong> ({t('mods.modsCount', {count: sorted().length})})
               </>
             ) : null}
           </p>
         ) : null}
-        <p style={{color: 'var(--text-muted)', 'font-size': '0.8125rem', 'margin-top': 0, 'margin-bottom': 0}}>{t('mods.help')}</p>
-      </section>
+        <p class="mb-0 mt-0 text-[0.8125rem] text-muted-foreground">{t('mods.help')}</p>
+      </Card>
 
-      <section class="ds-card browse-table-card" aria-labelledby="mods-list-title">
-        <h2 id="mods-list-title" class="ds-section-title">
+      <Card class="mb-0 flex min-h-0 flex-col" aria-labelledby="mods-list-title">
+        <CardTitle id="mods-list-title">
           <Rows3 size={16} strokeWidth={1.75} aria-hidden />
           {t('mods.sectionList')}
-        </h2>
-        <div class="browse-table-toolbar browse-toolbar-split-search">
-          <div class="field browse-search-field">
-            <label for="mods-search">{t('mods.searchLabel')}</label>
-            <div class="browse-field-input-row">
-              <input
+        </CardTitle>
+        <div class="mb-2 flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between">
+          <div class="mb-0 min-w-0 flex-1 basis-64">
+            <Label for="mods-search">{t('mods.searchLabel')}</Label>
+            <div class="flex max-w-xl items-stretch gap-1.5">
+              <Input
                 id="mods-search"
+                class="min-w-0 flex-1"
                 value={q()}
                 onInput={(e) => {
                   setQ(e.currentTarget.value);
@@ -232,19 +251,19 @@ export default function ModsPage() {
                 placeholder={t('mods.filterPh')}
                 autocomplete="off"
               />
-              <button type="button" class="btn btn-secondary browse-input-clear" disabled={!q().trim()} aria-label={t('common.clearField')} onClick={() => { setQ(''); setPage(1); }}>
+              <Button variant="secondary" class="min-w-[2.375rem] shrink-0 px-2" disabled={!q().trim()} aria-label={t('common.clearField')} onClick={() => { setQ(''); setPage(1); }}>
                 <X size={16} strokeWidth={2} aria-hidden />
-              </button>
+              </Button>
             </div>
           </div>
-          <div class="browse-table-toolbar-actions browse-toolbar-actions-trailing">
-            <button type="button" class="btn btn-secondary" disabled={busy() || sorted().length === 0} onClick={toggleSelectAllFiltered}>
+          <div class="flex flex-wrap items-center justify-end gap-2">
+            <Button variant="secondary" disabled={busy() || sorted().length === 0} onClick={() => onSelectAllChange(!allFilteredSelected())}>
               {allFilteredSelected() ? t('mods.deselectAll') : t('mods.selectAll')}
-            </button>
-            <button type="button" class="btn btn-danger" disabled={busy() || sel().size === 0} onClick={deleteSelected}>
+            </Button>
+            <Button variant="destructive" disabled={busy() || sel().size === 0} onClick={deleteSelected}>
               {t('mods.deleteSel', {count: sel().size})}
-            </button>
-            <span class="browse-toolbar-label">{t('browse.perPage')}</span>
+            </Button>
+            <span class="text-[0.8125rem] font-semibold text-muted-foreground">{t('browse.perPage')}</span>
             <PageSizeInput
               id="mods-page-size"
               value={pageSize()}
@@ -257,92 +276,91 @@ export default function ModsPage() {
             />
           </div>
         </div>
-        <div class="table-wrap browse-table-scroll">
-          <table class="data">
-            <caption class="sr-only">{t('mods.tableCaption')}</caption>
+        <TableScroll>
+          <Table>
+            <TableCaption class="sr-only">{t('mods.tableCaption')}</TableCaption>
             <thead>
               <tr>
-                <th scope="col" title={t('mods.thSelectColumnLong')} style={{width: '2.5rem'}}>
-                  <input
-                    type="checkbox"
-                    checked={allFilteredSelected()}
+                <TableHead scope="col" class="w-10" title={t('mods.thSelectColumnLong')}>
+                  <TableCheckbox
+                    checked={selectAllTriState().checked}
+                    indeterminate={selectAllTriState().indeterminate}
+                    onChange={onSelectAllChange}
                     disabled={busy() || sorted().length === 0}
-                    onChange={toggleSelectAllFiltered}
                     title={t('mods.selectFilteredTitle')}
-                    aria-label={t('mods.selectFilteredTitle')}
+                    ariaLabel={t('mods.selectFilteredTitle')}
                   />
-                </th>
+                </TableHead>
                 {thSort('id', t('mods.thId'), t('mods.thIdLong'))}
                 {thSort('name', t('mods.thName'), t('mods.thNameLong'))}
-                {thSort('size', t('mods.thSize'), t('mods.thSizeLong'), 'mods-th-size')}
+                {thSort('size', t('mods.thSize'), t('mods.thSizeLong'), 'text-right')}
                 {thSort('path', t('mods.thPath'), t('mods.thPathLong'))}
-                <th scope="col" title={t('mods.thActionsLong')}>
+                <TableHead scope="col" title={t('mods.thActionsLong')}>
                   {t('mods.thActions')}
-                </th>
+                </TableHead>
               </tr>
             </thead>
-            <tbody>
+            <TableBody>
               <For each={pageSlice()}>
                 {(m) => (
-                  <tr>
-                    <td>
-                      <input
-                        type="checkbox"
+                  <TableRow>
+                    <TableCell>
+                      <TableCheckbox
                         checked={sel().has(m.path)}
                         disabled={busy()}
-                        onChange={() => toggleRow(m.path)}
-                        aria-label={t('mods.toggleRowAria', {name: m.name || String(m.id)})}
+                        onChange={onRowCheckChange(m.path)}
+                        ariaLabel={t('mods.toggleRowAria', {name: m.name || String(m.id)})}
                       />
-                    </td>
-                    <td>{m.id}</td>
-                    <td>{m.name}</td>
-                    <td style={{'text-align': 'right'}}>{formatBytes(Number(m.sizeBytes) || 0)}</td>
-                    <td style={{'white-space': 'normal', 'max-width': '24rem'}}>{workshopFolderDisplayPath(m.path)}</td>
-                    <td>
-                      <div class="row-actions">
-                        <button type="button" class="btn btn-secondary" disabled={busy()} title={t('mods.steamPageTitle')} onClick={() => App.WorkshopPage(m.id)}>
+                    </TableCell>
+                    <TableCell>{m.id}</TableCell>
+                    <TableCell>{m.name}</TableCell>
+                    <TableCell class="text-right">{formatBytes(Number(m.sizeBytes) || 0)}</TableCell>
+                    <TableCell class="max-w-96 whitespace-normal">{workshopFolderDisplayPath(m.path)}</TableCell>
+                    <TableCell>
+                      <div class="flex flex-wrap gap-1">
+                        <Button variant="secondary" size="sm" disabled={busy()} title={t('mods.steamPageTitle')} onClick={() => App.WorkshopPage(m.id)}>
                           <ExternalLink size={14} strokeWidth={2} aria-hidden />
                           {t('mods.steam')}
-                        </button>
-                        <button type="button" class="btn btn-danger" disabled={busy()} title={t('mods.deleteTitle')} onClick={() => deleteOne(m)}>
+                        </Button>
+                        <Button variant="destructive" size="sm" disabled={busy()} title={t('mods.deleteTitle')} onClick={() => deleteOne(m)}>
                           <Trash2 size={14} strokeWidth={2} aria-hidden />
                           {t('mods.delete')}
-                        </button>
+                        </Button>
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 )}
               </For>
-            </tbody>
-          </table>
-        </div>
+            </TableBody>
+          </Table>
+        </TableScroll>
         {items().length > 0 ? (
-          <footer class="browse-mods-table-footer">
-            <div class="browse-table-toolbar-actions browse-mods-footer-actions">
-              <div class="browse-pagination-btns">
-                <button type="button" class="btn btn-secondary" disabled={page() <= 1 || busy()} onClick={() => setPage(1)} aria-label={t('browse.pageFirst')}>
-                  ««
-                </button>
-                <button type="button" class="btn btn-secondary" disabled={page() <= 1 || busy()} onClick={() => setPage((p) => p - 1)} aria-label={t('browse.pagePrev')}>
-                  ‹
-                </button>
-                <span class="browse-page-indicator" aria-live="polite">
-                  {page()} / {totalPages()}
-                </span>
-                <button type="button" class="btn btn-secondary" disabled={page() >= totalPages() || busy()} onClick={() => setPage((p) => p + 1)} aria-label={t('browse.pageNext')}>
-                  ›
-                </button>
-                <button type="button" class="btn btn-secondary" disabled={page() >= totalPages() || busy()} onClick={() => setPage(totalPages())} aria-label={t('browse.pageLast')}>
-                  »»
-                </button>
-              </div>
-              <p class="browse-page-line browse-page-line-end">{t('mods.pageLine', {slice: pageSlice().length, filtered: sorted().length, total: items().length})}</p>
+          <footer class="mt-2 flex flex-col gap-2 border-t border-border pt-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
+            <div class="flex flex-wrap items-center gap-1.5">
+              <Button variant="secondary" disabled={page() <= 1 || busy()} onClick={() => setPage(1)} aria-label={t('browse.pageFirst')}>
+                ««
+              </Button>
+              <Button variant="secondary" disabled={page() <= 1 || busy()} onClick={() => setPage((p) => p - 1)} aria-label={t('browse.pagePrev')}>
+                ‹
+              </Button>
+              <span class="min-w-[5.5rem] text-center text-[0.85rem] text-muted-foreground" aria-live="polite">
+                {page()} / {totalPages()}
+              </span>
+              <Button variant="secondary" disabled={page() >= totalPages() || busy()} onClick={() => setPage((p) => p + 1)} aria-label={t('browse.pageNext')}>
+                ›
+              </Button>
+              <Button variant="secondary" disabled={page() >= totalPages() || busy()} onClick={() => setPage(totalPages())} aria-label={t('browse.pageLast')}>
+                »»
+              </Button>
             </div>
+            <p class="m-0 max-w-md text-right text-[0.8rem] text-muted-foreground sm:text-left">
+              {t('mods.pageLine', {slice: pageSlice().length, filtered: sorted().length, total: items().length})}
+            </p>
           </footer>
         ) : null}
-        {items().length === 0 && !err() ? <p style={{'margin-bottom': 0}}>{t('mods.noneFound')}</p> : null}
-        {items().length > 0 && sorted().length === 0 ? <p style={{'margin-bottom': 0}}>{t('mods.noMatch')}</p> : null}
-      </section>
+        {items().length === 0 && !err() ? <p class="mb-0 text-muted-foreground">{t('mods.noneFound')}</p> : null}
+        {items().length > 0 && sorted().length === 0 ? <p class="mb-0 text-muted-foreground">{t('mods.noMatch')}</p> : null}
+      </Card>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import {createSignal} from 'solid-js';
 import {useTranslation} from 'solid-i18next';
 import {Eye, EyeOff} from 'lucide-solid';
+import {cn} from '@/lib/utils';
 
 function maskAddress(addr: string): string {
   if (!addr) {
@@ -20,12 +21,12 @@ export function ServerAddressCell(props: {address: string}) {
   return (
     <>
       {!props.address ? (
-        <span class="server-address-empty">—</span>
+        <span class="text-muted-foreground">—</span>
       ) : (
-        <div class="server-address-cell">
+        <div class="inline-flex max-w-full items-center gap-1.5">
           <button
             type="button"
-            class="server-address-toggle"
+            class="inline-flex min-h-7 min-w-7 shrink-0 cursor-pointer items-center justify-center rounded-md border border-border bg-card p-0.5 text-muted-foreground hover:border-primary hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             onClick={() => setVisible((v) => !v)}
             aria-pressed={visible()}
             title={visible() ? t('browse.toggleAddrHide') : t('browse.toggleAddrShow')}
@@ -33,7 +34,7 @@ export function ServerAddressCell(props: {address: string}) {
             {visible() ? <Eye size={14} strokeWidth={2} aria-hidden /> : <EyeOff size={14} strokeWidth={2} aria-hidden />}
             <span class="sr-only">{visible() ? t('browse.toggleAddrHide') : t('browse.toggleAddrShow')}</span>
           </button>
-          <span class="server-address-text" translate="no">
+          <span class="min-w-0 break-all font-[inherit] tabular-nums" translate="no">
             {showText()}
           </span>
         </div>

@@ -108,6 +108,7 @@ type Settings struct {
 	ClientGeoUpdated       int64            `json:"clientGeoUpdated"`
 	Locale                 string           `json:"locale"`
 	UITheme                string           `json:"uiTheme"`
+	UIExternalThemePath    string           `json:"uiExternalThemePath,omitempty"`
 	KnownMapNames          []string         `json:"knownMapNames,omitempty"`
 	WorkshopModTimeUpdated map[string]int64 `json:"workshopModTimeUpdated,omitempty"`
 }

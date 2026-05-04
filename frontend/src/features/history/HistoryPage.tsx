@@ -12,6 +12,20 @@ import {formatPlayersWithQueue} from '../../shared/formatPlayersWithQueue';
 import {ServerAddressCell} from '../../shared/ServerAddressCell';
 import {ServerJoinModal} from '../../shared/ServerJoinModal';
 import {ServerPasswordCell} from '../../shared/ServerPasswordCell';
+import {AlertError} from '@/components/ui/alert';
+import {Button} from '@/components/ui/button';
+import {Card, CardTitle} from '@/components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableRow,
+  TableScroll,
+  tablePasswordColClass,
+} from '@/components/ui/table';
+import {cn} from '@/lib/utils';
 
 export default function HistoryPage() {
   const [t, i18n] = useTranslation();
@@ -112,29 +126,29 @@ export default function HistoryPage() {
   return (
     <>
       <Show when={!s()}>
-        <p>{t('common.loading')}</p>
+        <p class="text-muted-foreground">{t('common.loading')}</p>
       </Show>
       <Show when={s()}>
         <div>
           <PageHeader icon={Clock} title={t('history.title')} description={t('history.subtitle')} />
           <Show when={!!err()}>
-            <div class="msg msg-error">{err()}</div>
+            <AlertError>{err()}</AlertError>
           </Show>
 
-          <section class="ds-card browse-table-card" aria-labelledby="hist-table-title">
-            <h2 id="hist-table-title" class="ds-section-title">
+          <Card class="mb-0 flex min-h-0 flex-col" aria-labelledby="hist-table-title">
+            <CardTitle id="hist-table-title">
               <Server size={16} strokeWidth={1.75} aria-hidden />
               {t('history.tableTitle')}
-            </h2>
-            {allEntries().length === 0 ? <p style={{'margin-top': 0}}>{t('history.empty')}</p> : null}
+            </CardTitle>
+            {allEntries().length === 0 ? <p class="mt-0 text-muted-foreground">{t('history.empty')}</p> : null}
             {allEntries().length > 0 ? (
               <>
-                <div class="browse-table-toolbar">
-                  <p class="browse-page-line">
+                <div class="mb-2 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+                  <p class="m-0 min-w-[10rem] flex-1 text-[0.8rem] text-muted-foreground">
                     {loading() ? t('common.processing') : t('history.pageLine', {slice: pageSlice().length, total: allEntries().length})}
                   </p>
-                  <div class="browse-table-toolbar-actions">
-                    <span class="browse-toolbar-label">{t('browse.perPage')}</span>
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-[0.8125rem] font-semibold text-muted-foreground">{t('browse.perPage')}</span>
                     <PageSizeInput
                       id="history-page-size"
                       value={pageSize()}
@@ -145,111 +159,111 @@ export default function HistoryPage() {
                         setPage(1);
                       }}
                     />
-                    <div class="browse-pagination-btns">
-                      <button type="button" class="btn btn-secondary" disabled={page() <= 1 || loading()} onClick={() => setPage(1)} aria-label={t('browse.pageFirst')}>
+                    <div class="flex flex-wrap items-center gap-1.5">
+                      <Button variant="secondary" disabled={page() <= 1 || loading()} onClick={() => setPage(1)} aria-label={t('browse.pageFirst')}>
                         ««
-                      </button>
-                      <button type="button" class="btn btn-secondary" disabled={page() <= 1 || loading()} onClick={() => setPage((p) => p - 1)} aria-label={t('browse.pagePrev')}>
+                      </Button>
+                      <Button variant="secondary" disabled={page() <= 1 || loading()} onClick={() => setPage((p) => p - 1)} aria-label={t('browse.pagePrev')}>
                         ‹
-                      </button>
-                      <span class="browse-page-indicator" aria-live="polite">
+                      </Button>
+                      <span class="min-w-[5.5rem] text-center text-[0.85rem] text-muted-foreground" aria-live="polite">
                         {page()} / {totalPages()}
                       </span>
-                      <button type="button" class="btn btn-secondary" disabled={page() >= totalPages() || loading()} onClick={() => setPage((p) => p + 1)} aria-label={t('browse.pageNext')}>
+                      <Button variant="secondary" disabled={page() >= totalPages() || loading()} onClick={() => setPage((p) => p + 1)} aria-label={t('browse.pageNext')}>
                         ›
-                      </button>
-                      <button type="button" class="btn btn-secondary" disabled={page() >= totalPages() || loading()} onClick={() => setPage(totalPages())} aria-label={t('browse.pageLast')}>
+                      </Button>
+                      <Button variant="secondary" disabled={page() >= totalPages() || loading()} onClick={() => setPage(totalPages())} aria-label={t('browse.pageLast')}>
                         »»
-                      </button>
+                      </Button>
                     </div>
-                    <button type="button" class="btn btn-secondary" disabled={loading() || pageSlice().length === 0} onClick={ping} title={t('favorites.refreshPingTitle')}>
+                    <Button variant="secondary" disabled={loading() || pageSlice().length === 0} onClick={ping} title={t('favorites.refreshPingTitle')}>
                       {t('favorites.refreshPing')}
-                    </button>
+                    </Button>
                   </div>
                 </div>
-                <div class="table-wrap browse-table-scroll">
-                  <table class="data">
-                    <caption class="sr-only">{t('history.tableCaption')}</caption>
+                <TableScroll>
+                  <Table>
+                    <TableCaption class="sr-only">{t('history.tableCaption')}</TableCaption>
                     <thead>
                       <tr>
-                        <th scope="col" title={t('browse.thNameLong')}>
+                        <TableHead scope="col" title={t('browse.thNameLong')}>
                           {t('browse.thName')}
-                        </th>
-                        <th scope="col" class="server-password-th" title={t('browse.thPasswordLong')}>
+                        </TableHead>
+                        <TableHead scope="col" class={tablePasswordColClass} title={t('browse.thPasswordLong')}>
                           {t('browse.thPassword')}
-                        </th>
-                        <th scope="col" title={t('browse.thMapLong')}>
+                        </TableHead>
+                        <TableHead scope="col" title={t('browse.thMapLong')}>
                           {t('browse.thMap')}
-                        </th>
-                        <th scope="col" title={t('browse.thPPLong')}>
+                        </TableHead>
+                        <TableHead scope="col" title={t('browse.thPPLong')}>
                           {t('browse.thPP')}
-                        </th>
-                        <th scope="col" title={t('browse.thProvLong')}>
+                        </TableHead>
+                        <TableHead scope="col" title={t('browse.thProvLong')}>
                           {t('browse.thProv')}
-                        </th>
-                        <th scope="col" title={t('browse.thModsLong')}>
+                        </TableHead>
+                        <TableHead scope="col" title={t('browse.thModsLong')}>
                           {t('browse.thMods')}
-                        </th>
-                        <th scope="col" title={t('browse.thTimeLong')}>
+                        </TableHead>
+                        <TableHead scope="col" title={t('browse.thTimeLong')}>
                           {t('browse.thTime')}
-                        </th>
-                        <th scope="col" title={t('browse.thPlayersLong')}>
+                        </TableHead>
+                        <TableHead scope="col" title={t('browse.thPlayersLong')}>
                           {t('browse.thPlayers')}
-                        </th>
-                        <th scope="col" title={t('browse.thAddrLong')}>
+                        </TableHead>
+                        <TableHead scope="col" title={t('browse.thAddrLong')}>
                           {t('browse.thAddr')}
-                        </th>
-                        <th scope="col" title={t('browse.thPingLong')}>
+                        </TableHead>
+                        <TableHead scope="col" title={t('browse.thPingLong')}>
                           {t('browse.thPing')}
-                        </th>
-                        <th scope="col" title={t('browse.thDistLong')}>
+                        </TableHead>
+                        <TableHead scope="col" title={t('browse.thDistLong')}>
                           {t('browse.thDist')}
-                        </th>
-                        <th scope="col" title={t('browse.thActionsLong')}>
+                        </TableHead>
+                        <TableHead scope="col" title={t('browse.thActionsLong')}>
                           {t('browse.thActions')}
-                        </th>
+                        </TableHead>
                       </tr>
                     </thead>
-                    <tbody>
+                    <TableBody>
                       <For each={pageSliceRows()}>
                         {(e) => {
                           const row = e.row;
                           const when = formatConnected(e.atUnix);
                           return (
-                            <tr>
-                              <td style={{'max-width': '14rem', 'white-space': 'normal'}}>
+                            <TableRow>
+                              <TableCell class="max-w-56 whitespace-normal">
                                 <div>{row.name}</div>
                                 {when ? (
-                                  <div style={{'font-size': '0.7rem', color: 'var(--text-muted)', 'margin-top': '0.15rem'}} title={t('history.connectedAtTitle')}>
+                                  <div class="mt-0.5 text-[0.7rem] text-muted-foreground" title={t('history.connectedAtTitle')}>
                                     {t('history.connectedAt', {when})}
                                   </div>
                                 ) : null}
-                              </td>
-                              <td class="server-password-td">
+                              </TableCell>
+                              <TableCell class={tablePasswordColClass}>
                                 <ServerPasswordCell row={row} />
-                              </td>
-                              <td>{row.mapName}</td>
-                              <td>{row.perspective}</td>
-                              <td>{row.provider}</td>
-                              <td>{row.modded ? t('common.yes') : t('common.no')}</td>
-                              <td>{row.inGameTime}</td>
-                              <td>{formatPlayersWithQueue(row.players, row.maxPlayers, row.queueSize)}</td>
-                              <td style={{'max-width': '18rem', 'white-space': 'normal'}}>
+                              </TableCell>
+                              <TableCell>{row.mapName}</TableCell>
+                              <TableCell>{row.perspective}</TableCell>
+                              <TableCell>{row.provider}</TableCell>
+                              <TableCell>{row.modded ? t('common.yes') : t('common.no')}</TableCell>
+                              <TableCell>{row.inGameTime}</TableCell>
+                              <TableCell>{formatPlayersWithQueue(row.players, row.maxPlayers, row.queueSize)}</TableCell>
+                              <TableCell class="max-w-72 whitespace-normal">
                                 <ServerAddressCell address={row.address} />
-                              </td>
-                              <td>{row.ping}</td>
-                              <td>{row.distanceLabel}</td>
-                              <td>
-                                <div class="row-actions row-actions-icon-only">
-                                  <button type="button" class="btn btn-secondary" title={t('favorites.connectTitle')} aria-label={t('favorites.connect')} onClick={() => setJoinModalRow(row)}>
+                              </TableCell>
+                              <TableCell>{row.ping}</TableCell>
+                              <TableCell>{row.distanceLabel}</TableCell>
+                              <TableCell>
+                                <div class="flex flex-wrap gap-1 [&_button]:min-h-7 [&_button]:min-w-7 [&_button]:justify-center [&_button]:p-1 [&_button]:text-xs">
+                                  <Button variant="secondary" size="sm" title={t('favorites.connectTitle')} aria-label={t('favorites.connect')} onClick={() => setJoinModalRow(row)}>
                                     <Play size={14} strokeWidth={2} aria-hidden />
-                                  </button>
-                                  <button type="button" class="btn btn-secondary" title={t('favorites.joinPanelModsTitle')} aria-label={t('favorites.joinPanelMods')} onClick={() => setJoinModalRow(row)}>
+                                  </Button>
+                                  <Button variant="secondary" size="sm" title={t('favorites.joinPanelModsTitle')} aria-label={t('favorites.joinPanelMods')} onClick={() => setJoinModalRow(row)}>
                                     <Package size={14} strokeWidth={2} aria-hidden />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    class="btn btn-secondary"
+                                  </Button>
+                                  <Button
+                                    variant="secondary"
+                                    size="sm"
                                     title={t('browse.quickFavTitle')}
                                     aria-label={t('browse.quickFav')}
                                     onClick={() =>
@@ -259,28 +273,28 @@ export default function HistoryPage() {
                                     }
                                   >
                                     <BookmarkPlus size={14} strokeWidth={2} aria-hidden />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    class="btn btn-danger"
+                                  </Button>
+                                  <Button
+                                    variant="destructive"
+                                    size="sm"
                                     title={t('history.deleteTitle')}
                                     aria-label={t('history.delete')}
                                     onClick={() => App.RemoveHistoryIndex(e.historyIndex).then(reload).catch((e) => setErr(String(e)))}
                                   >
                                     <Trash2 size={14} strokeWidth={2} aria-hidden />
-                                  </button>
+                                  </Button>
                                 </div>
-                              </td>
-                            </tr>
+                              </TableCell>
+                            </TableRow>
                           );
                         }}
                       </For>
-                    </tbody>
-                  </table>
-                </div>
+                    </TableBody>
+                  </Table>
+                </TableScroll>
               </>
             ) : null}
-          </section>
+          </Card>
           <Show when={joinModalRow()}>
             <ServerJoinModal row={joinModalRow()} onClose={() => setJoinModalRow(null)} onRowPatched={noopPatch} />
           </Show>

@@ -2,9 +2,9 @@ import {onCleanup, onMount} from 'solid-js';
 import * as App from '../../wailsjs/go/main/App';
 import {i18n} from './i18n';
 import {resolveLocale} from './resolveLocale';
-import {applyThemeToDocument} from '../theme/resolveTheme';
+import {applyFullThemeFromSettings} from '../theme/applyFullTheme';
 
-export function I18nSync(props: {children: any}) {
+export function I18nSync(props: {children: unknown}) {
   onMount(() => {
     let ok = true;
     App.LoadSettings()
@@ -14,7 +14,7 @@ export function I18nSync(props: {children: any}) {
         }
         const lng = resolveLocale(s.locale || '', navigator.language);
         void i18n.changeLanguage(lng);
-        applyThemeToDocument(s.uiTheme);
+        void applyFullThemeFromSettings(s.uiTheme, s.uiExternalThemePath);
       })
       .catch(() => {});
     onCleanup(() => {

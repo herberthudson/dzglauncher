@@ -84,7 +84,9 @@
     "langEs": "Spanish",
     "theme": "Interface theme",
     "themeFlatDark": "Flat dark",
-    "themeFlatLight": "Flat light"
+    "themeFlatLight": "Flat light",
+    "externalThemePath": "Optional CSS overlay (absolute file path)",
+    "externalThemePlaceholder": "/path/to/custom-theme.css"
   },
   "history": {
     "title": "Connection history",

@@ -11,7 +11,7 @@ This document describes **what exists in this repository**: languages, main libr
 | UI | SolidJS 1.9, TypeScript, [Vite 5](https://vitejs.dev/), [@solidjs/router](https://docs.solidjs.com/solid-router). |
 | i18n | [i18next](https://www.i18next.com/) + [solid-i18next](https://www.npmjs.com/package/solid-i18next) (locales under `frontend/src/locales/`). |
 | Icons | [lucide-solid](https://lucide.dev/). |
-| Styling | CSS theme variables (`frontend/src/theme/`, `frontend/src/shared/layout.css`). |
+| Styling | Tailwind CSS 3, variáveis CSS semânticas em `frontend/src/theme/`, componentes em `frontend/src/components/ui/`, alias `@/` → `frontend/src/`. |
 
 ### Platform scope
 

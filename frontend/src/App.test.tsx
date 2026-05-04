@@ -13,8 +13,10 @@ beforeEach(() => {
           Promise.resolve({
             locale: '',
             uiTheme: 'flat-dark-theme',
+            uiExternalThemePath: '',
           }),
         ),
+        ReadUIThemeFile: vi.fn(() => Promise.resolve('')),
       },
     },
   };

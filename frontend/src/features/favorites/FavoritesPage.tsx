@@ -11,48 +11,52 @@ import {formatPlayersWithQueue} from '../../shared/formatPlayersWithQueue';
 import {ServerAddressCell} from '../../shared/ServerAddressCell';
 import {ServerJoinModal} from '../../shared/ServerJoinModal';
 import {ServerPasswordCell} from '../../shared/ServerPasswordCell';
+import {AlertError} from '@/components/ui/alert';
+import {Button} from '@/components/ui/button';
+import {Card, CardTitle} from '@/components/ui/card';
+import {Table, TableBody, TableCaption, TableCell, TableHead, TableRow, TableScroll, tablePasswordColClass} from '@/components/ui/table';
 
 function FavoritesTableHead() {
   const [t] = useTranslation();
   return (
     <thead>
       <tr>
-        <th scope="col" title={t('browse.thNameLong')}>
+        <TableHead scope="col" title={t('browse.thNameLong')}>
           {t('browse.thName')}
-        </th>
-        <th scope="col" class="server-password-th" title={t('browse.thPasswordLong')}>
+        </TableHead>
+        <TableHead scope="col" class={tablePasswordColClass} title={t('browse.thPasswordLong')}>
           {t('browse.thPassword')}
-        </th>
-        <th scope="col" title={t('browse.thMapLong')}>
+        </TableHead>
+        <TableHead scope="col" title={t('browse.thMapLong')}>
           {t('browse.thMap')}
-        </th>
-        <th scope="col" title={t('browse.thPPLong')}>
+        </TableHead>
+        <TableHead scope="col" title={t('browse.thPPLong')}>
           {t('browse.thPP')}
-        </th>
-        <th scope="col" title={t('browse.thProvLong')}>
+        </TableHead>
+        <TableHead scope="col" title={t('browse.thProvLong')}>
           {t('browse.thProv')}
-        </th>
-        <th scope="col" title={t('browse.thModsLong')}>
+        </TableHead>
+        <TableHead scope="col" title={t('browse.thModsLong')}>
           {t('browse.thMods')}
-        </th>
-        <th scope="col" title={t('browse.thTimeLong')}>
+        </TableHead>
+        <TableHead scope="col" title={t('browse.thTimeLong')}>
           {t('browse.thTime')}
-        </th>
-        <th scope="col" title={t('browse.thPlayersLong')}>
+        </TableHead>
+        <TableHead scope="col" title={t('browse.thPlayersLong')}>
           {t('browse.thPlayers')}
-        </th>
-        <th scope="col" title={t('browse.thAddrLong')}>
+        </TableHead>
+        <TableHead scope="col" title={t('browse.thAddrLong')}>
           {t('browse.thAddr')}
-        </th>
-        <th scope="col" title={t('browse.thPingLong')}>
+        </TableHead>
+        <TableHead scope="col" title={t('browse.thPingLong')}>
           {t('browse.thPing')}
-        </th>
-        <th scope="col" title={t('browse.thDistLong')}>
+        </TableHead>
+        <TableHead scope="col" title={t('browse.thDistLong')}>
           {t('browse.thDist')}
-        </th>
-        <th scope="col" title={t('browse.thActionsLong')}>
+        </TableHead>
+        <TableHead scope="col" title={t('browse.thActionsLong')}>
           {t('browse.thActions')}
-        </th>
+        </TableHead>
       </tr>
     </thead>
   );
@@ -75,45 +79,45 @@ function FavoriteTableRow(props: FavoriteTableRowProps) {
   const rk = () => favoriteKeyParts(props.row.queryHost, props.row.gamePort, props.row.queryPort);
   const inFavorites = () => props.favoriteKeys.has(rk());
   return (
-    <tr>
-      <td style={{'max-width': '14rem', 'white-space': 'normal'}}>{props.row.name}</td>
-      <td class="server-password-td">
+    <TableRow>
+      <TableCell class="max-w-56 whitespace-normal">{props.row.name}</TableCell>
+      <TableCell class={tablePasswordColClass}>
         <ServerPasswordCell row={props.row} />
-      </td>
-      <td>{props.row.mapName}</td>
-      <td>{props.row.perspective}</td>
-      <td>{props.row.provider}</td>
-      <td>{props.row.modded ? t('common.yes') : t('common.no')}</td>
-      <td>{props.row.inGameTime}</td>
-      <td>{formatPlayersWithQueue(props.row.players, props.row.maxPlayers, props.row.queueSize)}</td>
-      <td style={{'max-width': '18rem', 'white-space': 'normal'}}>
+      </TableCell>
+      <TableCell>{props.row.mapName}</TableCell>
+      <TableCell>{props.row.perspective}</TableCell>
+      <TableCell>{props.row.provider}</TableCell>
+      <TableCell>{props.row.modded ? t('common.yes') : t('common.no')}</TableCell>
+      <TableCell>{props.row.inGameTime}</TableCell>
+      <TableCell>{formatPlayersWithQueue(props.row.players, props.row.maxPlayers, props.row.queueSize)}</TableCell>
+      <TableCell class="max-w-72 whitespace-normal">
         <ServerAddressCell address={props.row.address} />
-      </td>
-      <td>{props.row.ping}</td>
-      <td>{props.row.distanceLabel}</td>
-      <td>
-        <div class="row-actions row-actions-icon-only">
-          <button type="button" class="btn btn-secondary" title={t('favorites.connectTitle')} aria-label={t('favorites.connect')} onClick={() => props.onOpenJoin(props.row)}>
+      </TableCell>
+      <TableCell>{props.row.ping}</TableCell>
+      <TableCell>{props.row.distanceLabel}</TableCell>
+      <TableCell>
+        <div class="flex flex-wrap gap-1 [&_button]:min-h-7 [&_button]:min-w-7 [&_button]:justify-center [&_button]:p-1 [&_button]:text-xs">
+          <Button variant="secondary" size="sm" title={t('favorites.connectTitle')} aria-label={t('favorites.connect')} onClick={() => props.onOpenJoin(props.row)}>
             <Play size={14} strokeWidth={2} aria-hidden />
-          </button>
-          <button type="button" class="btn btn-secondary" title={t('favorites.joinPanelModsTitle')} aria-label={t('favorites.joinPanelMods')} onClick={() => props.onOpenJoin(props.row)}>
+          </Button>
+          <Button variant="secondary" size="sm" title={t('favorites.joinPanelModsTitle')} aria-label={t('favorites.joinPanelMods')} onClick={() => props.onOpenJoin(props.row)}>
             <Package size={14} strokeWidth={2} aria-hidden />
-          </button>
+          </Button>
           {props.mode === 'quick' ? (
             <>
-              <button
-                type="button"
-                class="btn btn-secondary"
+              <Button
+                variant="secondary"
+                size="sm"
                 disabled={inFavorites()}
                 title={inFavorites() ? t('favorites.addToFavoritesAlreadyTitle') : t('favorites.addToFavoritesTitle')}
                 aria-label={t('favorites.addToFavorites')}
                 onClick={() => props.onAddFavorite?.(props.row)}
               >
                 <Star size={14} strokeWidth={2} aria-hidden />
-              </button>
-              <button
-                type="button"
-                class="btn btn-danger"
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
                 title={t('favorites.removeQuickTitle')}
                 aria-label={t('favorites.removeQuick')}
                 onClick={() => {
@@ -123,16 +127,16 @@ function FavoriteTableRow(props: FavoriteTableRowProps) {
                 }}
               >
                 <Trash2 size={14} strokeWidth={2} aria-hidden />
-              </button>
+              </Button>
             </>
           ) : (
-            <button type="button" class="btn btn-danger" title={t('favorites.removeTitle')} aria-label={t('favorites.remove')} onClick={() => props.onRemoveFavorite(props.row, props.settings)}>
+            <Button variant="destructive" size="sm" title={t('favorites.removeTitle')} aria-label={t('favorites.remove')} onClick={() => props.onRemoveFavorite(props.row, props.settings)}>
               <Trash2 size={14} strokeWidth={2} aria-hidden />
-            </button>
+            </Button>
           )}
         </div>
-      </td>
-    </tr>
+      </TableCell>
+    </TableRow>
   );
 }
 
@@ -284,39 +288,37 @@ export default function FavoritesPage() {
   return (
     <>
       <Show when={!s()}>
-        <p>{t('common.loading')}</p>
+        <p class="text-muted-foreground">{t('common.loading')}</p>
       </Show>
       <Show when={s()}>
         <div>
           <PageHeader icon={Star} title={t('favorites.title')} description={t('favorites.subtitle')} />
           <Show when={!!err()}>
-            <div class="msg msg-error">{err()}</div>
+            <AlertError>{err()}</AlertError>
           </Show>
 
           <Show when={hasQuick()}>
-            <section class="ds-card" aria-labelledby="fav-quick-table-title">
-              <div class="browse-filters-header">
-                <h2 id="fav-quick-table-title" class="ds-section-title">
+            <Card class="mb-3" aria-labelledby="fav-quick-table-title">
+              <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+                <CardTitle id="fav-quick-table-title" class="mb-0">
                   <Bookmark size={16} strokeWidth={1.75} aria-hidden />
                   {t('favorites.quickTableTitle')}
-                </h2>
-                <div style={{display: 'flex', gap: '0.5rem', 'align-items': 'center', 'flex-wrap': 'wrap'}}>
-                  <p class="browse-page-line" style={{margin: 0, flex: '1 1 auto', 'min-width': '8rem'}}>
-                    {loading() ? t('common.processing') : '\u00a0'}
-                  </p>
-                  <button type="button" class="btn btn-secondary" disabled={loading() || quickRows().length === 0} onClick={pingQuick} title={t('favorites.refreshPingTitle')}>
+                </CardTitle>
+                <div class="flex min-w-0 flex-1 flex-wrap items-center justify-end gap-2">
+                  <p class="m-0 min-w-[8rem] flex-1 text-[0.8rem] text-muted-foreground">{loading() ? t('common.processing') : '\u00a0'}</p>
+                  <Button variant="secondary" disabled={loading() || quickRows().length === 0} onClick={pingQuick} title={t('favorites.refreshPingTitle')}>
                     {t('favorites.refreshPing')}
-                  </button>
-                  <button type="button" class="btn btn-secondary" disabled={loading() || !hasQuick()} onClick={() => App.ClearQuickFavorite().then(reload)}>
+                  </Button>
+                  <Button variant="secondary" disabled={loading() || !hasQuick()} onClick={() => App.ClearQuickFavorite().then(reload)}>
                     {t('favorites.clearQuick')}
-                  </button>
+                  </Button>
                 </div>
               </div>
-              <div class="table-wrap">
-                <table class="data">
-                  <caption class="sr-only">{t('favorites.quickTableCaption')}</caption>
+              <TableScroll>
+                <Table>
+                  <TableCaption class="sr-only">{t('favorites.quickTableCaption')}</TableCaption>
                   <FavoritesTableHead />
-                  <tbody>
+                  <TableBody>
                     <For each={quickEntriesForList()}>
                       {(e) => (
                         <FavoriteTableRow
@@ -332,25 +334,27 @@ export default function FavoritesPage() {
                         />
                       )}
                     </For>
-                  </tbody>
-                </table>
-              </div>
-            </section>
+                  </TableBody>
+                </Table>
+              </TableScroll>
+            </Card>
           </Show>
 
-          <section class="ds-card browse-table-card" aria-labelledby="fav-table-title">
-            <h2 id="fav-table-title" class="ds-section-title">
+          <Card class="mb-0 flex min-h-0 flex-col" aria-labelledby="fav-table-title">
+            <CardTitle id="fav-table-title">
               <Server size={16} strokeWidth={1.75} aria-hidden />
               {t('favorites.tableTitle')}
-            </h2>
-            {!hasAnyFavorite() ? <p style={{'margin-top': 0}}>{t('favorites.empty')}</p> : null}
-            {hasAnyFavorite() && otherRows().length === 0 ? <p style={{'margin-top': 0}}>{t('favorites.emptyOtherFavorites')}</p> : null}
+            </CardTitle>
+            {!hasAnyFavorite() ? <p class="mt-0 text-muted-foreground">{t('favorites.empty')}</p> : null}
+            {hasAnyFavorite() && otherRows().length === 0 ? <p class="mt-0 text-muted-foreground">{t('favorites.emptyOtherFavorites')}</p> : null}
             {otherRows().length > 0 ? (
               <>
-                <div class="browse-table-toolbar">
-                  <p class="browse-page-line">{loading() ? t('common.processing') : t('favorites.pageLine', {slice: pageSlice().length, total: otherRows().length})}</p>
-                  <div class="browse-table-toolbar-actions">
-                    <span class="browse-toolbar-label">{t('browse.perPage')}</span>
+                <div class="mb-2 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+                  <p class="m-0 min-w-[10rem] flex-1 text-[0.8rem] text-muted-foreground">
+                    {loading() ? t('common.processing') : t('favorites.pageLine', {slice: pageSlice().length, total: otherRows().length})}
+                  </p>
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-[0.8125rem] font-semibold text-muted-foreground">{t('browse.perPage')}</span>
                     <PageSizeInput
                       id="favorites-page-size"
                       value={pageSize()}
@@ -361,33 +365,33 @@ export default function FavoritesPage() {
                         setPage(1);
                       }}
                     />
-                    <div class="browse-pagination-btns">
-                      <button type="button" class="btn btn-secondary" disabled={page() <= 1 || loading()} onClick={() => setPage(1)} aria-label={t('browse.pageFirst')}>
+                    <div class="flex flex-wrap items-center gap-1.5">
+                      <Button variant="secondary" disabled={page() <= 1 || loading()} onClick={() => setPage(1)} aria-label={t('browse.pageFirst')}>
                         ««
-                      </button>
-                      <button type="button" class="btn btn-secondary" disabled={page() <= 1 || loading()} onClick={() => setPage((p) => p - 1)} aria-label={t('browse.pagePrev')}>
+                      </Button>
+                      <Button variant="secondary" disabled={page() <= 1 || loading()} onClick={() => setPage((p) => p - 1)} aria-label={t('browse.pagePrev')}>
                         ‹
-                      </button>
-                      <span class="browse-page-indicator" aria-live="polite">
+                      </Button>
+                      <span class="min-w-[5.5rem] text-center text-[0.85rem] text-muted-foreground" aria-live="polite">
                         {page()} / {totalPages()}
                       </span>
-                      <button type="button" class="btn btn-secondary" disabled={page() >= totalPages() || loading()} onClick={() => setPage((p) => p + 1)} aria-label={t('browse.pageNext')}>
+                      <Button variant="secondary" disabled={page() >= totalPages() || loading()} onClick={() => setPage((p) => p + 1)} aria-label={t('browse.pageNext')}>
                         ›
-                      </button>
-                      <button type="button" class="btn btn-secondary" disabled={page() >= totalPages() || loading()} onClick={() => setPage(totalPages())} aria-label={t('browse.pageLast')}>
+                      </Button>
+                      <Button variant="secondary" disabled={page() >= totalPages() || loading()} onClick={() => setPage(totalPages())} aria-label={t('browse.pageLast')}>
                         »»
-                      </button>
+                      </Button>
                     </div>
-                    <button type="button" class="btn btn-secondary" disabled={loading() || pingTargets().length === 0} onClick={ping} title={t('favorites.refreshPingTitle')}>
+                    <Button variant="secondary" disabled={loading() || pingTargets().length === 0} onClick={ping} title={t('favorites.refreshPingTitle')}>
                       {t('favorites.refreshPing')}
-                    </button>
+                    </Button>
                   </div>
                 </div>
-                <div class="table-wrap browse-table-scroll">
-                  <table class="data">
-                    <caption class="sr-only">{t('favorites.tableCaption')}</caption>
+                <TableScroll>
+                  <Table>
+                    <TableCaption class="sr-only">{t('favorites.tableCaption')}</TableCaption>
                     <FavoritesTableHead />
-                    <tbody>
+                    <TableBody>
                       <For each={pageSliceForList()}>
                         {(row) => (
                           <FavoriteTableRow
@@ -400,12 +404,12 @@ export default function FavoritesPage() {
                           />
                         )}
                       </For>
-                    </tbody>
-                  </table>
-                </div>
+                    </TableBody>
+                  </Table>
+                </TableScroll>
               </>
             ) : null}
-          </section>
+          </Card>
           <Show when={joinModalRow()}>
             <ServerJoinModal row={joinModalRow()} onClose={() => setJoinModalRow(null)} onRowPatched={patchFavoriteRow} />
           </Show>

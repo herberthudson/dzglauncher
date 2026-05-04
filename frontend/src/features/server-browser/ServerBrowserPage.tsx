@@ -5,7 +5,7 @@ import * as App from '../../../wailsjs/go/main/App';
 import {domain} from '../../../wailsjs/go/models';
 import {browseSessionPayload, loadBrowseSessionMigrate} from './browseSession';
 import {mapQuickFavError} from '../../shared/favoriteRows';
-import {DsSelect} from '../../shared/DsSelect';
+import {DsSelect} from '@/components/ui/select';
 import {PageSizeInput} from '../../shared/PageSizeInput';
 import {PageHeader} from '../../shared/PageHeader';
 import {clampPageSize} from '../../shared/pageSizeConstants';
@@ -13,6 +13,23 @@ import {formatPlayersWithQueue} from '../../shared/formatPlayersWithQueue';
 import {ServerAddressCell} from '../../shared/ServerAddressCell';
 import {ServerJoinModal} from '../../shared/ServerJoinModal';
 import {ServerPasswordCell} from '../../shared/ServerPasswordCell';
+import {FormCheckboxRow} from '@/components/ui/checkbox';
+import {AlertError} from '@/components/ui/alert';
+import {Button} from '@/components/ui/button';
+import {Card, CardTitle} from '@/components/ui/card';
+import {Input} from '@/components/ui/input';
+import {Label} from '@/components/ui/label';
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableRow,
+  TableScroll,
+  tablePasswordColClass,
+} from '@/components/ui/table';
+import {cn} from '@/lib/utils';
 
 function defaultFilters(): domain.FilterState {
   return domain.FilterState.createFrom({
@@ -193,12 +210,8 @@ export default function ServerBrowserPage() {
       .catch(() => {});
   });
 
-  const toggleFilter = (key: keyof domain.FilterState) => () => {
-    setFilters((prev) => {
-      const cur = prev[key];
-      const nextBool = typeof cur === 'boolean' ? !cur : cur;
-      return patchFilter(prev, {[key]: nextBool} as Partial<ReturnType<typeof filterFields>>);
-    });
+  const setFilterBool = (key: keyof domain.FilterState) => (checked: boolean) => {
+    setFilters((prev) => patchFilter(prev, {[key]: checked} as Partial<ReturnType<typeof filterFields>>));
   };
 
   const fetchSteam = () => {
@@ -268,43 +281,44 @@ export default function ServerBrowserPage() {
         fallback={
           <div>
             <PageHeader icon={Server} title={t('browse.title')} description={t('browse.subtitle')} />
-            <p class="msg">{t('common.processing')}</p>
+            <p class="text-sm text-muted-foreground">{t('common.processing')}</p>
           </div>
         }
       >
         <div>
           <PageHeader icon={Server} title={t('browse.title')} description={t('browse.subtitle')} />
           <Show when={!!err()}>
-            <div class="msg msg-error">{err()}</div>
+            <AlertError>{err()}</AlertError>
           </Show>
 
-          <div class="browse-layout">
-            <div class="browse-main">
-              <section class="ds-card browse-search-card" aria-label={t('browse.searchLabel')}>
-                <div class="browse-search-row">
-                  <div class="field browse-search-field">
-                    <label for="browse-search">{t('browse.searchLabel')}</label>
-                    <div class="browse-field-input-row">
-                      <input
+          <div class="mt-2 flex flex-col gap-2 lg:flex-row lg:items-start lg:gap-3">
+            <div class="flex min-w-0 flex-1 flex-col gap-2">
+              <Card class="mb-0" aria-label={t('browse.searchLabel')}>
+                <div class="flex flex-wrap items-end gap-2">
+                  <div class="mb-0 min-w-[12rem] flex-1 basis-64">
+                    <Label for="browse-search">{t('browse.searchLabel')}</Label>
+                    <div class="flex max-w-xl items-stretch gap-1.5">
+                      <Input
                         id="browse-search"
+                        class="min-w-0 flex-1"
                         value={filters().searchSubstring}
                         onInput={(e) => setFilters(patchFilter(filters(), {searchSubstring: e.currentTarget.value}))}
                       />
-                      <button
-                        type="button"
-                        class="btn btn-secondary browse-input-clear"
+                      <Button
+                        variant="secondary"
+                        class="min-w-[2.375rem] shrink-0 px-2"
                         disabled={!filters().searchSubstring}
                         aria-label={t('common.clearField')}
                         onClick={() => setFilters(patchFilter(filters(), {searchSubstring: ''}))}
                       >
                         <X size={16} strokeWidth={2} aria-hidden />
-                      </button>
+                      </Button>
                     </div>
                   </div>
-                  <div class="field browse-map-field">
-                    <label for="browse-map">{t('browse.map')}</label>
-                    <div class="browse-field-input-row">
-                      <div class="browse-field-input-grow">
+                  <div class="mb-0 min-w-[10rem] max-w-xs flex-1 basis-56">
+                    <Label for="browse-map">{t('browse.map')}</Label>
+                    <div class="flex max-w-xl items-stretch gap-1.5">
+                      <div class="min-w-0 flex-1">
                         <DsSelect
                           id="browse-map"
                           value={filters().mapEquals}
@@ -312,38 +326,38 @@ export default function ServerBrowserPage() {
                           onChange={(v) => setFilters(patchFilter(filters(), {mapEquals: v}))}
                         />
                       </div>
-                      <button
-                        type="button"
-                        class="btn btn-secondary browse-input-clear"
+                      <Button
+                        variant="secondary"
+                        class="min-w-[2.375rem] shrink-0 px-2"
                         disabled={!filters().mapEquals}
                         aria-label={t('common.clearField')}
                         onClick={() => setFilters(patchFilter(filters(), {mapEquals: ''}))}
                       >
                         <X size={16} strokeWidth={2} aria-hidden />
-                      </button>
+                      </Button>
                     </div>
                   </div>
-                  <div class="browse-search-actions">
-                    <button type="button" class="btn" disabled={loading()} onClick={fetchSteam}>
+                  <div class="mb-0.5 shrink-0">
+                    <Button disabled={loading()} onClick={fetchSteam}>
                       {t('browse.searchList')}
-                    </button>
+                    </Button>
                   </div>
                 </div>
-              </section>
+              </Card>
 
-              <section class="ds-card browse-table-card" aria-labelledby="browse-table-title">
-                <h2 id="browse-table-title" class="ds-section-title">
+              <Card class="mb-0 flex min-h-0 flex-col" aria-labelledby="browse-table-title">
+                <CardTitle id="browse-table-title">
                   <Server size={16} strokeWidth={1.75} aria-hidden />
                   {t('browse.tableTitle')}
-                </h2>
-                <div class="browse-table-toolbar">
-                  <p class="browse-page-line">
+                </CardTitle>
+                <div class="mb-2 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+                  <p class="m-0 min-w-[10rem] flex-1 text-[0.8rem] text-muted-foreground">
                     {loading()
                       ? t('common.processing')
                       : t('browse.pageLine', {slice: pageSlice().length, filtered: filtered().length, raw: raw().length})}
                   </p>
-                  <div class="browse-table-toolbar-actions">
-                    <span class="browse-toolbar-label">{t('browse.perPage')}</span>
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-[0.8125rem] font-semibold text-muted-foreground">{t('browse.perPage')}</span>
                     <PageSizeInput
                       id="browse-page-size"
                       value={pageSize()}
@@ -354,119 +368,117 @@ export default function ServerBrowserPage() {
                         setPage(1);
                       }}
                     />
-                    <div class="browse-pagination-btns">
-                      <button type="button" class="btn btn-secondary" disabled={page() <= 1 || loading()} onClick={() => setPage(1)} aria-label={t('browse.pageFirst')}>
+                    <div class="flex flex-wrap items-center gap-1.5">
+                      <Button variant="secondary" disabled={page() <= 1 || loading()} onClick={() => setPage(1)} aria-label={t('browse.pageFirst')}>
                         ««
-                      </button>
-                      <button type="button" class="btn btn-secondary" disabled={page() <= 1 || loading()} onClick={() => setPage((p) => p - 1)} aria-label={t('browse.pagePrev')}>
+                      </Button>
+                      <Button variant="secondary" disabled={page() <= 1 || loading()} onClick={() => setPage((p) => p - 1)} aria-label={t('browse.pagePrev')}>
                         ‹
-                      </button>
-                      <span class="browse-page-indicator" aria-live="polite">
+                      </Button>
+                      <span class="min-w-[5.5rem] text-center text-[0.85rem] text-muted-foreground" aria-live="polite">
                         {page()} / {totalPages()}
                       </span>
-                      <button
-                        type="button"
-                        class="btn btn-secondary"
+                      <Button
+                        variant="secondary"
                         disabled={page() >= totalPages() || loading()}
                         onClick={() => setPage((p) => p + 1)}
                         aria-label={t('browse.pageNext')}
                       >
                         ›
-                      </button>
-                      <button
-                        type="button"
-                        class="btn btn-secondary"
+                      </Button>
+                      <Button
+                        variant="secondary"
                         disabled={page() >= totalPages() || loading()}
                         onClick={() => setPage(totalPages())}
                         aria-label={t('browse.pageLast')}
                       >
                         »»
-                      </button>
+                      </Button>
                     </div>
-                    <button type="button" class="btn btn-secondary" disabled={loading() || pageSlice().length === 0} onClick={ping} title={t('browse.refreshPingTitle')}>
+                    <Button variant="secondary" disabled={loading() || pageSlice().length === 0} onClick={ping} title={t('browse.refreshPingTitle')}>
                       {t('browse.refreshPing')}
-                    </button>
+                    </Button>
                   </div>
                 </div>
-                <div class="table-wrap browse-table-scroll">
-                  <table class="data">
-                    <caption class="sr-only">{t('browse.tableCaption')}</caption>
+                <TableScroll>
+                  <Table>
+                    <TableCaption class="sr-only">{t('browse.tableCaption')}</TableCaption>
                     <thead>
                       <tr>
-                        <th scope="col" title={t('browse.thNameLong')}>
+                        <TableHead scope="col" title={t('browse.thNameLong')}>
                           {t('browse.thName')}
-                        </th>
-                        <th scope="col" class="server-password-th" title={t('browse.thPasswordLong')}>
+                        </TableHead>
+                        <TableHead scope="col" class={tablePasswordColClass} title={t('browse.thPasswordLong')}>
                           {t('browse.thPassword')}
-                        </th>
-                        <th scope="col" title={t('browse.thMapLong')}>
+                        </TableHead>
+                        <TableHead scope="col" title={t('browse.thMapLong')}>
                           {t('browse.thMap')}
-                        </th>
-                        <th scope="col" title={t('browse.thPPLong')}>
+                        </TableHead>
+                        <TableHead scope="col" title={t('browse.thPPLong')}>
                           {t('browse.thPP')}
-                        </th>
-                        <th scope="col" title={t('browse.thProvLong')}>
+                        </TableHead>
+                        <TableHead scope="col" title={t('browse.thProvLong')}>
                           {t('browse.thProv')}
-                        </th>
-                        <th scope="col" title={t('browse.thModsLong')}>
+                        </TableHead>
+                        <TableHead scope="col" title={t('browse.thModsLong')}>
                           {t('browse.thMods')}
-                        </th>
-                        <th scope="col" title={t('browse.thTimeLong')}>
+                        </TableHead>
+                        <TableHead scope="col" title={t('browse.thTimeLong')}>
                           {t('browse.thTime')}
-                        </th>
-                        <th scope="col" title={t('browse.thPlayersLong')}>
+                        </TableHead>
+                        <TableHead scope="col" title={t('browse.thPlayersLong')}>
                           {t('browse.thPlayers')}
-                        </th>
-                        <th scope="col" title={t('browse.thAddrLong')}>
+                        </TableHead>
+                        <TableHead scope="col" title={t('browse.thAddrLong')}>
                           {t('browse.thAddr')}
-                        </th>
-                        <th scope="col" title={t('browse.thPingLong')}>
+                        </TableHead>
+                        <TableHead scope="col" title={t('browse.thPingLong')}>
                           {t('browse.thPing')}
-                        </th>
-                        <th scope="col" title={t('browse.thDistLong')}>
+                        </TableHead>
+                        <TableHead scope="col" title={t('browse.thDistLong')}>
                           {t('browse.thDist')}
-                        </th>
-                        <th scope="col" title={t('browse.thActionsLong')}>
+                        </TableHead>
+                        <TableHead scope="col" title={t('browse.thActionsLong')}>
                           {t('browse.thActions')}
-                        </th>
+                        </TableHead>
                       </tr>
                     </thead>
-                    <tbody>
+                    <TableBody>
                       <For each={pageSlice()}>
                         {(row) => (
-                          <tr>
-                            <td style={{'max-width': '14rem', 'white-space': 'normal'}}>{row.name}</td>
-                            <td class="server-password-td">
+                          <TableRow>
+                            <TableCell class="max-w-56 whitespace-normal">{row.name}</TableCell>
+                            <TableCell class={tablePasswordColClass}>
                               <ServerPasswordCell row={row} />
-                            </td>
-                            <td>{row.mapName}</td>
-                            <td>{row.perspective}</td>
-                            <td>{row.provider}</td>
-                            <td>{row.modded ? t('common.yes') : t('common.no')}</td>
-                            <td>{row.inGameTime}</td>
-                            <td>{formatPlayersWithQueue(row.players, row.maxPlayers, row.queueSize)}</td>
-                            <td style={{'max-width': '18rem', 'white-space': 'normal'}}>
+                            </TableCell>
+                            <TableCell>{row.mapName}</TableCell>
+                            <TableCell>{row.perspective}</TableCell>
+                            <TableCell>{row.provider}</TableCell>
+                            <TableCell>{row.modded ? t('common.yes') : t('common.no')}</TableCell>
+                            <TableCell>{row.inGameTime}</TableCell>
+                            <TableCell>{formatPlayersWithQueue(row.players, row.maxPlayers, row.queueSize)}</TableCell>
+                            <TableCell class="max-w-72 whitespace-normal">
                               <ServerAddressCell address={row.address} />
-                            </td>
-                            <td>{row.ping}</td>
-                            <td>{row.distanceLabel}</td>
-                            <td>
-                              <div class="row-actions row-actions-icon-only">
-                                <button type="button" class="btn btn-secondary" title={t('browse.connectTitle')} aria-label={t('browse.connect')} onClick={() => setJoinModalRow(row)}>
+                            </TableCell>
+                            <TableCell>{row.ping}</TableCell>
+                            <TableCell>{row.distanceLabel}</TableCell>
+                            <TableCell>
+                              <div class="flex flex-wrap gap-1 [&_button]:min-h-7 [&_button]:min-w-7 [&_button]:justify-center [&_button]:p-1 [&_button]:text-xs">
+                                <Button variant="secondary" size="sm" title={t('browse.connectTitle')} aria-label={t('browse.connect')} onClick={() => setJoinModalRow(row)}>
                                   <Play size={14} strokeWidth={2} aria-hidden />
-                                </button>
-                                <button
-                                  type="button"
-                                  class="btn btn-secondary"
+                                </Button>
+                                <Button
+                                  variant="secondary"
+                                  size="sm"
                                   title={t('browse.favTitle')}
                                   aria-label={t('browse.fav')}
                                   onClick={() => App.ToggleFavoriteRow(row).catch((e) => setErr(String(e)))}
                                 >
                                   <Star size={14} strokeWidth={2} aria-hidden />
-                                </button>
-                                <button
-                                  type="button"
-                                  class="btn btn-secondary"
+                                </Button>
+                                <Button
+                                  variant="secondary"
+                                  size="sm"
                                   title={t('browse.quickFavTitle')}
                                   aria-label={t('browse.quickFav')}
                                   onClick={() =>
@@ -476,31 +488,32 @@ export default function ServerBrowserPage() {
                                   }
                                 >
                                   <BookmarkPlus size={14} strokeWidth={2} aria-hidden />
-                                </button>
-                                <button type="button" class="btn btn-secondary" title={t('browse.joinPanelModsTitle')} aria-label={t('browse.joinPanelMods')} onClick={() => setJoinModalRow(row)}>
+                                </Button>
+                                <Button variant="secondary" size="sm" title={t('browse.joinPanelModsTitle')} aria-label={t('browse.joinPanelMods')} onClick={() => setJoinModalRow(row)}>
                                   <Package size={14} strokeWidth={2} aria-hidden />
-                                </button>
+                                </Button>
                               </div>
-                            </td>
-                          </tr>
+                            </TableCell>
+                          </TableRow>
                         )}
                       </For>
-                    </tbody>
-                  </table>
-                </div>
-              </section>
+                    </TableBody>
+                  </Table>
+                </TableScroll>
+              </Card>
             </div>
 
-            <aside class="browse-sidebar">
-              <section class="ds-card browse-filters-card" aria-labelledby="browse-filters-title">
-                <div class="browse-filters-header">
-                  <h2 id="browse-filters-title" class="ds-section-title">
+            <aside class="flex flex-col gap-2 lg:sticky lg:top-1 lg:max-h-[calc(100dvh-var(--ds-nav-height)-1.5rem)] lg:w-64 lg:shrink-0 lg:overflow-hidden">
+              <Card class="mb-0 flex max-h-[min(46vh,22rem)] flex-col" aria-labelledby="browse-filters-title">
+                <div class="mb-2 flex items-center justify-between gap-2">
+                  <CardTitle id="browse-filters-title" class="mb-0">
                     <ListFilter size={16} strokeWidth={1.75} aria-hidden />
                     {t('browse.filtersTitle')}
-                  </h2>
-                  <button
-                    type="button"
-                    class="browse-filters-toggle"
+                  </CardTitle>
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    class="size-9 shrink-0"
                     onClick={() => setFiltersListOpen((o) => !o)}
                     aria-expanded={filtersListOpen()}
                     aria-controls="browse-filters-list"
@@ -508,85 +521,85 @@ export default function ServerBrowserPage() {
                   >
                     {filtersListOpen() ? <ChevronUp size={18} strokeWidth={2} aria-hidden /> : <ChevronDown size={18} strokeWidth={2} aria-hidden />}
                     <span class="sr-only">{filtersListOpen() ? t('browse.toggleFiltersHide') : t('browse.toggleFiltersShow')}</span>
-                  </button>
+                  </Button>
                 </div>
                 <Show when={filtersListOpen()}>
-                  <div id="browse-filters-list" class="browse-filters-scroll" role="group" aria-label={t('browse.filtersTitle')}>
-                    <label class="browse-filter-row">
-                      <input type="checkbox" checked={filters().exclude1PP} onChange={toggleFilter('exclude1PP')} />
-                      <span>{t('browse.f1pp')}</span>
-                    </label>
-                    <label class="browse-filter-row">
-                      <input type="checkbox" checked={filters().exclude3PP} onChange={toggleFilter('exclude3PP')} />
-                      <span>{t('browse.f3pp')}</span>
-                    </label>
-                    <label class="browse-filter-row">
-                      <input type="checkbox" checked={filters().excludeDay} onChange={toggleFilter('excludeDay')} />
-                      <span>{t('browse.fDay')}</span>
-                    </label>
-                    <label class="browse-filter-row">
-                      <input type="checkbox" checked={filters().excludeNight} onChange={toggleFilter('excludeNight')} />
-                      <span>{t('browse.fNight')}</span>
-                    </label>
-                    <label class="browse-filter-row">
-                      <input type="checkbox" checked={filters().excludeEmpty} onChange={toggleFilter('excludeEmpty')} />
-                      <span>{t('browse.fEmpty')}</span>
-                    </label>
-                    <label class="browse-filter-row">
-                      <input type="checkbox" checked={filters().excludeFull} onChange={toggleFilter('excludeFull')} />
-                      <span>{t('browse.fFull')}</span>
-                    </label>
-                    <label class="browse-filter-row">
-                      <input type="checkbox" checked={filters().excludeLowPop} onChange={toggleFilter('excludeLowPop')} />
-                      <span>{t('browse.fLowPop')}</span>
-                    </label>
-                    <label class="browse-filter-row">
-                      <input type="checkbox" checked={filters().excludeNonASCII} onChange={toggleFilter('excludeNonASCII')} />
-                      <span>{t('browse.fAscii')}</span>
-                    </label>
-                    <label class="browse-filter-row">
-                      <input type="checkbox" checked={filters().deduplicateByName} onChange={toggleFilter('deduplicateByName')} />
-                      <span>{t('browse.fDedupe')}</span>
-                    </label>
-                    <label class="browse-filter-row">
-                      <input type="checkbox" checked={filters().excludeOfficial} onChange={toggleFilter('excludeOfficial')} />
-                      <span>{t('browse.fOfficial')}</span>
-                    </label>
-                    <label class="browse-filter-row">
-                      <input type="checkbox" checked={filters().excludeUnofficial} onChange={toggleFilter('excludeUnofficial')} />
-                      <span>{t('browse.fUnofficial')}</span>
-                    </label>
-                    <label class="browse-filter-row">
-                      <input type="checkbox" checked={filters().excludeNonModded} onChange={toggleFilter('excludeNonModded')} />
-                      <span>{t('browse.fNoMods')}</span>
-                    </label>
+                  <div
+                    id="browse-filters-list"
+                    class="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto rounded-md border border-border bg-background p-1"
+                    role="group"
+                    aria-label={t('browse.filtersTitle')}
+                  >
+                    <FormCheckboxRow checked={filters().exclude1PP} onChange={setFilterBool('exclude1PP')}>
+                      {t('browse.f1pp')}
+                    </FormCheckboxRow>
+                    <FormCheckboxRow checked={filters().exclude3PP} onChange={setFilterBool('exclude3PP')}>
+                      {t('browse.f3pp')}
+                    </FormCheckboxRow>
+                    <FormCheckboxRow checked={filters().excludeDay} onChange={setFilterBool('excludeDay')}>
+                      {t('browse.fDay')}
+                    </FormCheckboxRow>
+                    <FormCheckboxRow checked={filters().excludeNight} onChange={setFilterBool('excludeNight')}>
+                      {t('browse.fNight')}
+                    </FormCheckboxRow>
+                    <FormCheckboxRow checked={filters().excludeEmpty} onChange={setFilterBool('excludeEmpty')}>
+                      {t('browse.fEmpty')}
+                    </FormCheckboxRow>
+                    <FormCheckboxRow checked={filters().excludeFull} onChange={setFilterBool('excludeFull')}>
+                      {t('browse.fFull')}
+                    </FormCheckboxRow>
+                    <FormCheckboxRow checked={filters().excludeLowPop} onChange={setFilterBool('excludeLowPop')}>
+                      {t('browse.fLowPop')}
+                    </FormCheckboxRow>
+                    <FormCheckboxRow checked={filters().excludeNonASCII} onChange={setFilterBool('excludeNonASCII')}>
+                      {t('browse.fAscii')}
+                    </FormCheckboxRow>
+                    <FormCheckboxRow checked={filters().deduplicateByName} onChange={setFilterBool('deduplicateByName')}>
+                      {t('browse.fDedupe')}
+                    </FormCheckboxRow>
+                    <FormCheckboxRow checked={filters().excludeOfficial} onChange={setFilterBool('excludeOfficial')}>
+                      {t('browse.fOfficial')}
+                    </FormCheckboxRow>
+                    <FormCheckboxRow checked={filters().excludeUnofficial} onChange={setFilterBool('excludeUnofficial')}>
+                      {t('browse.fUnofficial')}
+                    </FormCheckboxRow>
+                    <FormCheckboxRow checked={filters().excludeNonModded} onChange={setFilterBool('excludeNonModded')}>
+                      {t('browse.fNoMods')}
+                    </FormCheckboxRow>
                   </div>
                 </Show>
-              </section>
+              </Card>
 
-              <section class="ds-card browse-sources-card" aria-labelledby="browse-sources-title">
-                <h2 id="browse-sources-title" class="ds-section-title">
+              <Card class="mb-0" aria-labelledby="browse-sources-title">
+                <CardTitle id="browse-sources-title">
                   <Radar size={16} strokeWidth={1.75} aria-hidden />
                   {t('browse.otherSources')}
-                </h2>
-                <div class="browse-sources-stack">
-                  <button type="button" class="btn btn-secondary" disabled={loading()} onClick={scanLan}>
+                </CardTitle>
+                <div class="flex flex-col gap-2">
+                  <Button variant="secondary" disabled={loading()} onClick={scanLan}>
                     {t('browse.scanLan')}
-                  </button>
-                  <div class="field browse-bm-field">
-                    <label for="browse-bm-id">{t('browse.bmIdLabel')}</label>
-                    <div class="browse-field-input-row">
-                      <input id="browse-bm-id" value={bmId()} onInput={(e) => setBmId(e.currentTarget.value)} placeholder={t('browse.bmPlaceholder')} autocomplete="off" />
-                      <button type="button" class="btn btn-secondary browse-input-clear" disabled={!bmId().trim()} aria-label={t('common.clearField')} onClick={() => setBmId('')}>
+                  </Button>
+                  <div class="mb-0">
+                    <Label for="browse-bm-id">{t('browse.bmIdLabel')}</Label>
+                    <div class="flex max-w-xl items-stretch gap-1.5">
+                      <Input
+                        id="browse-bm-id"
+                        class="min-w-0 flex-1"
+                        value={bmId()}
+                        onInput={(e) => setBmId(e.currentTarget.value)}
+                        placeholder={t('browse.bmPlaceholder')}
+                        autocomplete="off"
+                      />
+                      <Button variant="secondary" class="min-w-[2.375rem] shrink-0 px-2" disabled={!bmId().trim()} aria-label={t('common.clearField')} onClick={() => setBmId('')}>
                         <X size={16} strokeWidth={2} aria-hidden />
-                      </button>
+                      </Button>
                     </div>
                   </div>
-                  <button type="button" class="btn btn-secondary" disabled={loading()} onClick={resolveBm}>
+                  <Button variant="secondary" disabled={loading()} onClick={resolveBm}>
                     {t('browse.resolveId')}
-                  </button>
+                  </Button>
                 </div>
-              </section>
+              </Card>
             </aside>
           </div>
           <Show when={joinModalRow()}>

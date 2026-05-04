@@ -4,6 +4,8 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
+	"os"
+	"path/filepath"
 	"slices"
 	"strings"
 	"sync"
@@ -90,6 +92,34 @@ func (a *App) LoadSettings() (domain.Settings, error) {
 func (a *App) SaveSettings(s domain.Settings) error {
 	a.reloadGeo(s.GeoIPDatabasePath)
 	return a.store.Save(s)
+}
+
+const maxUIThemeFileBytes = 512 * 1024
+
+func (a *App) ReadUIThemeFile(path string) (string, error) {
+	p := strings.TrimSpace(path)
+	if p == "" {
+		return "", nil
+	}
+	abs, err := filepath.Abs(filepath.Clean(p))
+	if err != nil {
+		return "", err
+	}
+	st, err := os.Stat(abs)
+	if err != nil {
+		return "", err
+	}
+	if st.IsDir() {
+		return "", fmt.Errorf("not a file")
+	}
+	if st.Size() > maxUIThemeFileBytes {
+		return "", fmt.Errorf("file too large")
+	}
+	data, err := os.ReadFile(abs)
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
 }
 
 func (a *App) ValidateSteamAPIKey(key string) domain.SteamKeyValidation {

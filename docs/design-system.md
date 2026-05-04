@@ -1,58 +1,54 @@
 # Design system (frontend)
 
-UI stack: **React 18**, **TypeScript**, **Vite 3**, **react-router-dom** v6, **i18next** / **react-i18next**, and **lucide-react** icons. The Wails binary embeds the output of `npm run build` (`frontend/dist`).
+UI stack: **SolidJS 1.9**, **TypeScript**, **Vite 5**, **Tailwind CSS 3**, **@kobalte/core** (Dialog, Select, Checkbox, …), **[@solidjs/router](https://docs.solidjs.com/solid-router)**, **i18next** / **solid-i18next**, **lucide-solid**. Componentes em [`frontend/src/components/ui/`](frontend/src/components/ui/) (padrão tipo shadcn / SolidUI: `Button`, `Card`, `Input`, `Label`, `Table*`, `StringSelect`/`DsSelect`, `FormCheckboxRow`, `TableCheckbox`, `Dialog*`, alertas). Referência: [SolidUI](https://github.com/stefan-karger/solid-ui) / [solid-ui.com](https://www.solid-ui.com).
 
-The project uses **structural tokens** + **per-theme CSS files** with semantic variables. React components avoid raw hex; they use classes in `src/shared/layout.css` and variables from the active theme.
+O Wails incorpora o output de `npm run build` (`frontend/dist`).
 
-## Files
+## Camada de tokens e temas
 
-| File | Role |
-|------|------|
-| `frontend/src/theme/tokens.css` | Spacing, radii, shadows, base typography (no brand colors). |
-| `frontend/src/theme/themes/flat-dark-theme.css` | Flat dark theme: dark surfaces, blue accent, light text. |
-| `frontend/src/theme/themes/flat-light-theme.css` | Flat light theme (same semantic variables). |
-| `frontend/src/theme/app.css` | Entry point: imports tokens and **all** themes. |
-| `frontend/src/shared/layout.css` | UI primitives (`.btn`, `.ds-card`, `.shell-nav`, tables, messages). |
+Cores e superfícies vêm de **variáveis CSS em canais HSL** (formato `H S% L%` sem envoltório `hsl()`), consumidas pelo `tailwind.config.ts` via `hsl(var(--nome) / <alpha-value>)`. Não há segundo conjunto legado (`--bg` / `--accent` em paralelo).
 
-## Enabling a theme
+| Ficheiro | Função |
+|----------|--------|
+| [`frontend/src/theme/tokens.css`](frontend/src/theme/tokens.css) | Espaçamentos `--ds-*`, sombras, altura da barra de navegação, `--font-sans` / `--font-mono`. |
+| [`frontend/src/theme/themes/flat-dark.css`](frontend/src/theme/themes/flat-dark.css) | Tema embutido escuro (`html[data-theme="flat-dark-theme"]` e fallback sem `data-theme`). |
+| [`frontend/src/theme/themes/flat-light.css`](frontend/src/theme/themes/flat-light.css) | Tema embutido claro (`html[data-theme="flat-light-theme"]`). |
+| [`frontend/src/theme/app.css`](frontend/src/theme/app.css) | `@tailwind` + `@layer base` + utilitário `.select-native` para `<select>`. |
+| [`frontend/src/theme/resolveTheme.ts`](frontend/src/theme/resolveTheme.ts) | `resolveTheme` / `applyThemeToDocument` (`data-theme` no `<html>`). |
+| [`frontend/src/theme/themeLoader.ts`](frontend/src/theme/themeLoader.ts) | `setExternalThemeFromText`, `attachExternalTheme`, `clearExternalTheme` (nó `#dzg-external-theme`). |
+| [`frontend/src/theme/applyFullTheme.ts`](frontend/src/theme/applyFullTheme.ts) | Aplica tema embutido + lê CSS opcional via `ReadUIThemeFile` (Wails). |
 
-1. In the app **Settings**, pick a theme (persisted as `uiTheme` in JSON) or edit `index.html`: `data-theme="flat-dark-theme"` or `data-theme="flat-light-theme"`.
+Variáveis semânticas esperadas nos temas (exemplos): `--background`, `--foreground`, `--card`, `--primary`, `--muted`, `--border`, `--input`, `--ring`, `--destructive`, `--success`, `--warn`, `--info`, … (ver ficheiros `flat-*.css` e `tailwind.config.ts`). O **`--radius`** comum nos temas embutidos está em **0.5rem** (cantos um pouco mais suaves, alinhado ao preset shadcn/SolidUI).
 
-2. Or import only one theme file in `app.css` (replacing current `@import`s) if you want a build **without** attribute switching.
+## Ativar tema embutido
 
-The stored value (`flat-dark-theme` / `flat-light-theme`) is applied on `<html>` at startup and when saving.
+1. **Definições**: escolher tema (gravado como `uiTheme` no JSON de configuração).
+2. Ou `index.html`: `data-theme="flat-dark-theme"` ou `data-theme="flat-light-theme"`.
 
-**Limitation:** only those bundled themes are supported without changing source. **User-supplied themes loaded at runtime** (no edit to `app.css` / no app rebuild) are not implemented yet; see the root [README.md](../README.md) roadmap.
+## Tema CSS externo (overlay)
 
-Each theme must declare the **same set** of variables consumed by `layout.css`, for example:
+1. Em **Definições**, preencher o caminho absoluto do ficheiro (gravado como `uiExternalThemePath`).
+2. O backend expõe [`ReadUIThemeFile`](../../app.go); o frontend injeta o conteúdo como `<style id="dzg-external-theme">` **depois** dos temas embutidos, para sobrescrever variáveis (e regras compatíveis) sem rebuild.
 
-- `--bg`, `--bg-elevated`, `--bg-hover`, `--bg-input`
-- `--border`, `--border-focus`
-- `--text`, `--text-muted`, `--text-on-accent`
-- `--accent`, `--accent-hover`, `--accent-muted`
-- `--danger`, `--radius`, `--font`, `--table-row-hover`, `--nav-active-bg`, `--nav-active-text`, `--page-header-icon-bg`
+Limite de tamanho do ficheiro e validação de caminho estão no Go.
 
-## New themes
+## Novo tema embutido
 
-1. Create `frontend/src/theme/themes/<name>.css` with:
+1. Criar `frontend/src/theme/themes/<id>.css` com `html[data-theme="<id>"] { ... }` redefinindo as mesmas variáveis que `flat-dark.css`.
+2. Adicionar `@import` em [`app.css`](frontend/src/theme/app.css).
+3. Incluir `<id>` em `THEME_IDS` em [`resolveTheme.ts`](frontend/src/theme/resolveTheme.ts) e nas opções da página de definições.
 
-   ```css
-   html[data-theme="name"] {
-     --bg: ...;
-     /* remaining variables */
-   }
-   ```
+## Tabelas e layout partilhado
 
-2. Add `@import "./themes/<name>.css";` in `app.css`.
+Componentes de tabela: [`frontend/src/components/ui/table.tsx`](frontend/src/components/ui/table.tsx) (`TableScroll`, `Table`, `TableHead`, `TableCell`, `tablePasswordColClass`, …).
 
-3. Set `data-theme="name"` on `<html>` (or at runtime: `document.documentElement.dataset.theme = 'name'`).
+## Componentes
 
-## Components
+- **`PageHeader`**: [`frontend/src/shared/PageHeader.tsx`](frontend/src/shared/PageHeader.tsx).
+- **`DsSelect` / `StringSelect`**: [`frontend/src/components/ui/select.tsx`](frontend/src/components/ui/select.tsx) — Select Kobalte + estilos Tailwind (substitui o antigo `shared/DsSelect`).
+- **`FormCheckboxRow`**, **`TableCheckbox`**: [`frontend/src/components/ui/checkbox.tsx`](frontend/src/components/ui/checkbox.tsx).
+- **Diálogo modal**: [`frontend/src/components/ui/dialog.tsx`](frontend/src/components/ui/dialog.tsx) (`Dialog`, `DialogOverlay`, `DialogContent` sobre Kobalte).
 
-- **`.ds-card`**: bordered elevated surface.
-- **`.ds-section-title`**: section title (subtle caps); may pair with a `lucide-react` icon.
-- **`PageHeader`**: page header with icon, title, optional description (`src/shared/PageHeader.tsx`).
+## Ícones
 
-## Icons
-
-Library: **`lucide-react`**. Prefer consistent SVG icons instead of emoji in navigation and headers.
+**lucide-solid**.

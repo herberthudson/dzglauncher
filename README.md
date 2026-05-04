@@ -68,7 +68,7 @@ Index: [`docs/README.md`](docs/README.md).
 |----------|----------|
 | [`docs/architecture-and-product.md`](docs/architecture-and-product.md) | Domain, integrations (Steam, A2S, Battlemetrics, geo), product rules — stack-agnostic. |
 | [`docs/project-and-structure.md`](docs/project-and-structure.md) | Folders, languages, libraries, layer boundaries. |
-| [`docs/design-system.md`](docs/design-system.md) | CSS themes, tokens, and UI components. |
+| [`docs/design-system.md`](docs/design-system.md) | Tailwind, CSS tokens, built-in themes, external theme overlay, UI components. |
 
 ## Repository layout
 
@@ -108,7 +108,7 @@ go test ./...
 - Steam master-list server browser with filters, search, and map selection.
 - Live server metadata and ping refresh via **A2S** (incl. DayZ rules / mod list where available).
 - **Favorites** plus up to **five quick favorites**, deduplicated **history**, and Workshop-oriented **mods** workflow.
-- Settings for Steam Web API key, Steam launch command, install paths, DayZ branch, i18n, and in-app **dark/light** theme switch for the bundled flat themes.
+- Settings for Steam Web API key, Steam launch command, install paths, DayZ branch, i18n, bundled **dark/light** themes, and optional **external CSS overlay** path (`uiExternalThemePath` + `ReadUIThemeFile`).
 - JSON settings under the OS config directory; Apache 2.0 license; English docs under [`docs/`](docs/README.md).
 
 ## Roadmap / open work
@@ -118,7 +118,7 @@ Rough edges and missing product work (code stubs or partial UI may exist; this i
 - **Battlemetrics** — token field and ID resolution exist, but end-to-end flows (errors, fallbacks, discoverability) are not finished or systematically tested.
 - **LAN** — subnet scan API exists; a first-class LAN experience (UX, edge cases, validation on real networks) is still open.
 - **Geolocation** — bundled DB-IP sample plus optional user database path; client location refresh, accuracy, and distance labelling need a coherent product pass and tests.
-- **Themes without a rebuild** — adding a new look still means shipping new CSS under `frontend/src/theme/themes/`, wiring `@import` in `app.css`, and rebuilding; **runtime-loaded user themes** (pick a file or folder, no developer build) are not implemented.
+- **Themes without a rebuild** — bundled themes still ship with the app; **optional runtime CSS overlay**: set an absolute file path in Settings (`uiExternalThemePath`); the app reads the file via Wails and injects it after built-in theme variables so you can override tokens without a developer build of the theme files themselves.
 
 ## Third-party credits
 

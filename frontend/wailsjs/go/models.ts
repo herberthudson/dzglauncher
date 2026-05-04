@@ -179,6 +179,7 @@ export namespace domain {
 	    clientGeoUpdated: number;
 	    locale: string;
 	    uiTheme: string;
+	    uiExternalThemePath?: string;
 	    knownMapNames?: string[];
 	    workshopModTimeUpdated?: Record<string, number>;
 	
@@ -208,6 +209,7 @@ export namespace domain {
 	        this.clientGeoUpdated = source["clientGeoUpdated"];
 	        this.locale = source["locale"];
 	        this.uiTheme = source["uiTheme"];
+	        this.uiExternalThemePath = source["uiExternalThemePath"];
 	        this.knownMapNames = source["knownMapNames"];
 	        this.workshopModTimeUpdated = source["workshopModTimeUpdated"];
 	    }

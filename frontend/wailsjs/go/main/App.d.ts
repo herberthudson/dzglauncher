@@ -35,6 +35,8 @@ export function MergeKnownMapNamesFromRows(arg1:Array<domain.ServerRow>):Promise
 
 export function OpenExternalURL(arg1:string):Promise<void>;
 
+export function ReadUIThemeFile(arg1:string):Promise<string>;
+
 export function RefreshServersPing(arg1:Array<domain.ServerRow>):Promise<Array<domain.ServerRow>>;
 
 export function RemoveFavorite(arg1:string,arg2:number,arg3:number):Promise<void>;

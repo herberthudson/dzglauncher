@@ -11,15 +11,23 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@kobalte/core": "^0.13.11",
     "@solidjs/router": "^0.14.10",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "i18next": "^26.0.6",
     "lucide-solid": "^0.460.0",
     "solid-i18next": "^0.0.4",
-    "solid-js": "^1.9.3"
+    "solid-js": "^1.9.3",
+    "tailwind-merge": "^3.5.0"
   },
   "devDependencies": {
     "@solidjs/testing-library": "^0.8.10",
+    "autoprefixer": "^10.5.0",
     "jsdom": "^25.0.1",
+    "postcss": "^8.5.13",
+    "tailwindcss": "^3.4.17",
+    "tailwindcss-animate": "^1.0.7",
     "typescript": "~5.6.3",
     "vite": "^5.4.11",
     "vite-plugin-solid": "^2.11.0",

@@ -84,7 +84,9 @@
     "langEs": "Español",
     "theme": "Tema de la interfaz",
     "themeFlatDark": "Plano oscuro",
-    "themeFlatLight": "Plano claro"
+    "themeFlatLight": "Plano claro",
+    "externalThemePath": "CSS superpuesto opcional (ruta absoluta al archivo)",
+    "externalThemePlaceholder": "/ruta/a/tema-personalizado.css"
   },
   "history": {
     "title": "Historial de conexiones",
