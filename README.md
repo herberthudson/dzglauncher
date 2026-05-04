@@ -44,8 +44,6 @@ The Linux **zip/tar.gz** binary expects **GTK3** and **WebKit2GTK 4.1** from the
 | **Ubuntu / Debian** | `sudo apt-get install -y libgtk-3-0 libwebkit2gtk-4.1-0` |
 | **Fedora** | `sudo dnf install gtk3 webkit2gtk4.1` |
 
-The **AppImage** bundles much of the GUI stack; the table above still applies if you use the portable archive or develop with the system WebKit.
-
 ### Linux window icon (taskbar, overview, Wayland)
 
 Wails passes your PNG to GTK (`gtk_window_set_icon`). On **X11**, that is often enough. On **Wayland** (default on many desktops), the compositor usually takes the window/taskbar icon from a **`.desktop` file** plus the **freedesktop icon theme** (`Icon=dzglauncher` → `hicolor/.../dzglauncher.png`), not from GTK’s window icon alone. If you only run `./build/bin/dzglauncher` without installing those pieces, you may still see a **generic or WebKit-style fallback** (e.g. a “W”-like placeholder), even though the app embeds a custom icon.
@@ -91,7 +89,7 @@ wails build
 
 Binaries and bundles land under `build/bin/` (standard Wails layout). Windows/macOS icons and metadata live under [`build/`](build/README.md). If you build for a non-Linux OS, treat the output as **untested** by this project (see **Platform support**).
 
-Linux release archives (zip, tar.gz, AppImage) and `SHA256SUMS` are built by [`.github/workflows/release-linux.yml`](.github/workflows/release-linux.yml) on version tags `v*`. The **zip** and **tar.gz** archives include `dzglauncher`, `LICENSE`, `README.md`, and a `share/` tree with [`packaging/linux/dzglauncher.desktop`](packaging/linux/dzglauncher.desktop) under `share/applications/` and the PNG icon under `share/icons/hicolor/256x256/apps/` (freedesktop layout for copying into `~/.local/share/`). After downloading `SHA256SUMS` together with the zip, tar.gz, and AppImage into the same directory, run `sha256sum -c SHA256SUMS` to verify them. The AppImage is produced on **Ubuntu 22.04** and bundles WebKit2GTK helper binaries plus a custom `AppRun` that sets `WEBKIT_EXEC_DIR` so the app does not rely on host paths such as `/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1/` (which do not exist on some distros, e.g. Arch-based systems). If the AppImage still fails to start WebKit on your system, use the **tar.gz** or **zip** build against your distribution’s `libwebkit2gtk-4.1` packages instead.
+Linux release archives (**zip** and **tar.gz**) and `SHA256SUMS` are built by [`.github/workflows/release-linux.yml`](.github/workflows/release-linux.yml) on version tags `v*`. Both archives include `dzglauncher`, `LICENSE`, `README.md`, and a `share/` tree with [`packaging/linux/dzglauncher.desktop`](packaging/linux/dzglauncher.desktop) under `share/applications/` and the PNG icon under `share/icons/hicolor/256x256/apps/` (freedesktop layout for copying into `~/.local/share/`). After downloading `SHA256SUMS` together with the zip and tar.gz into the same directory, run `sha256sum -c SHA256SUMS` to verify them.
 
 ## Documentation
 

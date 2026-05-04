@@ -1,6 +1,6 @@
 # Linux: system dependencies
 
-This project uses **Wails v2** with **GTK3** and **WebKit2GTK 4.1** (`webkit2_41` in [`wails.json`](../wails.json)). The Linux **zip/tar.gz** binary is **dynamically linked**: GTK and WebKit must be **installed** on the system. The **AppImage** bundles most of that stack, but may still rely on the host for fonts, GPU drivers, etc.
+This project uses **Wails v2** with **GTK3** and **WebKit2GTK 4.1** (`webkit2_41` in [`wails.json`](../wails.json)). The Linux **zip/tar.gz** binary is **dynamically linked**: GTK and WebKit must be **installed** on the system.
 
 Two cases:
 
