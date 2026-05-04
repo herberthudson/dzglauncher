@@ -9,6 +9,7 @@ import {PageHeader} from '../../shared/PageHeader';
 import {clampPageSize} from '../../shared/pageSizeConstants';
 import {formatPlayersWithQueue} from '../../shared/formatPlayersWithQueue';
 import {ServerAddressCell} from '../../shared/ServerAddressCell';
+import {parallelServerPing} from '../../shared/parallelServerPing';
 import {ServerJoinModal} from '../../shared/ServerJoinModal';
 import {ServerPasswordCell} from '../../shared/ServerPasswordCell';
 import {AlertError} from '@/components/ui/alert';
@@ -256,11 +257,9 @@ export default function FavoritesPage() {
       return;
     }
     setLoading(true);
-    App.RefreshServersPing(targets)
-      .then((updated) => {
-        applyPingMsFromUpdated(updated);
-        return App.MergeFavoriteSnapshots(updated);
-      })
+    setErr('');
+    void parallelServerPing(targets, (r) => App.RefreshServerPing(r), 12, (u) => applyPingMsFromUpdated([u]))
+      .then((updated) => App.MergeFavoriteSnapshots(updated))
       .then(() => reload())
       .catch((e) => setErr(String(e)))
       .finally(() => setLoading(false));
@@ -272,11 +271,9 @@ export default function FavoritesPage() {
       return;
     }
     setLoading(true);
-    App.RefreshServersPing(qr)
-      .then((updated) => {
-        applyPingMsFromUpdated(updated);
-        return App.MergeFavoriteSnapshots(updated);
-      })
+    setErr('');
+    void parallelServerPing(qr, (r) => App.RefreshServerPing(r), 12, (u) => applyPingMsFromUpdated([u]))
+      .then((updated) => App.MergeFavoriteSnapshots(updated))
       .then(() => reload())
       .catch((e) => setErr(String(e)))
       .finally(() => setLoading(false));

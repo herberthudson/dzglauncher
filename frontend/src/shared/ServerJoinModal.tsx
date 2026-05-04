@@ -11,8 +11,22 @@ import {Label} from '@/components/ui/label';
 import {Table, TableBody, TableCaption, TableCell, TableHead, TableRow} from '@/components/ui/table';
 import {formatBytes} from './formatBytes';
 
+const POLL_INSTALLED_MS = 3500;
+const PER_MOD_WAIT_MS = 25 * 60 * 1000;
+
 const JOIN_MOD_DESC_CHUNK_CHARS = 10;
 const JOIN_MOD_DESC_MAX_LINES = 3;
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
+}
+
+async function fetchJoinModalRows(row: domain.ServerRow): Promise<domain.WorkshopModRow[]> {
+  const list = await App.JoinModalWorkshopData(row.queryHost, row.queryPort, row.gamePort);
+  return Array.isArray(list) ? list.map((x) => domain.WorkshopModRow.createFrom(x)) : [];
+}
 
 function steamWorkshopDescPlain(raw: string): string {
   if (!raw) {
@@ -47,13 +61,98 @@ export type ServerJoinModalProps = {
 export function ServerJoinModal(props: ServerJoinModalProps) {
   const [t] = useTranslation();
   let fetchGen = 0;
+  const bulkAbort = {current: false};
   const [loading, setLoading] = createSignal(false);
   const [joinBusy, setJoinBusy] = createSignal(false);
   const [enrichErr, setEnrichErr] = createSignal('');
   const [launchErr, setLaunchErr] = createSignal('');
   const [modRows, setModRows] = createSignal<domain.WorkshopModRow[]>([]);
   const [modFilter, setModFilter] = createSignal('');
+  const [bulkMissingBusy, setBulkMissingBusy] = createSignal(false);
+  const [bulkSheetModName, setBulkSheetModName] = createSignal('');
+  const [bulkSheetModId, setBulkSheetModId] = createSignal('');
+  const [bulkMissingErr, setBulkMissingErr] = createSignal('');
 
+  const finalizeBulkMissing = () => {
+    setBulkMissingBusy(false);
+    setBulkSheetModName('');
+    setBulkSheetModId('');
+  };
+
+  const stopBulkMissing = () => {
+    bulkAbort.current = true;
+    finalizeBulkMissing();
+  };
+
+  const waitForModResolved = async (row: domain.ServerRow, modId: string, startGen: number) => {
+    const deadline = Date.now() + PER_MOD_WAIT_MS;
+    while (Date.now() < deadline) {
+      if (bulkAbort.current || startGen !== fetchGen) {
+        return 'abort' as const;
+      }
+      try {
+        const rows = await fetchJoinModalRows(row);
+        if (startGen !== fetchGen || bulkAbort.current) {
+          return 'abort' as const;
+        }
+        setModRows(rows);
+        props.onRowPatched(domain.ServerRow.createFrom({...row, workshopModIds: rows.map((r) => r.id)}));
+        const hit = rows.find((r) => String(r.id) === String(modId));
+        if (hit && (hit.status === 'ok' || hit.status === 'outdated')) {
+          return 'ok' as const;
+        }
+      } catch (e) {
+        setEnrichErr(String(e));
+        return 'err' as const;
+      }
+      await sleep(POLL_INSTALLED_MS);
+    }
+    return 'timeout' as const;
+  };
+
+  const installMissingAll = async () => {
+    const row = props.row;
+    if (!row || bulkMissingBusy()) {
+      return;
+    }
+    bulkAbort.current = false;
+    setBulkMissingErr('');
+    setBulkMissingBusy(true);
+    const runGen = fetchGen;
+    try {
+      for (;;) {
+        if (bulkAbort.current || runGen !== fetchGen) {
+          break;
+        }
+        const missing = modRows().filter((r) => r.status === 'missing');
+        if (missing.length === 0) {
+          break;
+        }
+        const cur = missing[0];
+        setBulkSheetModName(cur.name || '');
+        setBulkSheetModId(String(cur.id));
+        await App.WorkshopDownloadItem(cur.id);
+        if (bulkAbort.current || runGen !== fetchGen) {
+          break;
+        }
+        const w = await waitForModResolved(row, String(cur.id), runGen);
+        if (w === 'abort') {
+          break;
+        }
+        if (w === 'timeout') {
+          setBulkMissingErr(t('joinModal.installMissingModTimeout', {name: cur.name || cur.id}));
+          break;
+        }
+        if (w === 'err') {
+          break;
+        }
+      }
+    } catch (e) {
+      setEnrichErr(String(e));
+    } finally {
+      finalizeBulkMissing();
+    }
+  };
   const load = async () => {
     const row = props.row;
     if (!row) {
@@ -63,14 +162,14 @@ export function ServerJoinModal(props: ServerJoinModalProps) {
     setLoading(true);
     setEnrichErr('');
     setLaunchErr('');
+    setBulkMissingErr('');
     setModRows([]);
     setModFilter('');
     try {
-      const list = await App.JoinModalWorkshopData(row.queryHost, row.queryPort, row.gamePort);
+      const rows = await fetchJoinModalRows(row);
       if (g !== fetchGen) {
         return;
       }
-      const rows = Array.isArray(list) ? list.map((x) => domain.WorkshopModRow.createFrom(x)) : [];
       setModRows(rows);
       const ids = rows.map((r) => r.id);
       const patched = domain.ServerRow.createFrom({...row, workshopModIds: ids});
@@ -95,8 +194,12 @@ export function ServerJoinModal(props: ServerJoinModalProps) {
     void load();
     onCleanup(() => {
       fetchGen++;
+      bulkAbort.current = true;
+      finalizeBulkMissing();
     });
   });
+
+  const missingModIds = createMemo(() => modRows().filter((r) => r.status === 'missing').map((r) => r.id));
 
   const filteredModRows = createMemo(() => {
     const q = modFilter().trim().toLowerCase();
@@ -153,7 +256,12 @@ export function ServerJoinModal(props: ServerJoinModalProps) {
 
   const needsInstallOrUpdate = createMemo(() => modRows().some((r) => r.status === 'missing' || r.status === 'outdated'));
 
-  const joinDisabled = () => joinBusy() || loading() || !!enrichErr() || (modRows().length > 0 && needsInstallOrUpdate());
+  const joinDisabled = () =>
+    joinBusy() ||
+    loading() ||
+    bulkMissingBusy() ||
+    !!enrichErr() ||
+    (modRows().length > 0 && needsInstallOrUpdate());
 
   const title = () => {
     const row = props.row;
@@ -211,6 +319,7 @@ export function ServerJoinModal(props: ServerJoinModalProps) {
             }, 80);
           }}
         >
+          <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
           <div class="flex shrink-0 items-start justify-between gap-2 border-b border-border px-3 py-2">
             <Dialog.Title id="join-modal-title" class="m-0 text-base font-semibold">
               {t('joinModal.title')}
@@ -234,10 +343,17 @@ export function ServerJoinModal(props: ServerJoinModalProps) {
             </Show>
 
             <Show when={!!enrichErr()}>
-              <AlertError class="shrink-0">{enrichErr()}</AlertError>
+              <div class="flex shrink-0 flex-col gap-1.5">
+                <AlertError class="my-0 shrink-0 border-destructive/55 bg-destructive/[0.14]">{enrichErr()}</AlertError>
+                <p class="m-0 text-xs text-destructive/90">{t('joinModal.modsLoadErrorHint')}</p>
+              </div>
             </Show>
             <Show when={!!launchErr()}>
-              <AlertError class="shrink-0">{launchErr()}</AlertError>
+              <AlertError class="my-0 shrink-0 border-destructive/55 bg-destructive/[0.14]">{launchErr()}</AlertError>
+            </Show>
+
+            <Show when={!!bulkMissingErr()}>
+              <AlertError class="my-0 shrink-0 border-destructive/50 bg-destructive/[0.12]">{bulkMissingErr()}</AlertError>
             </Show>
 
             <Show when={!loading() && !enrichErr() && modRows().length === 0}>
@@ -255,6 +371,7 @@ export function ServerJoinModal(props: ServerJoinModalProps) {
                   placeholder={t('joinModal.filterModsPlaceholder')}
                   autocomplete="off"
                   class="max-w-none"
+                  disabled={bulkMissingBusy()}
                 />
               </div>
               <p class="shrink-0 text-sm text-muted-foreground">
@@ -381,7 +498,7 @@ export function ServerJoinModal(props: ServerJoinModalProps) {
                                     variant="secondary"
                                     size="sm"
                                     class="min-h-7 gap-1 px-2 text-xs"
-                                    disabled={r.status === 'ok'}
+                                    disabled={bulkMissingBusy() || r.status === 'ok'}
                                     title={
                                       r.status === 'ok'
                                         ? t('joinModal.installInstalledTitle')
@@ -430,11 +547,28 @@ export function ServerJoinModal(props: ServerJoinModalProps) {
           </div>
 
           <div class="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-border px-3 py-2">
-            <Button variant="secondary" disabled={loading()} onClick={() => void load()}>
+            <Button variant="secondary" disabled={loading() || bulkMissingBusy()} onClick={() => void load()}>
               <RefreshCw size={16} strokeWidth={2} aria-hidden />
               {t('joinModal.refresh')}
             </Button>
-            <Button variant="secondary" onClick={() => props.onClose()}>
+            <Show when={!!enrichErr()}>
+              <Button variant="destructive" disabled={loading()} title={t('joinModal.retryMods')} onClick={() => void load()}>
+                <RefreshCw size={16} strokeWidth={2} aria-hidden />
+                {t('joinModal.retryMods')}
+              </Button>
+            </Show>
+            <Show when={!loading() && !enrichErr() && modRows().length > 0 && missingModIds().length > 0}>
+              <Button
+                variant="destructive"
+                disabled={bulkMissingBusy()}
+                title={t('joinModal.installMissingTitle')}
+                onClick={() => void installMissingAll()}
+              >
+                <Download size={16} strokeWidth={2} aria-hidden />
+                {t('joinModal.installMissing')}
+              </Button>
+            </Show>
+            <Button variant="secondary" disabled={bulkMissingBusy()} onClick={() => props.onClose()}>
               {t('joinModal.close')}
             </Button>
             <Button disabled={joinDisabled()} title={t('joinModal.joinTitle')} onClick={() => void onJoin()}>
@@ -445,6 +579,33 @@ export function ServerJoinModal(props: ServerJoinModalProps) {
               )}
               {t('joinModal.join')}
             </Button>
+          </div>
+          <Show when={bulkMissingBusy()}>
+            <div
+              class="absolute inset-0 z-[60] flex items-center justify-center bg-black/45 p-4 backdrop-blur-[1px]"
+              role="alertdialog"
+              aria-modal="true"
+              aria-labelledby="join-install-sheet-title"
+              aria-busy="true"
+            >
+              <div class="w-full max-w-[22rem] rounded-md border border-destructive/45 bg-card p-4 text-card-foreground shadow-ds ring-1 ring-destructive/25">
+                <p id="join-install-sheet-title" class="m-0 text-sm font-semibold text-destructive">
+                  {t('joinModal.installMissingSheetTitle')}
+                </p>
+                <p class="mt-2 mb-0 text-sm font-medium text-foreground">{t('joinModal.installMissingSheetBody', {name: bulkSheetModName() || '—'})}</p>
+                <p class="mt-1 mb-0 text-xs text-muted-foreground">{t('joinModal.installMissingSheetId', {id: bulkSheetModId()})}</p>
+                <div class="mt-3 flex items-start gap-2 text-xs leading-snug text-muted-foreground">
+                  <Loader2 class="mt-0.5 size-4 shrink-0 animate-spin" strokeWidth={2} aria-hidden />
+                  <span>{t('joinModal.installMissingSheetHint')}</span>
+                </div>
+                <div class="mt-4 flex justify-end">
+                  <Button variant="destructive" size="sm" class="min-h-9 px-3" onClick={() => stopBulkMissing()}>
+                    {t('joinModal.stopBulkInstall')}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </Show>
           </div>
         </DialogContent>
       </Dialog.Portal>

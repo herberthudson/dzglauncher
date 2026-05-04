@@ -70,6 +70,10 @@ export function ReadUIThemeFile(arg1) {
   return window['go']['main']['App']['ReadUIThemeFile'](arg1);
 }
 
+export function RefreshServerPing(arg1) {
+  return window['go']['main']['App']['RefreshServerPing'](arg1);
+}
+
 export function RefreshServersPing(arg1) {
   return window['go']['main']['App']['RefreshServersPing'](arg1);
 }

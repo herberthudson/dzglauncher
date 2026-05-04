@@ -10,6 +10,7 @@ import {PageHeader} from '../../shared/PageHeader';
 import {clampPageSize} from '../../shared/pageSizeConstants';
 import {formatPlayersWithQueue} from '../../shared/formatPlayersWithQueue';
 import {ServerAddressCell} from '../../shared/ServerAddressCell';
+import {parallelServerPing} from '../../shared/parallelServerPing';
 import {ServerJoinModal} from '../../shared/ServerJoinModal';
 import {ServerPasswordCell} from '../../shared/ServerPasswordCell';
 import {AlertError} from '@/components/ui/alert';
@@ -31,7 +32,7 @@ export default function HistoryPage() {
   const [t, i18n] = useTranslation();
   const [s, setS] = createSignal<domain.Settings | null>(null);
   const [err, setErr] = createSignal('');
-  const [loading, setLoading] = createSignal(false);
+  const [pingInFlight, setPingInFlight] = createSignal(false);
   const [page, setPage] = createSignal(1);
   const [pageSize, setPageSize] = createSignal(clampPageSize(10));
   const [joinModalRow, setJoinModalRow] = createSignal<domain.ServerRow | null>(null);
@@ -108,19 +109,13 @@ export default function HistoryPage() {
       return;
     }
     const rows = sl.map((e) => e.row);
-    setLoading(true);
-    App.RefreshServersPing(rows)
-      .then((updated) => {
-        setRowMergedByKey((prev) => {
-          const next = {...prev};
-          for (const u of updated) {
-            next[rowKey(u)] = u;
-          }
-          return next;
-        });
-      })
+    setErr('');
+    setPingInFlight(true);
+    void parallelServerPing(rows, (r) => App.RefreshServerPing(r), 12, (u) => {
+      setRowMergedByKey((prev) => ({...prev, [rowKey(u)]: u}));
+    })
       .catch((e) => setErr(String(e)))
-      .finally(() => setLoading(false));
+      .finally(() => setPingInFlight(false));
   };
 
   return (
@@ -145,14 +140,14 @@ export default function HistoryPage() {
               <>
                 <div class="mb-2 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
                   <p class="m-0 min-w-[10rem] flex-1 text-[0.8rem] text-muted-foreground">
-                    {loading() ? t('common.processing') : t('history.pageLine', {slice: pageSlice().length, total: allEntries().length})}
+                    {pingInFlight() ? t('common.processing') : t('history.pageLine', {slice: pageSlice().length, total: allEntries().length})}
                   </p>
                   <div class="flex flex-wrap items-center gap-2">
                     <span class="text-[0.8125rem] font-semibold text-muted-foreground">{t('browse.perPage')}</span>
                     <PageSizeInput
                       id="history-page-size"
                       value={pageSize()}
-                      disabled={loading()}
+                      disabled={pingInFlight()}
                       ariaLabel={t('browse.perPage')}
                       onChange={(n) => {
                         setPageSize(n);
@@ -160,23 +155,23 @@ export default function HistoryPage() {
                       }}
                     />
                     <div class="flex flex-wrap items-center gap-1.5">
-                      <Button variant="secondary" disabled={page() <= 1 || loading()} onClick={() => setPage(1)} aria-label={t('browse.pageFirst')}>
+                      <Button variant="secondary" disabled={page() <= 1 || pingInFlight()} onClick={() => setPage(1)} aria-label={t('browse.pageFirst')}>
                         ««
                       </Button>
-                      <Button variant="secondary" disabled={page() <= 1 || loading()} onClick={() => setPage((p) => p - 1)} aria-label={t('browse.pagePrev')}>
+                      <Button variant="secondary" disabled={page() <= 1 || pingInFlight()} onClick={() => setPage((p) => p - 1)} aria-label={t('browse.pagePrev')}>
                         ‹
                       </Button>
                       <span class="min-w-[5.5rem] text-center text-[0.85rem] text-muted-foreground" aria-live="polite">
                         {page()} / {totalPages()}
                       </span>
-                      <Button variant="secondary" disabled={page() >= totalPages() || loading()} onClick={() => setPage((p) => p + 1)} aria-label={t('browse.pageNext')}>
+                      <Button variant="secondary" disabled={page() >= totalPages() || pingInFlight()} onClick={() => setPage((p) => p + 1)} aria-label={t('browse.pageNext')}>
                         ›
                       </Button>
-                      <Button variant="secondary" disabled={page() >= totalPages() || loading()} onClick={() => setPage(totalPages())} aria-label={t('browse.pageLast')}>
+                      <Button variant="secondary" disabled={page() >= totalPages() || pingInFlight()} onClick={() => setPage(totalPages())} aria-label={t('browse.pageLast')}>
                         »»
                       </Button>
                     </div>
-                    <Button variant="secondary" disabled={loading() || pageSlice().length === 0} onClick={ping} title={t('favorites.refreshPingTitle')}>
+                    <Button variant="secondary" disabled={pingInFlight() || pageSlice().length === 0} onClick={ping} title={t('favorites.refreshPingTitle')}>
                       {t('favorites.refreshPing')}
                     </Button>
                   </div>

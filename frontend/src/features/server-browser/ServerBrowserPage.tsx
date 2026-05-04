@@ -11,6 +11,7 @@ import {PageHeader} from '../../shared/PageHeader';
 import {clampPageSize} from '../../shared/pageSizeConstants';
 import {formatPlayersWithQueue} from '../../shared/formatPlayersWithQueue';
 import {ServerAddressCell} from '../../shared/ServerAddressCell';
+import {parallelServerPing} from '../../shared/parallelServerPing';
 import {ServerJoinModal} from '../../shared/ServerJoinModal';
 import {ServerPasswordCell} from '../../shared/ServerPasswordCell';
 import {FormCheckboxRow} from '@/components/ui/checkbox';
@@ -88,6 +89,7 @@ export default function ServerBrowserPage() {
   const [filters, setFilters] = createSignal(defaultFilters());
   const [knownMapNames, setKnownMapNames] = createSignal<string[]>([]);
   const [loading, setLoading] = createSignal(false);
+  const [pingInFlight, setPingInFlight] = createSignal(false);
   const [err, setErr] = createSignal('');
   const [bmId, setBmId] = createSignal('');
   const [page, setPage] = createSignal(1);
@@ -231,15 +233,13 @@ export default function ServerBrowserPage() {
     if (sl.length === 0) {
       return;
     }
-    setLoading(true);
-    App.RefreshServersPing(sl)
-      .then((updated) => {
-        const umap = new Map(updated.map((r) => [rowKey(r), r]));
-        setFiltered((prev) => prev.map((r) => umap.get(rowKey(r)) ?? r));
-        setRaw((prev) => prev.map((r) => umap.get(rowKey(r)) ?? r));
-      })
+    setErr('');
+    setPingInFlight(true);
+    void parallelServerPing(sl, (r) => App.RefreshServerPing(r), 12, (u) => {
+      patchJoinRow(u);
+    })
       .catch((e) => setErr(String(e)))
-      .finally(() => setLoading(false));
+      .finally(() => setPingInFlight(false));
   };
 
   const scanLan = () => {
@@ -352,7 +352,7 @@ export default function ServerBrowserPage() {
                 </CardTitle>
                 <div class="mb-2 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
                   <p class="m-0 min-w-[10rem] flex-1 text-[0.8rem] text-muted-foreground">
-                    {loading()
+                    {loading() || pingInFlight()
                       ? t('common.processing')
                       : t('browse.pageLine', {slice: pageSlice().length, filtered: filtered().length, raw: raw().length})}
                   </p>
@@ -395,7 +395,7 @@ export default function ServerBrowserPage() {
                         »»
                       </Button>
                     </div>
-                    <Button variant="secondary" disabled={loading() || pageSlice().length === 0} onClick={ping} title={t('browse.refreshPingTitle')}>
+                    <Button variant="secondary" disabled={loading() || pingInFlight() || pageSlice().length === 0} onClick={ping} title={t('browse.refreshPingTitle')}>
                       {t('browse.refreshPing')}
                     </Button>
                   </div>

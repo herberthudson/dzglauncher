@@ -53,7 +53,17 @@
     "totalLoadout": "Estimated mod list size:",
     "totalInstalledDisk": "On disk (installed / update pending):",
     "totalMissingDownload": "Missing mods (estimated download):",
-    "sizesPartial": "{{count}} item(s) have no Steam size data; totals may be incomplete."
+    "sizesPartial": "{{count}} item(s) have no Steam size data; totals may be incomplete.",
+    "modsLoadErrorHint": "Check your network, the server query port, and your Steam Web API key in Settings.",
+    "retryMods": "Try again",
+    "installMissing": "Install missing",
+    "installMissingTitle": "One mod at a time: opens Steam, waits until it is installed on disk, then continues.",
+    "stopBulkInstall": "Cancel",
+    "installMissingSheetTitle": "Installing missing mod",
+    "installMissingSheetBody": "{{name}}",
+    "installMissingSheetId": "ID: {{id}}",
+    "installMissingSheetHint": "Confirm in Steam if prompted. This panel closes when the mod is installed or you cancel.",
+    "installMissingModTimeout": "Timed out waiting for this mod ({{name}}). Use Refresh or try again."
   },
   "settings": {
     "title": "Settings",

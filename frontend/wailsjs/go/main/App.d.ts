@@ -37,6 +37,8 @@ export function OpenExternalURL(arg1:string):Promise<void>;
 
 export function ReadUIThemeFile(arg1:string):Promise<string>;
 
+export function RefreshServerPing(arg1:domain.ServerRow):Promise<domain.ServerRow>;
+
 export function RefreshServersPing(arg1:Array<domain.ServerRow>):Promise<Array<domain.ServerRow>>;
 
 export function RemoveFavorite(arg1:string,arg2:number,arg3:number):Promise<void>;

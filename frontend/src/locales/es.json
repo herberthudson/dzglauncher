@@ -53,7 +53,17 @@
     "totalLoadout": "Tamaño estimado de la lista de mods:",
     "totalInstalledDisk": "En disco (instalados / actualización pendiente):",
     "totalMissingDownload": "Mods faltantes (descarga estimada):",
-    "sizesPartial": "{{count}} elemento(s) sin tamaño en Steam; los totales pueden estar incompletos."
+    "sizesPartial": "{{count}} elemento(s) sin tamaño en Steam; los totales pueden estar incompletos.",
+    "modsLoadErrorHint": "Comprueba la red, el puerto de query del servidor y la clave Steam en ajustes.",
+    "retryMods": "Reintentar",
+    "installMissing": "Instalar faltantes",
+    "installMissingTitle": "Un mod cada vez: abre Steam, espera a que quede en disco y continúa con el siguiente.",
+    "stopBulkInstall": "Cancelar",
+    "installMissingSheetTitle": "Instalando mod faltante",
+    "installMissingSheetBody": "{{name}}",
+    "installMissingSheetId": "ID: {{id}}",
+    "installMissingSheetHint": "Confirma en Steam si lo pide. Este panel se cierra cuando el mod conste instalado o canceles.",
+    "installMissingModTimeout": "Tiempo de espera agotado para este mod ({{name}}). Usa Actualizar o reintenta."
   },
   "settings": {
     "title": "Ajustes",

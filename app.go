@@ -200,6 +200,35 @@ func (a *App) MergeKnownMapNamesFromRows(rows []domain.ServerRow) ([]string, err
 	return merged, nil
 }
 
+func refreshPingForRow(row domain.ServerRow) domain.ServerRow {
+	if row.QueryHost == "" || row.QueryPort <= 0 {
+		return row
+	}
+	info, err := a2s.Info(row.QueryHost, row.QueryPort, 2500*time.Millisecond)
+	if err != nil {
+		return row
+	}
+	row.Ping = info.PingMS
+	if info.Name != "" {
+		row.Name = info.Name
+	}
+	if info.Map != "" {
+		row.MapName = info.Map
+	}
+	row.Players = info.Players
+	row.MaxPlayers = info.MaxPlayers
+	pr := info.PasswordRequired
+	row.PasswordRequired = &pr
+	if info.QueueSizeFromInfo {
+		row.QueueSize = info.QueueSize
+	}
+	return row
+}
+
+func (a *App) RefreshServerPing(row domain.ServerRow) (domain.ServerRow, error) {
+	return refreshPingForRow(row), nil
+}
+
 func (a *App) RefreshServersPing(rows []domain.ServerRow) ([]domain.ServerRow, error) {
 	a.pingMu.Lock()
 	if time.Since(a.lastPingAt) < 2*time.Second {
@@ -211,27 +240,7 @@ func (a *App) RefreshServersPing(rows []domain.ServerRow) ([]domain.ServerRow, e
 	out := make([]domain.ServerRow, len(rows))
 	copy(out, rows)
 	for i := range out {
-		if out[i].QueryHost == "" || out[i].QueryPort <= 0 {
-			continue
-		}
-		info, err := a2s.Info(out[i].QueryHost, out[i].QueryPort, 2500*time.Millisecond)
-		if err != nil {
-			continue
-		}
-		out[i].Ping = info.PingMS
-		if info.Name != "" {
-			out[i].Name = info.Name
-		}
-		if info.Map != "" {
-			out[i].MapName = info.Map
-		}
-		out[i].Players = info.Players
-		out[i].MaxPlayers = info.MaxPlayers
-		pr := info.PasswordRequired
-		out[i].PasswordRequired = &pr
-		if info.QueueSizeFromInfo {
-			out[i].QueueSize = info.QueueSize
-		}
+		out[i] = refreshPingForRow(out[i])
 	}
 	return out, nil
 }

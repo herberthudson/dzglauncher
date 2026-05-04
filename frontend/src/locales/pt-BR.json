@@ -53,7 +53,17 @@
     "totalLoadout": "Tamanho estimado da lista de mods:",
     "totalInstalledDisk": "No disco (instalados / atualização pendente):",
     "totalMissingDownload": "Mods em falta (download estimado):",
-    "sizesPartial": "{{count}} item(ns) sem tamanho na Steam; os totais podem estar incompletos."
+    "sizesPartial": "{{count}} item(ns) sem tamanho na Steam; os totais podem estar incompletos.",
+    "modsLoadErrorHint": "Verifica a rede, a porta de query do servidor e a chave Steam nas definições.",
+    "retryMods": "Tentar novamente",
+    "installMissing": "Instalar em falta",
+    "installMissingTitle": "Um mod de cada vez: abre na Steam, espera ficar instalado no disco e passa ao seguinte.",
+    "stopBulkInstall": "Cancelar",
+    "installMissingSheetTitle": "A instalar mod em falta",
+    "installMissingSheetBody": "{{name}}",
+    "installMissingSheetId": "ID: {{id}}",
+    "installMissingSheetHint": "Confirma na Steam se pedido. Este painel fecha quando o mod aparecer instalado ou se cancelares.",
+    "installMissingModTimeout": "Tempo limite a aguardar este mod ({{name}}). Usa Atualizar ou tenta de novo."
   },
   "settings": {
     "title": "Configurações",
