@@ -1,6 +1,8 @@
 #!/bin/bash
-HERE=$(dirname "$(readlink -f "$0" 2>/dev/null || realpath "$0" 2>/dev/null || echo "$0")")
-export APPDIR="$HERE"
+if [ -z "${APPDIR:-}" ]; then
+  HERE=$(dirname "$(readlink -f "$0" 2>/dev/null || realpath "$0" 2>/dev/null || echo "$0")")
+  export APPDIR="$HERE"
+fi
 export PATH="$APPDIR/usr/bin:${PATH:-}"
 export LD_LIBRARY_PATH="$APPDIR/usr/lib:$APPDIR/usr/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH:-}"
 shopt -s nullglob
