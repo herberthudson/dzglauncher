@@ -4,6 +4,10 @@ Desktop client to browse DayZ servers, manage favorites (including up to **five 
 
 License: **Apache License 2.0** — see [`LICENSE`](LICENSE).
 
+## Project maintenance (read first)
+
+This repository is a **personal** project. The author **does not** promise to review feature ideas, reproduce bug reports, or merge pull requests on any timeline. Issues and PRs may stay open without reply, be **closed without a fix or merge**, or be handled **only if** it is convenient — there is **no obligation** to implement requests or maintain compatibility with your environment. Use the code and releases **as-is**; if you need guaranteed support, fork and maintain your own copy.
+
 ## Platform support
 
 Development and day-to-day validation target **Linux only**. Wails can produce binaries for **Windows** and **macOS**, but this repository **does not claim** those builds are tested, supported, or free of platform-specific issues. Treat non-Linux targets as **best-effort** until someone exercises and documents them.

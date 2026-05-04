@@ -1,5 +1,9 @@
 # Documentation (`docs/`)
 
+**Maintenance:** This is a **personal** project. There is **no commitment** to act on feature requests or bugs, or to merge PRs; issues may be closed without changes. See the root [README — Project maintenance (read first)](../README.md#project-maintenance-read-first).
+
+---
+
 All documents below are written for a **Linux-first** product: other operating systems may be buildable with Wails but are **not** claimed as tested here (see [architecture-and-product.md](./architecture-and-product.md) §2.1 and the root `README.md`).
 
 | File | Description |
