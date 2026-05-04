@@ -113,6 +113,8 @@ jobs:
             --icon-file ../packaging/linux/icons/hicolor/256x256/apps/dzglauncher.png \
             --plugin gtk
           cd ..
+          mv AppDir/usr/bin/dzglauncher AppDir/usr/bin/dzglauncher.bin
+          install -m755 packaging/linux/appimage/dzglauncher-wrapper.sh AppDir/usr/bin/dzglauncher
           WK_SRC=/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1
           WK_DST=AppDir/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1
           if [ -d "$WK_SRC" ]; then
