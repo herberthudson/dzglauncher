@@ -282,6 +282,9 @@ export function ServerJoinModal(props: ServerJoinModalProps) {
                       <TableHead scope="col" title={t('joinModal.colDescLong')}>
                         {t('joinModal.colDesc')}
                       </TableHead>
+                      <TableHead scope="col" class="whitespace-nowrap" title={t('joinModal.colSizeLong')}>
+                        {t('joinModal.colSize')}
+                      </TableHead>
                       <TableHead scope="col">{t('joinModal.colStatus')}</TableHead>
                       <TableHead scope="col">{t('joinModal.colAction')}</TableHead>
                     </tr>
@@ -291,7 +294,7 @@ export function ServerJoinModal(props: ServerJoinModalProps) {
                       when={filteredModRows().length > 0}
                       fallback={
                         <TableRow>
-                          <TableCell colspan={5} class="py-4 text-center text-sm text-muted-foreground whitespace-normal">
+                          <TableCell colspan={6} class="py-4 text-center text-sm text-muted-foreground whitespace-normal">
                             {t('joinModal.filterNoResults')}
                           </TableCell>
                         </TableRow>
@@ -331,6 +334,38 @@ export function ServerJoinModal(props: ServerJoinModalProps) {
                                 ) : (
                                   <span class="text-muted-foreground">—</span>
                                 )}
+                              </TableCell>
+                              <TableCell class="align-top text-xs whitespace-nowrap">
+                                {(() => {
+                                  const local = Number(r.localSizeBytes) || 0;
+                                  const remote = Number(r.remoteSizeBytes) || 0;
+                                  if (local === 0 && remote === 0) {
+                                    return <span class="text-muted-foreground">—</span>;
+                                  }
+                                  if (r.status === 'missing') {
+                                    return remote > 0 ? formatBytes(remote) : <span class="text-muted-foreground">—</span>;
+                                  }
+                                  if (r.status === 'ok') {
+                                    if (local > 0) {
+                                      return formatBytes(local);
+                                    }
+                                    return remote > 0 ? formatBytes(remote) : <span class="text-muted-foreground">—</span>;
+                                  }
+                                  return (
+                                    <div class="flex max-w-[11rem] flex-col gap-0.5 whitespace-normal">
+                                      {local > 0 ? (
+                                        <div>
+                                          <span class="text-muted-foreground">{t('joinModal.sizeRowDisk')}</span> {formatBytes(local)}
+                                        </div>
+                                      ) : null}
+                                      {remote > 0 ? (
+                                        <div>
+                                          <span class="text-muted-foreground">{t('joinModal.sizeRowWorkshop')}</span> {formatBytes(remote)}
+                                        </div>
+                                      ) : null}
+                                    </div>
+                                  );
+                                })()}
                               </TableCell>
                               <TableCell class="align-top">{r.status === 'ok' ? (
                                   <span class="text-xs font-medium text-success">{t('joinModal.installed')}</span>
