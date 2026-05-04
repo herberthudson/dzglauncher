@@ -8,7 +8,7 @@ export const Card: Component<{class?: string; children?: JSX.Element} & JSX.HTML
   return (
     <div
       class={cn(
-        'mb-3 rounded-md border border-border bg-card p-3 text-card-foreground shadow-ds last:mb-0',
+        'mb-3 rounded-md border border-border bg-card/85 p-3 text-card-foreground shadow-ds backdrop-blur-[3px] last:mb-0',
         local.class,
       )}
       {...rest}

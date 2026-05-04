@@ -6,7 +6,7 @@ export const tablePasswordColClass = 'w-12 max-w-14 text-center';
 const tableBaseClass = 'w-full border-collapse text-[0.8125rem] tabular-nums';
 
 const scrollShellClass =
-  'max-h-[min(72vh,42rem)] overflow-auto rounded-md border border-border bg-card';
+  'max-h-[min(72vh,42rem)] overflow-auto rounded-md border border-border bg-card/85 backdrop-blur-[3px]';
 
 export const TableScroll: Component<{class?: string; children?: JSX.Element}> = (props) => {
   const [local, rest] = splitProps(props, ['class', 'children']);
@@ -58,7 +58,7 @@ export const TableHead: Component<JSX.ThHTMLAttributes<HTMLTableCellElement>> = 
   return (
     <th
       class={cn(
-        'sticky top-0 z-10 border-b border-border bg-card px-2 py-1.5 text-left text-[0.75rem] font-semibold uppercase tracking-wide text-muted-foreground whitespace-nowrap',
+        'sticky top-0 z-10 border-b border-border bg-card/85 px-2 py-1.5 text-left text-[0.75rem] font-semibold uppercase tracking-wide text-muted-foreground backdrop-blur-[3px] whitespace-nowrap',
         local.class,
       )}
       {...rest}

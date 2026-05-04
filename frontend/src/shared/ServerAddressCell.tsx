@@ -26,7 +26,7 @@ export function ServerAddressCell(props: {address: string}) {
         <div class="inline-flex max-w-full items-center gap-1.5">
           <button
             type="button"
-            class="inline-flex min-h-7 min-w-7 shrink-0 cursor-pointer items-center justify-center rounded-md border border-border bg-card p-0.5 text-muted-foreground hover:border-primary hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            class="inline-flex min-h-7 min-w-7 shrink-0 cursor-pointer items-center justify-center rounded-md border border-border bg-card/85 p-0.5 text-muted-foreground backdrop-blur-[2px] hover:border-primary hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             onClick={() => setVisible((v) => !v)}
             aria-pressed={visible()}
             title={visible() ? t('browse.toggleAddrHide') : t('browse.toggleAddrShow')}

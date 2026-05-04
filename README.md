@@ -30,6 +30,21 @@ Typical expectations:
 
 This repo sets `"build:tags": "webkit2_41"` in [`wails.json`](wails.json) to align with WebKit2GTK versions used on Linux builds. Cross-compiling or building on Windows/macOS is possible with Wails; see **Platform support** above regarding testing.
 
+### Linux window icon (taskbar, overview, Wayland)
+
+Wails passes your PNG to GTK (`gtk_window_set_icon`). On **X11**, that is often enough. On **Wayland** (default on many desktops), the compositor usually takes the window/taskbar icon from a **`.desktop` file** plus the **freedesktop icon theme** (`Icon=dzglauncher` → `hicolor/.../dzglauncher.png`), not from GTK’s window icon alone. If you only run `./build/bin/dzglauncher` without installing those pieces, you may still see a **generic or WebKit-style fallback** (e.g. a “W”-like placeholder), even though the app embeds a custom icon.
+
+To get the correct icon in the shell while developing, install the entry and icons into your user prefix (paths match [`packaging/linux/dzglauncher.desktop`](packaging/linux/dzglauncher.desktop) and `packaging/linux/icons/`):
+
+```bash
+mkdir -p ~/.local/share/applications ~/.local/share/icons/hicolor/256x256/apps
+cp packaging/linux/dzglauncher.desktop ~/.local/share/applications/
+cp packaging/linux/icons/hicolor/256x256/apps/dzglauncher.png ~/.local/share/icons/hicolor/256x256/apps/
+gtk-update-icon-cache ~/.local/share/icons/hicolor 2>/dev/null || true
+```
+
+Adjust the `Exec=` line in the copied `.desktop` if your binary is not on `PATH` (use the full path to `dzglauncher`).
+
 ### Runtime / keys (app behavior)
 
 - **Steam Web API key** — required for the Steam master-list browser (see in-app settings and [`docs/architecture-and-product.md`](docs/architecture-and-product.md)).
