@@ -45,7 +45,11 @@
     "tableCaption": "Mods do servidor: miniatura e descrição da Steam Workshop, estado local e ações.",
     "filterMods": "Filtrar mods",
     "filterModsPlaceholder": "Nome, ID, descrição ou estado (ex.: instalado, em falta)…",
-    "filterNoResults": "Nenhum mod corresponde à pesquisa."
+    "filterNoResults": "Nenhum mod corresponde à pesquisa.",
+    "totalLoadout": "Tamanho estimado da lista de mods:",
+    "totalInstalledDisk": "No disco (instalados / atualização pendente):",
+    "totalMissingDownload": "Mods em falta (download estimado):",
+    "sizesPartial": "{{count}} item(ns) sem tamanho na Steam; os totais podem estar incompletos."
   },
   "settings": {
     "title": "Configurações",

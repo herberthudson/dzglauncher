@@ -55,12 +55,22 @@ func JoinModalRows(serverIDs []string, installedByID map[string]Item, cache map[
 				}
 			}
 		}
+		var localSz int64
+		if hasLocal {
+			localSz = it.SizeBytes
+		}
+		var remoteSz int64
+		if hasRemote && detail.FileSize > 0 {
+			remoteSz = detail.FileSize
+		}
 		rows = append(rows, domain.WorkshopModRow{
-			ID:          id,
-			Name:        name,
-			Status:      st,
-			Description: detail.Description,
-			PreviewURL:  detail.PreviewURL,
+			ID:              id,
+			Name:            name,
+			Status:          st,
+			Description:     detail.Description,
+			PreviewURL:      detail.PreviewURL,
+			LocalSizeBytes:  localSz,
+			RemoteSizeBytes: remoteSz,
 		})
 	}
 	return rows

@@ -15,6 +15,7 @@ import (
 type PublishedFileDetail struct {
 	PublishedFileID string
 	TimeUpdated     int64
+	FileSize        int64
 	Title           string
 	Description     string
 	PreviewURL      string
@@ -32,6 +33,34 @@ func parsePublishedFileID(v interface{}) string {
 		return strings.TrimSpace(x.String())
 	default:
 		return strings.TrimSpace(fmt.Sprint(x))
+	}
+}
+
+func parseJSONInt64(v interface{}) int64 {
+	if v == nil {
+		return 0
+	}
+	switch x := v.(type) {
+	case float64:
+		return int64(x)
+	case json.Number:
+		n, err := x.Int64()
+		if err != nil {
+			return 0
+		}
+		return n
+	case string:
+		n, err := strconv.ParseInt(strings.TrimSpace(x), 10, 64)
+		if err != nil {
+			return 0
+		}
+		return n
+	case int:
+		return int64(x)
+	case int64:
+		return x
+	default:
+		return 0
 	}
 }
 
@@ -96,6 +125,7 @@ func parsePublishedDetailsJSON(body []byte) (map[string]PublishedFileDetail, err
 			PublishedFileDetails []struct {
 				PublishedFileID interface{} `json:"publishedfileid"`
 				TimeUpdated     int64       `json:"time_updated"`
+				FileSize        interface{} `json:"file_size"`
 				Title           string      `json:"title"`
 				Description     string      `json:"description"`
 				PreviewURL      string      `json:"preview_url"`
@@ -114,6 +144,7 @@ func parsePublishedDetailsJSON(body []byte) (map[string]PublishedFileDetail, err
 		out[pid] = PublishedFileDetail{
 			PublishedFileID: pid,
 			TimeUpdated:     d.TimeUpdated,
+			FileSize:        parseJSONInt64(d.FileSize),
 			Title:           strings.TrimSpace(d.Title),
 			Description:     strings.TrimSpace(d.Description),
 			PreviewURL:      strings.TrimSpace(d.PreviewURL),

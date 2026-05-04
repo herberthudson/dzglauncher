@@ -9,9 +9,11 @@ const (
 )
 
 type WorkshopModRow struct {
-	ID          string            `json:"id"`
-	Name        string            `json:"name"`
-	Status      WorkshopModStatus `json:"status"`
-	Description string            `json:"description"`
-	PreviewURL  string            `json:"previewUrl"`
+	ID              string            `json:"id"`
+	Name            string            `json:"name"`
+	Status          WorkshopModStatus `json:"status"`
+	Description     string            `json:"description"`
+	PreviewURL      string            `json:"previewUrl"`
+	LocalSizeBytes  int64             `json:"localSizeBytes"`
+	RemoteSizeBytes int64             `json:"remoteSizeBytes"`
 }

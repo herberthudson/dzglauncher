@@ -252,6 +252,8 @@ export namespace domain {
 	    status: string;
 	    description: string;
 	    previewUrl: string;
+	    localSizeBytes: number;
+	    remoteSizeBytes: number;
 	
 	    static createFrom(source: any = {}) {
 	        return new WorkshopModRow(source);
@@ -264,6 +266,8 @@ export namespace domain {
 	        this.status = source["status"];
 	        this.description = source["description"];
 	        this.previewUrl = source["previewUrl"];
+	        this.localSizeBytes = source["localSizeBytes"];
+	        this.remoteSizeBytes = source["remoteSizeBytes"];
 	    }
 	}
 

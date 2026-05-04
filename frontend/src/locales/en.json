@@ -45,7 +45,11 @@
     "tableCaption": "Server mods: Steam Workshop thumbnail and description, local status, and actions.",
     "filterMods": "Filter mods",
     "filterModsPlaceholder": "Name, ID, description, or status (e.g. installed, missing)…",
-    "filterNoResults": "No mods match your search."
+    "filterNoResults": "No mods match your search.",
+    "totalLoadout": "Estimated mod list size:",
+    "totalInstalledDisk": "On disk (installed / update pending):",
+    "totalMissingDownload": "Missing mods (estimated download):",
+    "sizesPartial": "{{count}} item(s) have no Steam size data; totals may be incomplete."
   },
   "settings": {
     "title": "Settings",

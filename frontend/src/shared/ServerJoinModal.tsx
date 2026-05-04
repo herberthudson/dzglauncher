@@ -9,6 +9,7 @@ import {Dialog, DialogContent, DialogOverlay} from '@/components/ui/dialog';
 import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
 import {Table, TableBody, TableCaption, TableCell, TableHead, TableRow} from '@/components/ui/table';
+import {formatBytes} from './formatBytes';
 
 const JOIN_MOD_DESC_CHUNK_CHARS = 10;
 const JOIN_MOD_DESC_MAX_LINES = 3;
@@ -120,6 +121,36 @@ export function ServerJoinModal(props: ServerJoinModalProps) {
     });
   });
 
+  const modSizeTotals = createMemo(() => {
+    const rows = modRows();
+    let totalLoadout = 0;
+    let partialNoSize = 0;
+    for (const r of rows) {
+      const remote = Number(r.remoteSizeBytes) || 0;
+      const local = Number(r.localSizeBytes) || 0;
+      if (remote > 0) {
+        totalLoadout += remote;
+      } else if (local > 0) {
+        totalLoadout += local;
+      } else {
+        partialNoSize++;
+      }
+    }
+    let installedDisk = 0;
+    for (const r of rows) {
+      if (r.status === 'ok' || r.status === 'outdated') {
+        installedDisk += Number(r.localSizeBytes) || 0;
+      }
+    }
+    let missingDl = 0;
+    for (const r of rows) {
+      if (r.status === 'missing') {
+        missingDl += Number(r.remoteSizeBytes) || 0;
+      }
+    }
+    return {totalLoadout, installedDisk, missingDl, partialNoSize};
+  });
+
   const needsInstallOrUpdate = createMemo(() => modRows().some((r) => r.status === 'missing' || r.status === 'outdated'));
 
   const joinDisabled = () => joinBusy() || loading() || !!enrichErr() || (modRows().length > 0 && needsInstallOrUpdate());
@@ -226,6 +257,19 @@ export function ServerJoinModal(props: ServerJoinModalProps) {
                   class="max-w-none"
                 />
               </div>
+              <p class="shrink-0 text-sm text-muted-foreground">
+                {t('joinModal.totalLoadout')}{' '}
+                <strong class="text-foreground">{formatBytes(modSizeTotals().totalLoadout)}</strong>
+                {' · '}
+                {t('joinModal.totalInstalledDisk')}{' '}
+                <strong class="text-foreground">{formatBytes(modSizeTotals().installedDisk)}</strong>
+                {' · '}
+                {t('joinModal.totalMissingDownload')}{' '}
+                <strong class="text-foreground">{formatBytes(modSizeTotals().missingDl)}</strong>
+              </p>
+              <Show when={modSizeTotals().partialNoSize > 0}>
+                <p class="shrink-0 text-xs text-muted-foreground">{t('joinModal.sizesPartial', {count: modSizeTotals().partialNoSize})}</p>
+              </Show>
               <div class="min-h-0 flex-1 overflow-auto rounded-md border border-border bg-card">
                 <Table>
                   <TableCaption class="sr-only">{t('joinModal.tableCaption')}</TableCaption>
