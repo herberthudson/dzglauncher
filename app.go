@@ -21,6 +21,7 @@ import (
 	"dzglauncher/internal/adapters/workshop"
 	"dzglauncher/internal/domain"
 	"dzglauncher/internal/services/favhistory"
+	"dzglauncher/internal/services/filemgr"
 	"dzglauncher/internal/services/filters"
 	"dzglauncher/internal/services/geo"
 	"dzglauncher/internal/services/steambrowser"
@@ -333,6 +334,22 @@ func (a *App) DeleteWorkshopItems(paths []string) error {
 	}
 	appid := workshop.DayZAppID(cfg.DayZBranch)
 	return workshop.DeleteModDirs(root, appid, paths)
+}
+
+func (a *App) OpenWorkshopItemFolder(path string) error {
+	cfg, err := a.store.Load()
+	if err != nil {
+		return err
+	}
+	root := workshop.WorkshopContentRoot(cfg.SteamRootPath)
+	if root == "" {
+		return fmt.Errorf("pasta raiz Steam não configurada")
+	}
+	appid := workshop.DayZAppID(cfg.DayZBranch)
+	if err := workshop.EnsureModDirUnderContent(root, appid, path); err != nil {
+		return err
+	}
+	return filemgr.OpenDirectory(path)
 }
 
 func (a *App) ToggleFavoriteRow(row domain.ServerRow) error {

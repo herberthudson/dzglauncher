@@ -66,6 +66,10 @@ export function OpenExternalURL(arg1) {
   return window['go']['main']['App']['OpenExternalURL'](arg1);
 }
 
+export function OpenWorkshopItemFolder(arg1) {
+  return window['go']['main']['App']['OpenWorkshopItemFolder'](arg1);
+}
+
 export function ReadUIThemeFile(arg1) {
   return window['go']['main']['App']['ReadUIThemeFile'](arg1);
 }

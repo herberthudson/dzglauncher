@@ -17,16 +17,33 @@ func underWorkshopContent(base, target string) bool {
 	return rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator))
 }
 
+func workshopContentBase(contentRoot, appid string) string {
+	return filepath.Clean(filepath.Join(contentRoot, "steamapps", "workshop", "content", appid))
+}
+
+func EnsureModDirUnderContent(contentRoot, appid, target string) error {
+	base := workshopContentBase(contentRoot, appid)
+	t := filepath.Clean(target)
+	if !underWorkshopContent(base, t) {
+		return fmt.Errorf("caminho inválido: %s", target)
+	}
+	st, err := os.Stat(t)
+	if err != nil {
+		return err
+	}
+	if !st.IsDir() {
+		return fmt.Errorf("não é pasta: %s", target)
+	}
+	return nil
+}
+
 func DeleteModDirs(contentRoot, appid string, paths []string) error {
 	if len(paths) == 0 {
 		return nil
 	}
-	base := filepath.Join(contentRoot, "steamapps", "workshop", "content", appid)
-	base = filepath.Clean(base)
 	for _, p := range paths {
-		t := filepath.Clean(p)
-		if !underWorkshopContent(base, t) {
-			return fmt.Errorf("caminho inválido: %s", p)
+		if err := EnsureModDirUnderContent(contentRoot, appid, p); err != nil {
+			return err
 		}
 	}
 	for _, p := range paths {

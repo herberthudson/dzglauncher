@@ -258,6 +258,7 @@
     "thPath": "Pasta",
     "thActions": "Ações",
     "steam": "Steam",
+    "local": "Local",
     "delete": "Excluir",
     "confirmOne": "Excluir esta pasta do mod do disco?",
     "confirmMany": "Excluir {{count}} mod(s) selecionado(s) do disco?",
@@ -271,9 +272,10 @@
     "thNameLong": "Nome do mod exibido na Steam.",
     "thSizeLong": "Tamanho total da pasta do mod no disco. Clique no cabeçalho para ordenar por tamanho.",
     "thPathLong": "Caminho da pasta do mod dentro da instalação Steam.",
-    "thActionsLong": "Abrir na Steam ou excluir a pasta do mod.",
+    "thActionsLong": "Abrir na Steam, abrir a pasta no gerenciador de arquivos ou excluir a pasta do mod.",
     "thSelectColumnLong": "Selecionar ou desmarcar todas as linhas filtradas nesta página.",
     "steamPageTitle": "Abrir a página deste item na Steam.",
+    "localTitle": "Abrir a pasta deste mod no gerenciador de arquivos.",
     "deleteTitle": "Excluir permanentemente a pasta deste mod do disco.",
     "toggleRowAria": "Selecionar ou desmarcar: {{name}}"
   }

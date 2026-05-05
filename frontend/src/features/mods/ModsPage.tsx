@@ -1,6 +1,6 @@
 import {createEffect, createMemo, createSignal, For, onMount, Show} from 'solid-js';
 import {useTranslation} from 'solid-i18next';
-import {ExternalLink, Package, Rows3, Trash2, X} from 'lucide-solid';
+import {ExternalLink, FolderOpen, Package, Rows3, Trash2, X} from 'lucide-solid';
 import * as App from '../../../wailsjs/go/main/App';
 import {workshop} from '../../../wailsjs/go/models';
 import {PageSizeInput} from '../../shared/PageSizeInput';
@@ -321,6 +321,21 @@ export default function ModsPage() {
                         <Button variant="secondary" size="sm" disabled={busy()} title={t('mods.steamPageTitle')} onClick={() => App.WorkshopPage(m.id)}>
                           <ExternalLink size={14} strokeWidth={2} aria-hidden />
                           {t('mods.steam')}
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          disabled={busy()}
+                          title={t('mods.localTitle')}
+                          aria-label={t('mods.localTitle')}
+                          onClick={() =>
+                            App.OpenWorkshopItemFolder(m.path)
+                              .then(() => setErr(''))
+                              .catch((e) => setErr(String(e)))
+                          }
+                        >
+                          <FolderOpen size={14} strokeWidth={2} aria-hidden />
+                          {t('mods.local')}
                         </Button>
                         <Button variant="destructive" size="sm" disabled={busy()} title={t('mods.deleteTitle')} onClick={() => deleteOne(m)}>
                           <Trash2 size={14} strokeWidth={2} aria-hidden />

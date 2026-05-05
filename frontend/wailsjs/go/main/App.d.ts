@@ -35,6 +35,8 @@ export function MergeKnownMapNamesFromRows(arg1:Array<domain.ServerRow>):Promise
 
 export function OpenExternalURL(arg1:string):Promise<void>;
 
+export function OpenWorkshopItemFolder(arg1:string):Promise<void>;
+
 export function ReadUIThemeFile(arg1:string):Promise<string>;
 
 export function RefreshServerPing(arg1:domain.ServerRow):Promise<domain.ServerRow>;

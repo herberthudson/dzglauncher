@@ -258,6 +258,7 @@
     "thPath": "Carpeta",
     "thActions": "Acciones",
     "steam": "Steam",
+    "local": "Local",
     "delete": "Eliminar",
     "confirmOne": "¿Eliminar esta carpeta del mod del disco?",
     "confirmMany": "¿Eliminar {{count}} mod(s) seleccionado(s) del disco?",
@@ -271,9 +272,10 @@
     "thNameLong": "Nombre del mod en Steam.",
     "thSizeLong": "Tamaño total de la carpeta del mod en disco. Pulse el encabezado para ordenar por tamaño.",
     "thPathLong": "Ruta de la carpeta del mod dentro de la instalación de Steam.",
-    "thActionsLong": "Abrir en Steam o eliminar la carpeta del mod.",
+    "thActionsLong": "Abrir en Steam, abrir la carpeta en el gestor de archivos o eliminar la carpeta del mod.",
     "thSelectColumnLong": "Seleccionar o desmarcar todas las filas filtradas en esta página.",
     "steamPageTitle": "Abrir la página de este elemento en Steam.",
+    "localTitle": "Abrir la carpeta de este mod en el gestor de archivos.",
     "deleteTitle": "Eliminar permanentemente la carpeta de este mod del disco.",
     "toggleRowAria": "Alternar selección: {{name}}"
   }

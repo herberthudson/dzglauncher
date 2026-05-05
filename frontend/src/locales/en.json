@@ -258,6 +258,7 @@
     "thPath": "Folder",
     "thActions": "Actions",
     "steam": "Steam",
+    "local": "Local",
     "delete": "Delete",
     "confirmOne": "Delete this mod folder from disk?",
     "confirmMany": "Delete {{count}} selected mod(s) from disk?",
@@ -271,9 +272,10 @@
     "thNameLong": "Mod name as shown on Steam.",
     "thSizeLong": "Total size of the mod folder on disk. Click the header to sort by size.",
     "thPathLong": "Mod folder path inside your Steam installation.",
-    "thActionsLong": "Open in Steam or delete the mod folder.",
+    "thActionsLong": "Open in Steam, open the folder in the file manager, or delete the mod folder.",
     "thSelectColumnLong": "Select or clear all filtered rows on this page.",
     "steamPageTitle": "Open this item's page in Steam.",
+    "localTitle": "Open this mod's folder in the file manager.",
     "deleteTitle": "Permanently delete this mod folder from disk.",
     "toggleRowAria": "Toggle selection: {{name}}"
   }
