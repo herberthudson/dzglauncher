@@ -1,5 +1,5 @@
 pkgname=dzglauncher
-pkgver=1.1.1
+pkgver=1.2.0
 pkgrel=1
 pkgdesc="Browse DayZ servers, favorites, Workshop mods, and launch via Steam"
 arch=('x86_64')
@@ -10,7 +10,7 @@ optdepends=('steam: launch DayZ via Steam')
 install=dzglauncher.install
 options=('!strip')
 source=("https://github.com/herberthudson/dzglauncher/releases/download/v${pkgver}/dzglauncher-${pkgver}-linux-amd64.tar.gz")
-sha256sums=('e517e33ae32e02256fb093fbecc2335fca3d7a3594eeb4080618fbbc5e5db3ca')
+sha256sums=('f5ac26e4795b7872a14303d49f4f3948f92e1fbfe91e5df89a1c6b81bacbb7d0')
 
 package() {
   cd "${srcdir}"
