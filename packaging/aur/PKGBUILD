@@ -1,0 +1,22 @@
+pkgname=dzglauncher
+pkgver=1.0.7
+pkgrel=1
+pkgdesc="Browse DayZ servers, favorites, Workshop mods, and launch via Steam"
+arch=('x86_64')
+url="https://github.com/herberthudson/dzglauncher"
+license=('Apache')
+depends=('gtk3' 'webkit2gtk-4.1' 'librsvg' 'hicolor-icon-theme' 'desktop-file-utils')
+optdepends=('steam: launch DayZ via Steam')
+install=dzglauncher.install
+options=('!strip')
+source=("https://github.com/herberthudson/dzglauncher/releases/download/v${pkgver}/dzglauncher-${pkgver}-linux-amd64.tar.gz")
+sha256sums=('24f77f507fc183db9b071ec1eac00a10db06e56ba8ce0892ad7cd073f9ff5970')
+
+package() {
+  cd "${srcdir}"
+  install -Dm755 dzglauncher "${pkgdir}/usr/bin/dzglauncher"
+  install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+  install -Dm644 README.md "${pkgdir}/usr/share/doc/${pkgname}/README.md"
+  install -Dm644 share/applications/dzglauncher.desktop "${pkgdir}/usr/share/applications/dzglauncher.desktop"
+  install -Dm644 share/icons/hicolor/256x256/apps/dzglauncher.png "${pkgdir}/usr/share/icons/hicolor/256x256/apps/dzglauncher.png"
+}
