@@ -12,6 +12,7 @@ import {formatPlayersWithQueue} from '../../shared/formatPlayersWithQueue';
 import {ServerAddressCell} from '../../shared/ServerAddressCell';
 import {parallelServerPing} from '../../shared/parallelServerPing';
 import {ServerJoinModal} from '../../shared/ServerJoinModal';
+import {PingMsCell} from '../../shared/PingMsCell';
 import {ServerPasswordCell} from '../../shared/ServerPasswordCell';
 import {AlertError} from '@/components/ui/alert';
 import {Button} from '@/components/ui/button';
@@ -246,7 +247,9 @@ export default function HistoryPage() {
                               <TableCell class="max-w-72 whitespace-normal">
                                 <ServerAddressCell address={row.address} />
                               </TableCell>
-                              <TableCell>{row.ping}</TableCell>
+                              <TableCell>
+                                <PingMsCell value={row.ping} />
+                              </TableCell>
                               <TableCell>{row.distanceLabel}</TableCell>
                               <TableCell>
                                 <div class="flex flex-wrap gap-1 [&_button]:min-h-7 [&_button]:min-w-7 [&_button]:justify-center [&_button]:p-1 [&_button]:text-xs">
