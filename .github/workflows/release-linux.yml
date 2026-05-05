@@ -71,7 +71,22 @@ jobs:
         run: |
           set -euo pipefail
           echo "$(go env GOPATH)/bin" >> "${GITHUB_PATH}"
-          wails build -ldflags "-X main.Version=${VERSION}"
+          wails build -clean -f -ldflags "-X dzglauncher/internal/buildinfo.Version=${VERSION}"
+
+      - name: Verify embedded app version
+        env:
+          VERSION: ${{ steps.ver.outputs.version }}
+        run: |
+          set -euo pipefail
+          bin="build/bin/dzglauncher"
+          if [[ ! -f "${bin}" ]]; then
+            echo "missing ${bin}" >&2
+            exit 1
+          fi
+          if ! strings -n 3 "${bin}" | grep -Fxq "${VERSION}"; then
+            echo "embedded version mismatch: expected exact string ${VERSION} in ${bin}" >&2
+            exit 1
+          fi
 
       - name: Build distribution archives (zip and tar.gz)
         env:

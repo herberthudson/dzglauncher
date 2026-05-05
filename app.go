@@ -20,6 +20,7 @@ import (
 	"dzglauncher/internal/adapters/configfile"
 	"dzglauncher/internal/adapters/ghrelease"
 	"dzglauncher/internal/adapters/lan"
+	"dzglauncher/internal/buildinfo"
 	"dzglauncher/internal/adapters/steam"
 	"dzglauncher/internal/adapters/workshop"
 	"dzglauncher/internal/domain"
@@ -100,7 +101,7 @@ func (a *App) SaveSettings(s domain.Settings) error {
 
 func (a *App) AboutInfo() domain.AboutInfo {
 	return domain.AboutInfo{
-		Version:       Version,
+		Version:       buildinfo.Version,
 		AppName:       "dzglauncher",
 		RepositoryURL: "https://github.com/herberthudson/dzglauncher",
 		Author:        "Herbert Hudson",
@@ -110,7 +111,7 @@ func (a *App) AboutInfo() domain.AboutInfo {
 }
 
 func (a *App) CheckForUpdate() (domain.UpdateCheckResult, error) {
-	curRaw := strings.TrimSpace(Version)
+	curRaw := strings.TrimSpace(buildinfo.Version)
 	res := domain.UpdateCheckResult{CurrentVersion: curRaw}
 	if curRaw == "" || curRaw == "dev" {
 		return res, nil
