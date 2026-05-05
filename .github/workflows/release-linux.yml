@@ -66,10 +66,12 @@ jobs:
         run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.12.0
 
       - name: wails build
+        env:
+          VERSION: ${{ steps.ver.outputs.version }}
         run: |
           set -euo pipefail
           echo "$(go env GOPATH)/bin" >> "${GITHUB_PATH}"
-          wails build
+          wails build -ldflags "-X main.Version=${VERSION}"
 
       - name: Build distribution archives (zip and tar.gz)
         env:
@@ -134,6 +136,28 @@ jobs:
           mkdir -p dist
           dpkg-deb --root-owner-group --build "${ROOT}" "dist/dzglauncher_${VERSION}_amd64.deb"
 
+      - name: Build .rpm package
+        env:
+          VERSION: ${{ steps.ver.outputs.version }}
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          docker run --rm \
+            -v "${GITHUB_WORKSPACE}:/workspace" \
+            fedora:latest \
+            bash -c "
+          set -eux
+          VER=\$1
+          dnf install -y rpm-build
+          mkdir -p /root/rpmbuild/BUILD /root/rpmbuild/RPMS /root/rpmbuild/SOURCES /root/rpmbuild/SPECS /root/rpmbuild/SRPMS
+          cp /workspace/packaging/rpm/dzglauncher.spec /root/rpmbuild/SPECS/
+          rpmbuild -bb /root/rpmbuild/SPECS/dzglauncher.spec \
+            --define \"_topdir /root/rpmbuild\" \
+            --define \"ver \${VER}\"
+          shopt -s nullglob
+          cp /root/rpmbuild/RPMS/x86_64/dzglauncher-*.rpm /workspace/dist/
+          " _ "${VERSION}"
+
       - name: SHA256SUMS
         env:
           VERSION: ${{ steps.ver.outputs.version }}
@@ -144,6 +168,7 @@ jobs:
             "dzglauncher-${VERSION}-linux-amd64.zip" \
             "dzglauncher-${VERSION}-linux-amd64.tar.gz" \
             "dzglauncher_${VERSION}_amd64.deb" \
+            "dzglauncher-${VERSION}-1.x86_64.rpm" \
             > SHA256SUMS
           sha256sum -c SHA256SUMS
 
@@ -161,6 +186,7 @@ jobs:
             dist/dzglauncher-${{ steps.ver.outputs.version }}-linux-amd64.zip
             dist/dzglauncher-${{ steps.ver.outputs.version }}-linux-amd64.tar.gz
             dist/dzglauncher_${{ steps.ver.outputs.version }}_amd64.deb
+            dist/dzglauncher-${{ steps.ver.outputs.version }}-1.x86_64.rpm
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -186,3 +212,29 @@ jobs:
           fi
           git commit -m "chore(packaging): sync PKGBUILD for v${VERSION}"
           git push "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:${DEFAULT_BRANCH}"
+
+      - name: Build Arch Linux package (.pkg.tar.zst)
+        if: github.ref_type == 'tag' && startsWith(github.ref, 'refs/tags/v')
+        run: |
+          set -euo pipefail
+          docker run --rm \
+            -v "${GITHUB_WORKSPACE}:/work" \
+            -w /work/packaging/aur \
+            archlinux:base-devel \
+            bash -ceuo pipefail '
+              pacman -Sy --noconfirm --needed archlinux-keyring
+              pacman -Sy --noconfirm --needed base-devel
+              useradd -m builder
+              chown -R builder:builder /work/packaging/aur
+              su builder -c "cd /work/packaging/aur && makepkg -f --noconfirm"
+            '
+
+      - name: Upload Arch Linux package to GitHub Release
+        if: github.ref_type == 'tag' && startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.ver.outputs.version }}
+        run: |
+          set -euo pipefail
+          PKG="$(ls packaging/aur/dzglauncher-"${VERSION}"-*-x86_64.pkg.tar.zst)"
+          gh release upload "v${VERSION}" "${PKG}" --repo "${GITHUB_REPOSITORY}" --clobber

@@ -5,7 +5,8 @@
     "favorites": "Favoritos",
     "history": "Histórico",
     "modsWorkshop": "Mods Workshop",
-    "ariaMain": "Navegação principal"
+    "ariaMain": "Navegação principal",
+    "about": "Sobre"
   },
   "common": {
     "loading": "Carregando…",
@@ -13,6 +14,13 @@
     "yes": "sim",
     "no": "não",
     "clearField": "Limpar campo"
+  },
+  "updateToast": {
+    "title": "Atualização disponível",
+    "body": "A versão {{latest}} está disponível (estás na {{current}}).",
+    "openRelease": "Ver release",
+    "dismiss": "Fechar",
+    "dismissAria": "Fechar notificação de atualização"
   },
   "joinModal": {
     "title": "Entrar no servidor",
@@ -278,5 +286,29 @@
     "localTitle": "Abrir a pasta deste mod no gerenciador de arquivos.",
     "deleteTitle": "Excluir permanentemente a pasta deste mod do disco.",
     "toggleRowAria": "Selecionar ou desmarcar: {{name}}"
+  },
+  "about": {
+    "title": "Sobre",
+    "subtitle": "Detalhes do projeto, link do repositório e tecnologias usadas neste launcher.",
+    "loadError": "Não foi possível carregar as informações do aplicativo.",
+    "sectionProject": "Projeto",
+    "nameLabel": "Nome",
+    "versionLabel": "Versão",
+    "authorLabel": "Autor",
+    "licenseLabel": "Licença",
+    "licenseHint": "O repositório inclui o arquivo LICENSE; o link abre o texto legal oficial da Apache 2.0.",
+    "openLicense": "Texto completo da licença",
+    "sectionRepo": "Repositório",
+    "repoHint": "Código-fonte e releases estão no GitHub.",
+    "openRepo": "Abrir no navegador",
+    "sectionTech": "Tecnologias",
+    "techIntro": "Este aplicativo foi feito com:",
+    "techGo": "Go — lógica da aplicação e serviços",
+    "techWails": "Wails v2 — shell desktop e ponte com o WebView",
+    "techSolid": "SolidJS — interface reativa",
+    "techTs": "TypeScript — frontend tipado",
+    "techVite": "Vite — build do frontend",
+    "techTailwind": "Tailwind CSS — layout e estilo",
+    "techI18n": "i18next — internacionalização"
   }
 }

@@ -5,6 +5,7 @@ go 1.23.1
 require (
 	github.com/wailsapp/wails/v2 v2.12.0
 	github.com/woozymasta/a2s v0.3.2
+	golang.org/x/mod v0.23.0
 )
 
 require (

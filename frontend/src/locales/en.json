@@ -5,7 +5,8 @@
     "favorites": "Favorites",
     "history": "History",
     "modsWorkshop": "Workshop mods",
-    "ariaMain": "Main navigation"
+    "ariaMain": "Main navigation",
+    "about": "About"
   },
   "common": {
     "loading": "Loading…",
@@ -13,6 +14,13 @@
     "yes": "yes",
     "no": "no",
     "clearField": "Clear field"
+  },
+  "updateToast": {
+    "title": "Update available",
+    "body": "Version {{latest}} is available (you are on {{current}}).",
+    "openRelease": "View release",
+    "dismiss": "Dismiss",
+    "dismissAria": "Close update notification"
   },
   "joinModal": {
     "title": "Join server",
@@ -278,5 +286,29 @@
     "localTitle": "Open this mod's folder in the file manager.",
     "deleteTitle": "Permanently delete this mod folder from disk.",
     "toggleRowAria": "Toggle selection: {{name}}"
+  },
+  "about": {
+    "title": "About",
+    "subtitle": "Project details, repository link, and technologies used in this launcher.",
+    "loadError": "Could not load application information.",
+    "sectionProject": "Project",
+    "nameLabel": "Name",
+    "versionLabel": "Version",
+    "authorLabel": "Author",
+    "licenseLabel": "License",
+    "licenseHint": "The repository includes a LICENSE file; this link opens the official Apache 2.0 legal text.",
+    "openLicense": "Full license text",
+    "sectionRepo": "Repository",
+    "repoHint": "Source code and releases are hosted on GitHub.",
+    "openRepo": "Open in browser",
+    "sectionTech": "Technologies",
+    "techIntro": "This app is built with:",
+    "techGo": "Go — application logic and services",
+    "techWails": "Wails v2 — desktop shell and WebView bridge",
+    "techSolid": "SolidJS — reactive user interface",
+    "techTs": "TypeScript — typed frontend code",
+    "techVite": "Vite — frontend build tooling",
+    "techTailwind": "Tailwind CSS — layout and styling",
+    "techI18n": "i18next — internationalization"
   }
 }

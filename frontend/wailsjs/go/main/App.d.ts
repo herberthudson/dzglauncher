@@ -3,11 +3,15 @@
 import {domain} from '../models';
 import {workshop} from '../models';
 
+export function AboutInfo():Promise<domain.AboutInfo>;
+
 export function AddFavoriteRow(arg1:domain.ServerRow):Promise<void>;
 
 export function AppendHistoryRow(arg1:domain.ServerRow):Promise<void>;
 
 export function ApplyServerFilters(arg1:Array<domain.ServerRow>,arg2:domain.FilterState):Promise<Array<domain.ServerRow>>;
+
+export function CheckForUpdate():Promise<domain.UpdateCheckResult>;
 
 export function ClearQuickFavorite():Promise<void>;
 

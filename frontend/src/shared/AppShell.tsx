@@ -1,7 +1,7 @@
 import type {JSX} from 'solid-js';
 import {A} from '@solidjs/router';
 import {useTranslation} from 'solid-i18next';
-import {Clock, Package, Server, Settings, Star} from 'lucide-solid';
+import {Clock, Info, Package, Server, Settings, Star} from 'lucide-solid';
 import dzglLogo from '@/assets/dzgl-logo.png';
 
 const navLinkClass =
@@ -61,6 +61,12 @@ export function AppShell(props: {children?: JSX.Element}) {
               <span class="inline-flex items-center gap-1.5">
                 <Package size={18} strokeWidth={1.75} aria-hidden />
                 <span>{t('nav.modsWorkshop')}</span>
+              </span>
+            </A>
+            <A href="/about" class={navLinkClass} activeClass={navLinkActiveClass}>
+              <span class="inline-flex items-center gap-1.5">
+                <Info size={18} strokeWidth={1.75} aria-hidden />
+                <span>{t('nav.about')}</span>
               </span>
             </A>
           </div>

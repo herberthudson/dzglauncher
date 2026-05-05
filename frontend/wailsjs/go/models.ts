@@ -1,5 +1,27 @@
 export namespace domain {
 	
+	export class AboutInfo {
+	    version: string;
+	    appName: string;
+	    repositoryURL: string;
+	    author: string;
+	    licenseName: string;
+	    licenseURL: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new AboutInfo(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.version = source["version"];
+	        this.appName = source["appName"];
+	        this.repositoryURL = source["repositoryURL"];
+	        this.author = source["author"];
+	        this.licenseName = source["licenseName"];
+	        this.licenseURL = source["licenseURL"];
+	    }
+	}
 	export class Favorite {
 	    ip: string;
 	    gamePort: number;
@@ -246,6 +268,24 @@ export namespace domain {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.ok = source["ok"];
 	        this.message = source["message"];
+	    }
+	}
+	export class UpdateCheckResult {
+	    updateAvailable: boolean;
+	    currentVersion: string;
+	    latestVersion: string;
+	    releasePageURL: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new UpdateCheckResult(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.updateAvailable = source["updateAvailable"];
+	        this.currentVersion = source["currentVersion"];
+	        this.latestVersion = source["latestVersion"];
+	        this.releasePageURL = source["releasePageURL"];
 	    }
 	}
 	export class WorkshopModRow {

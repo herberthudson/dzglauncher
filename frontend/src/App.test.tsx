@@ -17,6 +17,15 @@ beforeEach(() => {
           }),
         ),
         ReadUIThemeFile: vi.fn(() => Promise.resolve('')),
+        CheckForUpdate: vi.fn(() =>
+          Promise.resolve({
+            updateAvailable: false,
+            currentVersion: 'dev',
+            latestVersion: '',
+            releasePageURL: '',
+          }),
+        ),
+        OpenExternalURL: vi.fn(),
       },
     },
   };

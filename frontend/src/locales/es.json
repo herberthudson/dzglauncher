@@ -5,7 +5,8 @@
     "favorites": "Favoritos",
     "history": "Historial",
     "modsWorkshop": "Mods Workshop",
-    "ariaMain": "Navegación principal"
+    "ariaMain": "Navegación principal",
+    "about": "Acerca de"
   },
   "common": {
     "loading": "Cargando…",
@@ -13,6 +14,13 @@
     "yes": "sí",
     "no": "no",
     "clearField": "Limpiar campo"
+  },
+  "updateToast": {
+    "title": "Actualización disponible",
+    "body": "La versión {{latest}} está disponible (tienes la {{current}}).",
+    "openRelease": "Ver release",
+    "dismiss": "Cerrar",
+    "dismissAria": "Cerrar notificación de actualización"
   },
   "joinModal": {
     "title": "Entrar al servidor",
@@ -278,5 +286,29 @@
     "localTitle": "Abrir la carpeta de este mod en el gestor de archivos.",
     "deleteTitle": "Eliminar permanentemente la carpeta de este mod del disco.",
     "toggleRowAria": "Alternar selección: {{name}}"
+  },
+  "about": {
+    "title": "Acerca de",
+    "subtitle": "Detalles del proyecto, enlace al repositorio y tecnologías de este launcher.",
+    "loadError": "No se pudo cargar la información de la aplicación.",
+    "sectionProject": "Proyecto",
+    "nameLabel": "Nombre",
+    "versionLabel": "Versión",
+    "authorLabel": "Autor",
+    "licenseLabel": "Licencia",
+    "licenseHint": "El repositorio incluye el archivo LICENSE; el enlace abre el texto legal oficial de Apache 2.0.",
+    "openLicense": "Texto completo de la licencia",
+    "sectionRepo": "Repositorio",
+    "repoHint": "El código y los releases están en GitHub.",
+    "openRepo": "Abrir en el navegador",
+    "sectionTech": "Tecnologías",
+    "techIntro": "Esta aplicación está hecha con:",
+    "techGo": "Go — lógica de la aplicación y servicios",
+    "techWails": "Wails v2 — shell de escritorio y puente WebView",
+    "techSolid": "SolidJS — interfaz reactiva",
+    "techTs": "TypeScript — frontend tipado",
+    "techVite": "Vite — empaquetado del frontend",
+    "techTailwind": "Tailwind CSS — maquetación y estilo",
+    "techI18n": "i18next — internacionalización"
   }
 }

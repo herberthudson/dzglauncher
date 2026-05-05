@@ -11,11 +11,14 @@ import (
 	"sync"
 	"time"
 
+	"golang.org/x/mod/semver"
+
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 
 	"dzglauncher/internal/adapters/a2s"
 	"dzglauncher/internal/adapters/battlemetrics"
 	"dzglauncher/internal/adapters/configfile"
+	"dzglauncher/internal/adapters/ghrelease"
 	"dzglauncher/internal/adapters/lan"
 	"dzglauncher/internal/adapters/steam"
 	"dzglauncher/internal/adapters/workshop"
@@ -93,6 +96,42 @@ func (a *App) LoadSettings() (domain.Settings, error) {
 func (a *App) SaveSettings(s domain.Settings) error {
 	a.reloadGeo(s.GeoIPDatabasePath)
 	return a.store.Save(s)
+}
+
+func (a *App) AboutInfo() domain.AboutInfo {
+	return domain.AboutInfo{
+		Version:       Version,
+		AppName:       "dzglauncher",
+		RepositoryURL: "https://github.com/herberthudson/dzglauncher",
+		Author:        "Herbert Hudson",
+		LicenseName:   "Apache License 2.0",
+		LicenseURL:    "https://www.apache.org/licenses/LICENSE-2.0",
+	}
+}
+
+func (a *App) CheckForUpdate() (domain.UpdateCheckResult, error) {
+	curRaw := strings.TrimSpace(Version)
+	res := domain.UpdateCheckResult{CurrentVersion: curRaw}
+	if curRaw == "" || curRaw == "dev" {
+		return res, nil
+	}
+	cur := strings.TrimPrefix(strings.TrimPrefix(curRaw, "v"), "V")
+	tag, page, err := ghrelease.FetchLatestRelease("herberthudson", "dzglauncher")
+	if err != nil {
+		return domain.UpdateCheckResult{}, err
+	}
+	latest := strings.TrimPrefix(strings.TrimPrefix(tag, "v"), "V")
+	res.LatestVersion = latest
+	res.ReleasePageURL = page
+	v1 := "v" + cur
+	v2 := "v" + latest
+	if !semver.IsValid(v1) || !semver.IsValid(v2) {
+		return res, nil
+	}
+	if semver.Compare(semver.Canonical(v1), semver.Canonical(v2)) < 0 {
+		res.UpdateAvailable = true
+	}
+	return res, nil
 }
 
 const maxUIThemeFileBytes = 512 * 1024
