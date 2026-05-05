@@ -7,6 +7,19 @@ import (
 	"dzglauncher/internal/domain"
 )
 
+func TestDedupeWorkshopIDs(t *testing.T) {
+	got := DedupeWorkshopIDs([]string{" 1 ", "1", "2", "", "3"})
+	want := []string{"1", "2", "3"}
+	if len(got) != len(want) {
+		t.Fatalf("got %v want %v", got, want)
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Fatalf("got %v want %v", got, want)
+		}
+	}
+}
+
 func TestJoinModalRows_Outdated(t *testing.T) {
 	ids := []string{"100"}
 	installed := map[string]Item{"100": {ID: "100", Name: "M"}}

@@ -19,7 +19,7 @@ export function EnrichServerMods(arg1:string,arg2:number,arg3:number):Promise<Ar
 
 export function FetchSteamServers():Promise<Array<domain.ServerRow>>;
 
-export function JoinModalWorkshopData(arg1:string,arg2:number,arg3:number):Promise<Array<domain.WorkshopModRow>>;
+export function JoinModalWorkshopData(arg1:string,arg2:number,arg3:number,arg4:Array<string>,arg5:boolean):Promise<Array<domain.WorkshopModRow>>;
 
 export function LaunchConnect(arg1:domain.ServerRow):Promise<void>;
 

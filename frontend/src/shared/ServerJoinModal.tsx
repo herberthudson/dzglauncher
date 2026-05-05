@@ -23,8 +23,17 @@ function sleep(ms: number): Promise<void> {
   });
 }
 
-async function fetchJoinModalRows(row: domain.ServerRow): Promise<domain.WorkshopModRow[]> {
-  const list = await App.JoinModalWorkshopData(row.queryHost, row.queryPort, row.gamePort);
+async function fetchJoinModalRows(
+  row: domain.ServerRow,
+  opts: {knownWorkshopIds: string[]; skipServerModQuery: boolean},
+): Promise<domain.WorkshopModRow[]> {
+  const list = await App.JoinModalWorkshopData(
+    row.queryHost,
+    row.queryPort,
+    row.gamePort,
+    opts.knownWorkshopIds,
+    opts.skipServerModQuery,
+  );
   return Array.isArray(list) ? list.map((x) => domain.WorkshopModRow.createFrom(x)) : [];
 }
 
@@ -91,7 +100,13 @@ export function ServerJoinModal(props: ServerJoinModalProps) {
         return 'abort' as const;
       }
       try {
-        const rows = await fetchJoinModalRows(row);
+        const knownIds = modRows()
+          .map((r) => String(r.id))
+          .filter((id) => id.trim() !== '');
+        const rows = await fetchJoinModalRows(row, {
+          knownWorkshopIds: knownIds,
+          skipServerModQuery: true,
+        });
         if (startGen !== fetchGen || bulkAbort.current) {
           return 'abort' as const;
         }
@@ -153,7 +168,7 @@ export function ServerJoinModal(props: ServerJoinModalProps) {
       finalizeBulkMissing();
     }
   };
-  const load = async () => {
+  const load = async (forceServerQuery = false) => {
     const row = props.row;
     if (!row) {
       return;
@@ -166,7 +181,12 @@ export function ServerJoinModal(props: ServerJoinModalProps) {
     setModRows([]);
     setModFilter('');
     try {
-      const rows = await fetchJoinModalRows(row);
+      const fromRow = (row.workshopModIds ?? []).map(String).filter((id) => id.trim() !== '');
+      const skipServer = !forceServerQuery && fromRow.length > 0;
+      const rows = await fetchJoinModalRows(row, {
+        knownWorkshopIds: skipServer ? fromRow : [],
+        skipServerModQuery: skipServer,
+      });
       if (g !== fetchGen) {
         return;
       }
@@ -547,12 +567,12 @@ export function ServerJoinModal(props: ServerJoinModalProps) {
           </div>
 
           <div class="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-border px-3 py-2">
-            <Button variant="secondary" disabled={loading() || bulkMissingBusy()} onClick={() => void load()}>
+            <Button variant="secondary" disabled={loading() || bulkMissingBusy()} onClick={() => void load(true)}>
               <RefreshCw size={16} strokeWidth={2} aria-hidden />
               {t('joinModal.refresh')}
             </Button>
             <Show when={!!enrichErr()}>
-              <Button variant="destructive" disabled={loading()} title={t('joinModal.retryMods')} onClick={() => void load()}>
+              <Button variant="destructive" disabled={loading()} title={t('joinModal.retryMods')} onClick={() => void load(true)}>
                 <RefreshCw size={16} strokeWidth={2} aria-hidden />
                 {t('joinModal.retryMods')}
               </Button>

@@ -11,6 +11,23 @@ func NormWorkshopID(s string) string {
 	return strings.TrimSpace(s)
 }
 
+func DedupeWorkshopIDs(ids []string) []string {
+	seen := make(map[string]struct{})
+	out := make([]string, 0, len(ids))
+	for _, raw := range ids {
+		id := NormWorkshopID(raw)
+		if id == "" {
+			continue
+		}
+		if _, dup := seen[id]; dup {
+			continue
+		}
+		seen[id] = struct{}{}
+		out = append(out, id)
+	}
+	return out
+}
+
 func JoinModalRows(serverIDs []string, installedByID map[string]Item, cache map[string]int64, remote map[string]steam.PublishedFileDetail) []domain.WorkshopModRow {
 	seen := make(map[string]struct{})
 	var rows []domain.WorkshopModRow

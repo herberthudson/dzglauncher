@@ -507,14 +507,22 @@ func cloneInt64Map(m map[string]int64) map[string]int64 {
 	return out
 }
 
-func (a *App) JoinModalWorkshopData(host string, queryPort int, gamePort int) ([]domain.WorkshopModRow, error) {
+func (a *App) JoinModalWorkshopData(host string, queryPort int, gamePort int, knownWorkshopIDs []string, skipServerModQuery bool) ([]domain.WorkshopModRow, error) {
 	cfg, err := a.store.Load()
 	if err != nil {
 		return nil, err
 	}
-	ids, err := a.EnrichServerMods(host, queryPort, gamePort)
-	if err != nil {
-		return nil, err
+	var ids []string
+	if skipServerModQuery {
+		ids = workshop.DedupeWorkshopIDs(knownWorkshopIDs)
+		if len(ids) == 0 {
+			return nil, fmt.Errorf("sem IDs de mod para atualização local")
+		}
+	} else {
+		ids, err = a.EnrichServerMods(host, queryPort, gamePort)
+		if err != nil {
+			return nil, err
+		}
 	}
 	root := workshop.WorkshopContentRoot(cfg.SteamRootPath)
 	var items []workshop.Item
