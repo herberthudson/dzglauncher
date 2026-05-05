@@ -13,6 +13,7 @@ import {parallelServerPing} from '../../shared/parallelServerPing';
 import {ServerJoinModal} from '../../shared/ServerJoinModal';
 import {PingMsCell} from '../../shared/PingMsCell';
 import {ServerPasswordCell} from '../../shared/ServerPasswordCell';
+import {InGameTimeCell} from '../../shared/InGameTimeCell';
 import {AlertError} from '@/components/ui/alert';
 import {Button} from '@/components/ui/button';
 import {Card, CardTitle} from '@/components/ui/card';
@@ -90,7 +91,9 @@ function FavoriteTableRow(props: FavoriteTableRowProps) {
       <TableCell>{props.row.perspective}</TableCell>
       <TableCell>{props.row.provider}</TableCell>
       <TableCell>{props.row.modded ? t('common.yes') : t('common.no')}</TableCell>
-      <TableCell>{props.row.inGameTime}</TableCell>
+      <TableCell>
+        <InGameTimeCell inGameTime={props.row.inGameTime} />
+      </TableCell>
       <TableCell>{formatPlayersWithQueue(props.row.players, props.row.maxPlayers, props.row.queueSize)}</TableCell>
       <TableCell class="max-w-72 whitespace-normal">
         <ServerAddressCell address={props.row.address} />

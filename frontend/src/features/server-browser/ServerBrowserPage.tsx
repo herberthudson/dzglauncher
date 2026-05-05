@@ -16,6 +16,7 @@ import {parallelServerPing} from '../../shared/parallelServerPing';
 import {ServerJoinModal} from '../../shared/ServerJoinModal';
 import {PingMsCell} from '../../shared/PingMsCell';
 import {ServerPasswordCell} from '../../shared/ServerPasswordCell';
+import {InGameTimeCell} from '../../shared/InGameTimeCell';
 import {FormCheckboxRow} from '@/components/ui/checkbox';
 import {AlertError} from '@/components/ui/alert';
 import {Button} from '@/components/ui/button';
@@ -520,7 +521,9 @@ export default function ServerBrowserPage() {
                             <TableCell>{row.perspective}</TableCell>
                             <TableCell>{row.provider}</TableCell>
                             <TableCell>{row.modded ? t('common.yes') : t('common.no')}</TableCell>
-                            <TableCell>{row.inGameTime}</TableCell>
+                            <TableCell>
+                              <InGameTimeCell inGameTime={row.inGameTime} />
+                            </TableCell>
                             <TableCell>{formatPlayersWithQueue(row.players, row.maxPlayers, row.queueSize)}</TableCell>
                             <TableCell class="max-w-72 whitespace-normal">
                               <ServerAddressCell address={row.address} />
