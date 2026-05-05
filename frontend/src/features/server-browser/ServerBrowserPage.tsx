@@ -4,6 +4,7 @@ import {BookmarkPlus, ChevronDown, ChevronUp, ListFilter, Package, Play, Radar, 
 import * as App from '../../../wailsjs/go/main/App';
 import {domain} from '../../../wailsjs/go/models';
 import {browseSessionPayload, loadBrowseSessionMigrate} from './browseSession';
+import {sortBrowseRows, type BrowseListSortKey} from './sortBrowseRows';
 import {mapQuickFavError} from '../../shared/favoriteRows';
 import {DsSelect} from '@/components/ui/select';
 import {PageSizeInput} from '../../shared/PageSizeInput';
@@ -97,6 +98,8 @@ export default function ServerBrowserPage() {
   const [pageSize, setPageSize] = createSignal(clampPageSize(10));
   const [joinModalRow, setJoinModalRow] = createSignal<domain.ServerRow | null>(null);
   const [filtersListOpen, setFiltersListOpen] = createSignal(true);
+  const [browseSortKey, setBrowseSortKey] = createSignal<BrowseListSortKey | null>(null);
+  const [browseSortAsc, setBrowseSortAsc] = createSignal(true);
 
   onMount(() => {
     let cancelled = false;
@@ -155,7 +158,9 @@ export default function ServerBrowserPage() {
     });
   });
 
-  const totalPages = createMemo(() => Math.max(1, Math.ceil(filtered().length / pageSize()) || 1));
+  const orderedFiltered = createMemo(() => sortBrowseRows(filtered(), browseSortKey(), browseSortAsc(), rowKey));
+
+  const totalPages = createMemo(() => Math.max(1, Math.ceil(orderedFiltered().length / pageSize()) || 1));
 
   createEffect(() => {
     const tp = totalPages();
@@ -164,8 +169,17 @@ export default function ServerBrowserPage() {
 
   const pageSlice = createMemo(() => {
     const start = (page() - 1) * pageSize();
-    return filtered().slice(start, start + pageSize());
+    return orderedFiltered().slice(start, start + pageSize());
   });
+
+  const toggleBrowseSort = (key: BrowseListSortKey) => {
+    if (browseSortKey() === key) {
+      setBrowseSortAsc((a) => !a);
+    } else {
+      setBrowseSortKey(key);
+      setBrowseSortAsc(true);
+    }
+  };
 
   const patchJoinRow = (next: domain.ServerRow) => {
     const rk = rowKey(next);
@@ -415,8 +429,24 @@ export default function ServerBrowserPage() {
                         <TableHead scope="col" title={t('browse.thMapLong')}>
                           {t('browse.thMap')}
                         </TableHead>
-                        <TableHead scope="col" title={t('browse.thPPLong')}>
-                          {t('browse.thPP')}
+                        <TableHead scope="col" class="p-0">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            class={cn(
+                              'h-auto min-h-8 w-full justify-start rounded-none px-2 py-1.5 text-[0.75rem] font-semibold uppercase tracking-wide',
+                              browseSortKey() === 'perspective' ? 'text-foreground' : 'text-muted-foreground',
+                            )}
+                            title={t('browse.thPPLong')}
+                            aria-label={t('browse.sortPPTitle')}
+                            onClick={() => toggleBrowseSort('perspective')}
+                          >
+                            {t('browse.thPP')}
+                            <Show when={browseSortKey() === 'perspective'}>
+                              {browseSortAsc() ? <ChevronUp size={14} strokeWidth={2} aria-hidden /> : <ChevronDown size={14} strokeWidth={2} aria-hidden />}
+                            </Show>
+                          </Button>
                         </TableHead>
                         <TableHead scope="col" title={t('browse.thProvLong')}>
                           {t('browse.thProv')}
@@ -427,14 +457,46 @@ export default function ServerBrowserPage() {
                         <TableHead scope="col" title={t('browse.thTimeLong')}>
                           {t('browse.thTime')}
                         </TableHead>
-                        <TableHead scope="col" title={t('browse.thPlayersLong')}>
-                          {t('browse.thPlayers')}
+                        <TableHead scope="col" class="p-0">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            class={cn(
+                              'h-auto min-h-8 w-full justify-start rounded-none px-2 py-1.5 text-[0.75rem] font-semibold uppercase tracking-wide',
+                              browseSortKey() === 'players' ? 'text-foreground' : 'text-muted-foreground',
+                            )}
+                            title={t('browse.thPlayersLong')}
+                            aria-label={t('browse.sortPlayersTitle')}
+                            onClick={() => toggleBrowseSort('players')}
+                          >
+                            {t('browse.thPlayers')}
+                            <Show when={browseSortKey() === 'players'}>
+                              {browseSortAsc() ? <ChevronUp size={14} strokeWidth={2} aria-hidden /> : <ChevronDown size={14} strokeWidth={2} aria-hidden />}
+                            </Show>
+                          </Button>
                         </TableHead>
                         <TableHead scope="col" title={t('browse.thAddrLong')}>
                           {t('browse.thAddr')}
                         </TableHead>
-                        <TableHead scope="col" title={t('browse.thPingLong')}>
-                          {t('browse.thPing')}
+                        <TableHead scope="col" class="p-0">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            class={cn(
+                              'h-auto min-h-8 w-full justify-start rounded-none px-2 py-1.5 text-[0.75rem] font-semibold uppercase tracking-wide',
+                              browseSortKey() === 'ping' ? 'text-foreground' : 'text-muted-foreground',
+                            )}
+                            title={t('browse.thPingLong')}
+                            aria-label={t('browse.sortPingTitle')}
+                            onClick={() => toggleBrowseSort('ping')}
+                          >
+                            {t('browse.thPing')}
+                            <Show when={browseSortKey() === 'ping'}>
+                              {browseSortAsc() ? <ChevronUp size={14} strokeWidth={2} aria-hidden /> : <ChevronDown size={14} strokeWidth={2} aria-hidden />}
+                            </Show>
+                          </Button>
                         </TableHead>
                         <TableHead scope="col" title={t('browse.thDistLong')}>
                           {t('browse.thDist')}
