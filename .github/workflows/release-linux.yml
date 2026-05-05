@@ -54,6 +54,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             build-essential pkg-config \
+            dpkg-dev \
             libgtk-3-dev \
             libwebkit2gtk-4.1-dev \
             libgirepository1.0-dev \
@@ -82,6 +83,55 @@ jobs:
           ( cd staging && zip -r9 "../dist/dzglauncher-${VERSION}-linux-amd64.zip" dzglauncher LICENSE README.md share )
           tar -C staging -czvf "dist/dzglauncher-${VERSION}-linux-amd64.tar.gz" dzglauncher LICENSE README.md share
 
+      - name: Build .deb package
+        env:
+          VERSION: ${{ steps.ver.outputs.version }}
+        run: |
+          set -euo pipefail
+          ROOT="deb-pkg"
+          rm -rf "${ROOT}"
+          mkdir -p "${ROOT}/DEBIAN" "${ROOT}/usr/bin" \
+            "${ROOT}/usr/share/applications" \
+            "${ROOT}/usr/share/icons/hicolor/256x256/apps"
+          cp build/bin/dzglauncher "${ROOT}/usr/bin/dzglauncher"
+          chmod 0755 "${ROOT}/usr/bin/dzglauncher"
+          strip "${ROOT}/usr/bin/dzglauncher" 2>/dev/null || true
+          cp packaging/linux/dzglauncher.desktop "${ROOT}/usr/share/applications/"
+          cp packaging/linux/icons/hicolor/256x256/apps/dzglauncher.png \
+            "${ROOT}/usr/share/icons/hicolor/256x256/apps/"
+          SIZE="$(du -sk "${ROOT}/usr" | cut -f1)"
+          SHLIB_DEPS="$(dpkg-shlibdeps -O "${ROOT}/usr/bin/dzglauncher" 2>/dev/null | sed -n 's/^shlibs:Depends=//p' || true)"
+          if [ -z "${SHLIB_DEPS}" ]; then
+            SHLIB_DEPS="libgtk-3-0 (>= 3.22), libwebkit2gtk-4.1-0, librsvg2-2"
+          fi
+          cat > "${ROOT}/DEBIAN/control" <<EOF
+          Package: dzglauncher
+          Version: ${VERSION}
+          Architecture: amd64
+          Maintainer: Herbert Hudson
+          Installed-Size: ${SIZE}
+          Depends: ${SHLIB_DEPS}
+          Section: games
+          Priority: optional
+          Homepage: https://github.com/${GITHUB_REPOSITORY}
+          Description: DayZ server browser and launcher
+           Browse DayZ servers, favorites, Workshop mods, and launch via Steam.
+          EOF
+          cat > "${ROOT}/DEBIAN/postinst" <<'EOS'
+          #!/bin/sh
+          set -e
+          if command -v update-desktop-database >/dev/null 2>&1; then
+            update-desktop-database -q /usr/share/applications 2>/dev/null || true
+          fi
+          if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+            gtk-update-icon-cache -q -t -f /usr/share/icons/hicolor 2>/dev/null || true
+          fi
+          exit 0
+          EOS
+          chmod 0755 "${ROOT}/DEBIAN/postinst"
+          mkdir -p dist
+          dpkg-deb --root-owner-group --build "${ROOT}" "dist/dzglauncher_${VERSION}_amd64.deb"
+
       - name: SHA256SUMS
         env:
           VERSION: ${{ steps.ver.outputs.version }}
@@ -91,6 +141,7 @@ jobs:
           sha256sum \
             "dzglauncher-${VERSION}-linux-amd64.zip" \
             "dzglauncher-${VERSION}-linux-amd64.tar.gz" \
+            "dzglauncher_${VERSION}_amd64.deb" \
             > SHA256SUMS
           sha256sum -c SHA256SUMS
 
@@ -107,5 +158,6 @@ jobs:
             dist/SHA256SUMS
             dist/dzglauncher-${{ steps.ver.outputs.version }}-linux-amd64.zip
             dist/dzglauncher-${{ steps.ver.outputs.version }}-linux-amd64.tar.gz
+            dist/dzglauncher_${{ steps.ver.outputs.version }}_amd64.deb
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
