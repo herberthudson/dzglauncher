@@ -53,6 +53,7 @@ type FilterState struct {
 	ExcludeOfficial    bool   `json:"excludeOfficial"`
 	ExcludeUnofficial  bool   `json:"excludeUnofficial"`
 	ExcludeNonModded   bool   `json:"excludeNonModded"`
+	ExcludePassword    bool   `json:"excludePassword"`
 	MapEquals          string `json:"mapEquals"`
 	SearchSubstring    string `json:"searchSubstring"`
 }

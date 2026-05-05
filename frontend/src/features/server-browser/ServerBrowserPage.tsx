@@ -49,6 +49,7 @@ function defaultFilters(): domain.FilterState {
     excludeOfficial: false,
     excludeUnofficial: false,
     excludeNonModded: false,
+    excludePassword: false,
     mapEquals: '',
     searchSubstring: '',
   });
@@ -73,6 +74,7 @@ function filterFields(f: domain.FilterState) {
     excludeOfficial: !!f.excludeOfficial,
     excludeUnofficial: !!f.excludeUnofficial,
     excludeNonModded: !!f.excludeNonModded,
+    excludePassword: !!f.excludePassword,
     mapEquals: f.mapEquals ?? '',
     searchSubstring: f.searchSubstring ?? '',
   };
@@ -630,6 +632,9 @@ export default function ServerBrowserPage() {
                     </FormCheckboxRow>
                     <FormCheckboxRow checked={filters().excludeNonModded} onChange={setFilterBool('excludeNonModded')}>
                       {t('browse.fNoMods')}
+                    </FormCheckboxRow>
+                    <FormCheckboxRow checked={filters().excludePassword} onChange={setFilterBool('excludePassword')}>
+                      {t('browse.fPassword')}
                     </FormCheckboxRow>
                   </div>
                 </Show>

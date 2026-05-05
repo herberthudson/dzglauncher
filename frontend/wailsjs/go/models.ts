@@ -58,6 +58,7 @@ export namespace domain {
 	    excludeOfficial: boolean;
 	    excludeUnofficial: boolean;
 	    excludeNonModded: boolean;
+	    excludePassword: boolean;
 	    mapEquals: string;
 	    searchSubstring: string;
 	
@@ -80,6 +81,7 @@ export namespace domain {
 	        this.excludeOfficial = source["excludeOfficial"];
 	        this.excludeUnofficial = source["excludeUnofficial"];
 	        this.excludeNonModded = source["excludeNonModded"];
+	        this.excludePassword = source["excludePassword"];
 	        this.mapEquals = source["mapEquals"];
 	        this.searchSubstring = source["searchSubstring"];
 	    }

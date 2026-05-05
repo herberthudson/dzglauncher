@@ -6,6 +6,22 @@ import (
 	"dzglauncher/internal/domain"
 )
 
+func TestExcludePassword(t *testing.T) {
+	tpw := true
+	fpw := false
+	rows := []domain.ServerRow{
+		{Name: "open", PasswordRequired: &fpw},
+		{Name: "locked", PasswordRequired: &tpw},
+		{Name: "unknown"},
+	}
+	f := domain.DefaultFilterState()
+	f.ExcludePassword = true
+	out := Apply(rows, f)
+	if len(out) != 2 {
+		t.Fatalf("want 2 got %d %+v", len(out), names(out))
+	}
+}
+
 func TestApplyOfficial(t *testing.T) {
 	rows := []domain.ServerRow{
 		{Name: "a", Provider: "Official", Modded: false, Players: 1, MaxPlayers: 10, MapName: "enoch", InGameTime: "12:00"},

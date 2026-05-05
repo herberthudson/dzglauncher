@@ -17,6 +17,7 @@ export type BrowseFiltersPlain = {
   excludeOfficial: boolean;
   excludeUnofficial: boolean;
   excludeNonModded: boolean;
+  excludePassword: boolean;
   mapEquals: string;
   searchSubstring: string;
 };

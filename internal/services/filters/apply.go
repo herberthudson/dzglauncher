@@ -80,6 +80,9 @@ func Apply(rows []domain.ServerRow, f domain.FilterState) []domain.ServerRow {
 		if f.ExcludeNonModded && !r.Modded {
 			continue
 		}
+		if f.ExcludePassword && r.PasswordRequired != nil && *r.PasswordRequired {
+			continue
+		}
 		if f.MapEquals != "" && !strings.EqualFold(strings.TrimSpace(f.MapEquals), "all") {
 			if !strings.EqualFold(normalizeMap(r.MapName), normalizeMap(f.MapEquals)) {
 				continue

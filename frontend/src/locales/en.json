@@ -152,6 +152,7 @@
     "fOfficial": "Exclude official",
     "fUnofficial": "Exclude unofficial",
     "fNoMods": "Exclude without mods",
+    "fPassword": "Exclude password-protected",
     "pageLine": "Page: {{slice}} rows · {{filtered}} filtered · {{raw}} in list",
     "pageFirst": "First page",
     "pagePrev": "Previous page",
