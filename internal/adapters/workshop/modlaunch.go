@@ -23,9 +23,9 @@ func ModParamFromWorkshopIDs(steamRoot, branch, gameInstallRoot string, workshop
 	}
 	if fi, e := os.Stat(gameRoot); e != nil || !fi.IsDir() {
 		if e != nil {
-			return "", nil, fmt.Errorf("pasta do DayZ não encontrada: %s: %w", gameRoot, e)
+			return "", nil, fmt.Errorf("DayZ folder not found: %s: %w", gameRoot, e)
 		}
-		return "", nil, fmt.Errorf("pasta do DayZ não é um diretório: %s", gameRoot)
+		return "", nil, fmt.Errorf("DayZ path is not a directory: %s", gameRoot)
 	}
 	appid := DayZAppID(branch)
 	items, e := ListInstalled(root, appid)

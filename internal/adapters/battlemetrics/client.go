@@ -36,7 +36,7 @@ func (c *Client) ServerByID(ctx context.Context, token, id string) (ServerDetail
 	}
 	id = strings.TrimSpace(id)
 	if id == "" {
-		return ServerDetail{}, fmt.Errorf("id vazio")
+		return ServerDetail{}, fmt.Errorf("empty id")
 	}
 	u := "https://api.battlemetrics.com/servers/" + id
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)

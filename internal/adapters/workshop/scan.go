@@ -40,12 +40,12 @@ func ListInstalled(contentRoot string, appid string) ([]Item, error) {
 	fi, err := os.Stat(root)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			return nil, fmt.Errorf("pasta workshop DayZ não encontrada (appid %s): %s", appid, root)
+			return nil, fmt.Errorf("DayZ workshop folder not found (appid %s): %s", appid, root)
 		}
 		return nil, err
 	}
 	if !fi.IsDir() {
-		return nil, fmt.Errorf("caminho workshop não é pasta: %s", root)
+		return nil, fmt.Errorf("workshop path is not a directory: %s", root)
 	}
 	ents, err := os.ReadDir(root)
 	if err != nil {

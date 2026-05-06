@@ -15,14 +15,14 @@ func OpenDirectory(abs string) error {
 		return err
 	}
 	if !st.IsDir() {
-		return fmt.Errorf("não é pasta: %s", p)
+		return fmt.Errorf("not a directory: %s", p)
 	}
 
 	switch runtime.GOOS {
 	case "linux":
 		xdg, err := exec.LookPath("xdg-open")
 		if err != nil {
-			return fmt.Errorf("xdg-open não encontrado; instale o pacote xdg-utils da sua distro")
+			return fmt.Errorf("xdg-open not found; install the xdg-utils package from your distribution")
 		}
 		cmd := exec.Command(xdg, p)
 		return cmd.Start()
@@ -35,7 +35,7 @@ func OpenDirectory(abs string) error {
 	default:
 		xdg, err := exec.LookPath("xdg-open")
 		if err != nil {
-			return fmt.Errorf("abrir pasta não suportado neste sistema")
+			return fmt.Errorf("opening directories is not supported on this system")
 		}
 		cmd := exec.Command(xdg, p)
 		return cmd.Start()

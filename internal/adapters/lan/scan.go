@@ -106,7 +106,7 @@ func Scan(ctx context.Context, queryPort int) ([]domain.ServerRow, error) {
 	}
 	prefix, self, ok := localIPv4Base24()
 	if !ok {
-		return nil, errors.New("rede IPv4 local não detectada: sem rota padrão ou interface RFC1918 ativa")
+		return nil, errors.New("local IPv4 network not detected: no default route or active RFC1918 interface")
 	}
 	gp := gamePortForQuery(queryPort)
 	var mu sync.Mutex

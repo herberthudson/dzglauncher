@@ -178,11 +178,11 @@ func (a *App) FetchSteamServers() ([]domain.ServerRow, error) {
 		return nil, err
 	}
 	if time.Now().Unix() < cfg.SteamCooldownUntil {
-		return nil, fmt.Errorf("cooldown ativo")
+		return nil, fmt.Errorf("cooldown active")
 	}
 	key := cfg.SteamWebAPIKey
 	if key == "" {
-		return nil, fmt.Errorf("configure a chave Steam Web API")
+		return nil, fmt.Errorf("configure Steam Web API key")
 	}
 	ctx, cancel := context.WithTimeout(a.ctx, 120*time.Second)
 	defer cancel()
@@ -193,7 +193,7 @@ func (a *App) FetchSteamServers() ([]domain.ServerRow, error) {
 			_ = a.store.Save(cfg)
 			return nil, err
 		}
-		return nil, fmt.Errorf("lista vazia")
+		return nil, fmt.Errorf("empty list")
 	}
 	cfg.SteamCooldownUntil = 0
 	_ = a.store.Save(cfg)
@@ -274,7 +274,7 @@ func (a *App) RefreshServersPing(rows []domain.ServerRow) ([]domain.ServerRow, e
 	a.pingMu.Lock()
 	if time.Since(a.lastPingAt) < 2*time.Second {
 		a.pingMu.Unlock()
-		return rows, fmt.Errorf("aguarde antes de novo ping")
+		return rows, fmt.Errorf("wait before pinging again")
 	}
 	a.lastPingAt = time.Now()
 	a.pingMu.Unlock()
@@ -300,7 +300,7 @@ func (a *App) ResolveBattlemetricsID(id string) (domain.ServerRow, error) {
 		return domain.ServerRow{}, err
 	}
 	if cfg.BattlemetricsToken == "" {
-		return domain.ServerRow{}, fmt.Errorf("token battlemetrics em falta")
+		return domain.ServerRow{}, fmt.Errorf("missing BattleMetrics token")
 	}
 	ctx, cancel := context.WithTimeout(a.ctx, 25*time.Second)
 	defer cancel()
@@ -373,7 +373,7 @@ func (a *App) DeleteWorkshopItems(paths []string) error {
 	}
 	root := workshop.WorkshopContentRoot(cfg.SteamRootPath)
 	if root == "" {
-		return fmt.Errorf("pasta raiz Steam não configurada")
+		return fmt.Errorf("Steam root folder not configured")
 	}
 	appid := workshop.DayZAppID(cfg.DayZBranch)
 	return workshop.DeleteModDirs(root, appid, paths)
@@ -386,7 +386,7 @@ func (a *App) OpenWorkshopItemFolder(path string) error {
 	}
 	root := workshop.WorkshopContentRoot(cfg.SteamRootPath)
 	if root == "" {
-		return fmt.Errorf("pasta raiz Steam não configurada")
+		return fmt.Errorf("Steam root folder not configured")
 	}
 	appid := workshop.DayZAppID(cfg.DayZBranch)
 	if err := workshop.EnsureModDirUnderContent(root, appid, path); err != nil {
@@ -533,13 +533,13 @@ func (a *App) LaunchConnect(row domain.ServerRow) error {
 			return werr
 		}
 		if len(missing) > 0 {
-			return fmt.Errorf("mods workshop em falta (instale na Steam): %s", strings.Join(missing, ", "))
+			return fmt.Errorf("missing workshop mods (install via Steam): %s", strings.Join(missing, ", "))
 		}
 	}
 	appID := steamlaunch.AppLaunchID(cfg.DayZBranch)
 	if err := steamlaunch.ExecApplaunchDayZ(cfg.SteamLaunchCommand, appID, host, gp, playerName, modParam); err != nil {
 		if modParam != "" {
-			return fmt.Errorf("steam com lista de mods: %w", err)
+			return fmt.Errorf("steam launch with mod list: %w", err)
 		}
 		a.OpenExternalURL(steamlaunch.BuildConnectURI(host, gp, cfg.DayZBranch))
 	}
@@ -576,7 +576,7 @@ func (a *App) JoinModalWorkshopData(host string, queryPort int, gamePort int, kn
 	if skipServerModQuery {
 		ids = workshop.DedupeWorkshopIDs(knownWorkshopIDs)
 		if len(ids) == 0 {
-			return nil, fmt.Errorf("sem IDs de mod para atualização local")
+			return nil, fmt.Errorf("no mod IDs for local refresh")
 		}
 	} else {
 		ids, err = a.EnrichServerMods(host, queryPort, gamePort)
@@ -626,7 +626,7 @@ func (a *App) WorkshopDownloadItem(id string) error {
 	}
 	id = strings.TrimSpace(id)
 	if id == "" {
-		return fmt.Errorf("id vazio")
+		return fmt.Errorf("empty id")
 	}
 	if cfg.WorkshopModTimeUpdated == nil {
 		cfg.WorkshopModTimeUpdated = map[string]int64{}

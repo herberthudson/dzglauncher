@@ -124,7 +124,7 @@ func MergeDedupe(rows []domain.ServerRow) []domain.ServerRow {
 
 func (s *Service) FetchAll(ctx context.Context, apiKey, branch string) ([]domain.ServerRow, error) {
 	if strings.TrimSpace(apiKey) == "" {
-		return nil, fmt.Errorf("chave steam em falta")
+		return nil, fmt.Errorf("missing Steam API key")
 	}
 	appid := AppIDForBranch(branch)
 	var mu sync.Mutex

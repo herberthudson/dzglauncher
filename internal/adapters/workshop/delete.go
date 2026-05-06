@@ -25,14 +25,14 @@ func EnsureModDirUnderContent(contentRoot, appid, target string) error {
 	base := workshopContentBase(contentRoot, appid)
 	t := filepath.Clean(target)
 	if !underWorkshopContent(base, t) {
-		return fmt.Errorf("caminho inválido: %s", target)
+		return fmt.Errorf("invalid path: %s", target)
 	}
 	st, err := os.Stat(t)
 	if err != nil {
 		return err
 	}
 	if !st.IsDir() {
-		return fmt.Errorf("não é pasta: %s", target)
+		return fmt.Errorf("not a directory: %s", target)
 	}
 	return nil
 }
