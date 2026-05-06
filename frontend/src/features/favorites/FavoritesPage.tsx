@@ -11,6 +11,7 @@ import {formatPlayersWithQueue} from '../../shared/formatPlayersWithQueue';
 import {ServerAddressCell} from '../../shared/ServerAddressCell';
 import {parallelServerPing} from '../../shared/parallelServerPing';
 import {ServerJoinModal} from '../../shared/ServerJoinModal';
+import {pingLooksUnavailable} from '../../shared/pingReachability';
 import {PingMsCell} from '../../shared/PingMsCell';
 import {ServerPasswordCell} from '../../shared/ServerPasswordCell';
 import {InGameTimeCell} from '../../shared/InGameTimeCell';
@@ -18,6 +19,7 @@ import {AlertError} from '@/components/ui/alert';
 import {Button} from '@/components/ui/button';
 import {Card, CardTitle} from '@/components/ui/card';
 import {Table, TableBody, TableCaption, TableCell, TableHead, TableRow, TableScroll, tablePasswordColClass} from '@/components/ui/table';
+import {cn} from '@/lib/utils';
 
 function FavoritesTableHead() {
   const [t] = useTranslation();
@@ -71,6 +73,7 @@ type FavoriteTableRowProps = {
   mode: 'favorite' | 'quick';
   quickSlotIndex?: number;
   favoriteKeys: Set<string>;
+  pingUnreachable?: boolean;
   onOpenJoin: (row: domain.ServerRow) => void;
   onRemoveFavorite: (row: domain.ServerRow, settings: domain.Settings) => void;
   onRemoveQuickSlot?: (index: number) => void;
@@ -82,7 +85,9 @@ function FavoriteTableRow(props: FavoriteTableRowProps) {
   const rk = () => favoriteKeyParts(props.row.queryHost, props.row.gamePort, props.row.queryPort);
   const inFavorites = () => props.favoriteKeys.has(rk());
   return (
-    <TableRow>
+    <TableRow
+      class={cn(props.pingUnreachable && '[&_td]:bg-muted/25 [&_td]:text-foreground/65')}
+    >
       <TableCell class="max-w-56 whitespace-normal">{props.row.name}</TableCell>
       <TableCell class={tablePasswordColClass}>
         <ServerPasswordCell row={props.row} />
@@ -99,7 +104,11 @@ function FavoriteTableRow(props: FavoriteTableRowProps) {
         <ServerAddressCell address={props.row.address} />
       </TableCell>
       <TableCell>
-        <PingMsCell value={props.row.ping} />
+        <PingMsCell
+          value={props.row.ping ?? 9999}
+          unreachable={props.pingUnreachable}
+          unreachableLabel={t('browse.pingUnreachable')}
+        />
       </TableCell>
       <TableCell>{props.row.distanceLabel}</TableCell>
       <TableCell>
@@ -156,6 +165,7 @@ export default function FavoritesPage() {
   const [pageSize, setPageSize] = createSignal(clampPageSize(10));
   const [joinModalRow, setJoinModalRow] = createSignal<domain.ServerRow | null>(null);
   const [pingMsByFavKey, setPingMsByFavKey] = createSignal<Record<string, number>>({});
+  const [pingUnreachableKeys, setPingUnreachableKeys] = createSignal<Set<string>>(new Set<string>());
 
   const reload = () =>
     App.LoadSettings().then((v) => {
@@ -172,20 +182,40 @@ export default function FavoritesPage() {
     reload().catch(() => {});
   });
 
-  const favoritesFingerprint = createMemo(() => {
+  const favoritesListIdentity = createMemo(() => {
     const st = s();
     if (!st) {
       return '';
     }
-    const fk = (st.favorites || []).map((f) => favoriteKey(f)).sort();
-    const qk = quickFavoritesList(st).map((f) => favoriteKey(f));
-    return [...fk, ...qk].join('|');
+    const keys = new Set<string>();
+    for (const f of st.favorites || []) {
+      keys.add(favoriteKey(f));
+    }
+    for (const f of quickFavoritesList(st)) {
+      keys.add(favoriteKey(f));
+    }
+    return [...keys].sort().join('|');
   });
 
   createEffect(() => {
-    favoritesFingerprint();
+    favoritesListIdentity();
     setPingMsByFavKey({});
+    setPingUnreachableKeys(new Set<string>());
   });
+
+  const applyPingReachability = (updated: domain.ServerRow) => {
+    const k = favRowKey(updated);
+    const bad = pingLooksUnavailable(updated.ping);
+    setPingUnreachableKeys((prev) => {
+      const next = new Set(prev);
+      if (bad) {
+        next.add(k);
+      } else {
+        next.delete(k);
+      }
+      return next;
+    });
+  };
 
   const quickEntries = createMemo(() => (s() ? quickFavoriteEntries(s()!) : []));
   const quickEntriesForList = createMemo(() => {
@@ -264,7 +294,10 @@ export default function FavoritesPage() {
     }
     setLoading(true);
     setErr('');
-    void parallelServerPing(targets, (r) => App.RefreshServerPing(r), 12, (u) => applyPingMsFromUpdated([u]))
+    void parallelServerPing(targets, (r) => App.RefreshServerPing(r), 12, (u) => {
+      applyPingMsFromUpdated([u]);
+      applyPingReachability(u);
+    })
       .then((updated) => App.MergeFavoriteSnapshots(updated))
       .then(() => reload())
       .catch((e) => setErr(String(e)))
@@ -278,7 +311,10 @@ export default function FavoritesPage() {
     }
     setLoading(true);
     setErr('');
-    void parallelServerPing(qr, (r) => App.RefreshServerPing(r), 12, (u) => applyPingMsFromUpdated([u]))
+    void parallelServerPing(qr, (r) => App.RefreshServerPing(r), 12, (u) => {
+      applyPingMsFromUpdated([u]);
+      applyPingReachability(u);
+    })
       .then((updated) => App.MergeFavoriteSnapshots(updated))
       .then(() => reload())
       .catch((e) => setErr(String(e)))
@@ -330,6 +366,7 @@ export default function FavoritesPage() {
                           mode="quick"
                           quickSlotIndex={e.index}
                           favoriteKeys={favoriteKeys()}
+                          pingUnreachable={pingUnreachableKeys().has(favRowKey(e.row))}
                           onOpenJoin={setJoinModalRow}
                           onRemoveFavorite={handleRemoveFavorite}
                           onRemoveQuickSlot={handleRemoveQuickSlot}
@@ -402,6 +439,7 @@ export default function FavoritesPage() {
                             settings={s()!}
                             mode="favorite"
                             favoriteKeys={favoriteKeys()}
+                            pingUnreachable={pingUnreachableKeys().has(favRowKey(row))}
                             onOpenJoin={setJoinModalRow}
                             onRemoveFavorite={handleRemoveFavorite}
                           />

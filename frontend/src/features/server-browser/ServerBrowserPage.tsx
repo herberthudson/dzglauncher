@@ -13,6 +13,7 @@ import {PageHeader} from '../../shared/PageHeader';
 import {clampPageSize} from '../../shared/pageSizeConstants';
 import {formatPlayersWithQueue} from '../../shared/formatPlayersWithQueue';
 import {ServerAddressCell} from '../../shared/ServerAddressCell';
+import {pingLooksUnavailable} from '../../shared/pingReachability';
 import {parallelServerPing} from '../../shared/parallelServerPing';
 import {ServerJoinModal} from '../../shared/ServerJoinModal';
 import {PingMsCell} from '../../shared/PingMsCell';
@@ -59,10 +60,6 @@ function defaultFilters(): domain.FilterState {
 
 function rowKey(r: domain.ServerRow) {
   return r.queryHost + ':' + r.queryPort + ':' + r.address;
-}
-
-function pingLooksUnavailable(ping: number | undefined): boolean {
-  return ping === 9999 || ping == null || !Number.isFinite(ping);
 }
 
 function filterFields(f: domain.FilterState) {

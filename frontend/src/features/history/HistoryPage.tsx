@@ -3,7 +3,7 @@ import {useTranslation} from 'solid-i18next';
 import {BookmarkPlus, Clock, Package, Play, Server, Trash2} from 'lucide-solid';
 import * as App from '../../../wailsjs/go/main/App';
 import {domain} from '../../../wailsjs/go/models';
-import {mapQuickFavError, rowKey} from '../../shared/favoriteRows';
+import {favRowKey, mapQuickFavError} from '../../shared/favoriteRows';
 import {historyEntries} from '../../shared/historyRows';
 import {PageSizeInput} from '../../shared/PageSizeInput';
 import {PageHeader} from '../../shared/PageHeader';
@@ -12,6 +12,7 @@ import {formatPlayersWithQueue} from '../../shared/formatPlayersWithQueue';
 import {ServerAddressCell} from '../../shared/ServerAddressCell';
 import {parallelServerPing} from '../../shared/parallelServerPing';
 import {ServerJoinModal} from '../../shared/ServerJoinModal';
+import {pingLooksUnavailable} from '../../shared/pingReachability';
 import {PingMsCell} from '../../shared/PingMsCell';
 import {ServerPasswordCell} from '../../shared/ServerPasswordCell';
 import {InGameTimeCell} from '../../shared/InGameTimeCell';
@@ -39,6 +40,7 @@ export default function HistoryPage() {
   const [pageSize, setPageSize] = createSignal(clampPageSize(10));
   const [joinModalRow, setJoinModalRow] = createSignal<domain.ServerRow | null>(null);
   const [rowMergedByKey, setRowMergedByKey] = createSignal<Record<string, domain.ServerRow>>({});
+  const [pingUnreachableKeys, setPingUnreachableKeys] = createSignal<Set<string>>(new Set<string>());
 
   const reload = () =>
     App.LoadSettings()
@@ -59,16 +61,32 @@ export default function HistoryPage() {
 
   const allEntries = createMemo(() => historyEntries(hist()));
 
-  const historyFingerprint = createMemo(() =>
-    allEntries()
-      .map((e) => `${e.historyIndex}:${rowKey(e.row)}`)
+  const historyListIdentity = createMemo(() =>
+    [...allEntries()]
+      .sort((a, b) => a.historyIndex - b.historyIndex)
+      .map((e) => `${e.historyIndex}:${favRowKey(e.row)}`)
       .join('|'),
   );
 
   createEffect(() => {
-    historyFingerprint();
+    historyListIdentity();
     setRowMergedByKey({});
+    setPingUnreachableKeys(new Set<string>());
   });
+
+  const applyPingReachability = (updated: domain.ServerRow) => {
+    const k = favRowKey(updated);
+    const bad = pingLooksUnavailable(updated.ping);
+    setPingUnreachableKeys((prev) => {
+      const next = new Set(prev);
+      if (bad) {
+        next.add(k);
+      } else {
+        next.delete(k);
+      }
+      return next;
+    });
+  };
 
   const totalPages = createMemo(() => Math.max(1, Math.ceil(allEntries().length / pageSize()) || 1));
 
@@ -86,7 +104,7 @@ export default function HistoryPage() {
   const pageSliceRows = createMemo(() => {
     const m = rowMergedByKey();
     return pageSlice().map((e) => {
-      const k = rowKey(e.row);
+      const k = favRowKey(e.row);
       return {
         historyIndex: e.historyIndex,
         atUnix: e.atUnix,
@@ -114,7 +132,8 @@ export default function HistoryPage() {
     setErr('');
     setPingInFlight(true);
     void parallelServerPing(rows, (r) => App.RefreshServerPing(r), 12, (u) => {
-      setRowMergedByKey((prev) => ({...prev, [rowKey(u)]: u}));
+      setRowMergedByKey((prev) => ({...prev, [favRowKey(u)]: u}));
+      applyPingReachability(u);
     })
       .catch((e) => setErr(String(e)))
       .finally(() => setPingInFlight(false));
@@ -226,8 +245,11 @@ export default function HistoryPage() {
                         {(e) => {
                           const row = e.row;
                           const when = formatConnected(e.atUnix);
+                          const pingRowMuted = pingUnreachableKeys().has(favRowKey(row));
                           return (
-                            <TableRow>
+                            <TableRow
+                              class={cn(pingRowMuted && '[&_td]:bg-muted/25 [&_td]:text-foreground/65')}
+                            >
                               <TableCell class="max-w-56 whitespace-normal">
                                 <div>{row.name}</div>
                                 {when ? (
@@ -251,7 +273,11 @@ export default function HistoryPage() {
                                 <ServerAddressCell address={row.address} />
                               </TableCell>
                               <TableCell>
-                                <PingMsCell value={row.ping} />
+                                <PingMsCell
+                                  value={row.ping ?? 9999}
+                                  unreachable={pingRowMuted}
+                                  unreachableLabel={t('browse.pingUnreachable')}
+                                />
                               </TableCell>
                               <TableCell>{row.distanceLabel}</TableCell>
                               <TableCell>
