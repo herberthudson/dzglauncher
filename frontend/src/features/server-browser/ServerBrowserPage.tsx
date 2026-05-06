@@ -5,7 +5,7 @@ import * as App from '../../../wailsjs/go/main/App';
 import {domain} from '../../../wailsjs/go/models';
 import {browseSessionPayload, loadBrowseSessionMigrate} from './browseSession';
 import {sortBrowseRows, type BrowseListSortKey} from './sortBrowseRows';
-import {mapQuickFavError} from '../../shared/favoriteRows';
+import {favoritesKeySet, favRowKey, mapQuickFavError, quickFavoritesKeySet} from '../../shared/favoriteRows';
 import {DsSelect} from '@/components/ui/select';
 import {PageSizeInput} from '../../shared/PageSizeInput';
 import {PageHeader} from '../../shared/PageHeader';
@@ -103,6 +103,16 @@ export default function ServerBrowserPage() {
   const [filtersListOpen, setFiltersListOpen] = createSignal(true);
   const [browseSortKey, setBrowseSortKey] = createSignal<BrowseListSortKey | null>(null);
   const [browseSortAsc, setBrowseSortAsc] = createSignal(true);
+  const [settingsForFavUi, setSettingsForFavUi] = createSignal<domain.Settings | null>(null);
+
+  const favKeysForBrowse = createMemo(() => favoritesKeySet(settingsForFavUi() ?? domain.Settings.createFrom({})));
+  const quickFavKeysForBrowse = createMemo(() => quickFavoritesKeySet(settingsForFavUi() ?? domain.Settings.createFrom({})));
+
+  const refreshBrowseFavoriteUi = () => {
+    void App.LoadSettings()
+      .then((st) => setSettingsForFavUi(domain.Settings.createFrom(st as object)))
+      .catch(() => {});
+  };
 
   onMount(() => {
     let cancelled = false;
@@ -217,6 +227,7 @@ export default function ServerBrowserPage() {
     App.LoadSettings()
       .then((st) => {
         setKnownMapNames(Array.isArray(st.knownMapNames) ? st.knownMapNames : []);
+        setSettingsForFavUi(domain.Settings.createFrom(st as object));
       })
       .catch(() => {});
   });
@@ -511,7 +522,11 @@ export default function ServerBrowserPage() {
                     </thead>
                     <TableBody>
                       <For each={pageSlice()}>
-                        {(row) => (
+                        {(row) => {
+                          const rk = favRowKey(row);
+                          const inFav = favKeysForBrowse().has(rk);
+                          const inQuick = quickFavKeysForBrowse().has(rk);
+                          return (
                           <TableRow>
                             <TableCell class="max-w-56 whitespace-normal">{row.name}</TableCell>
                             <TableCell class={tablePasswordColClass}>
@@ -542,9 +557,19 @@ export default function ServerBrowserPage() {
                                   size="sm"
                                   title={t('browse.favTitle')}
                                   aria-label={t('browse.fav')}
-                                  onClick={() => App.ToggleFavoriteRow(row).catch((e) => setErr(String(e)))}
+                                  onClick={() =>
+                                    App.ToggleFavoriteRow(row)
+                                      .then(() => refreshBrowseFavoriteUi())
+                                      .catch((e) => setErr(String(e)))
+                                  }
                                 >
-                                  <Star size={14} strokeWidth={2} aria-hidden />
+                                  <Star
+                                    size={14}
+                                    strokeWidth={2}
+                                    aria-hidden
+                                    fill={inFav ? 'currentColor' : 'none'}
+                                    class={cn(inFav && 'text-amber-500')}
+                                  />
                                 </Button>
                                 <Button
                                   variant="secondary"
@@ -552,12 +577,18 @@ export default function ServerBrowserPage() {
                                   title={t('browse.quickFavTitle')}
                                   aria-label={t('browse.quickFav')}
                                   onClick={() =>
-                                    App.SetQuickFavorite(row, window.prompt(t('browse.quickFavPrompt'), row.name) || row.name).catch((e) =>
-                                      setErr(mapQuickFavError(String(e), t)),
-                                    )
+                                    App.SetQuickFavorite(row, window.prompt(t('browse.quickFavPrompt'), row.name) || row.name)
+                                      .then(() => refreshBrowseFavoriteUi())
+                                      .catch((e) => setErr(mapQuickFavError(String(e), t)))
                                   }
                                 >
-                                  <BookmarkPlus size={14} strokeWidth={2} aria-hidden />
+                                  <BookmarkPlus
+                                    size={14}
+                                    strokeWidth={2}
+                                    aria-hidden
+                                    fill={inQuick ? 'currentColor' : 'none'}
+                                    class={cn(inQuick && 'text-amber-500')}
+                                  />
                                 </Button>
                                 <Button variant="secondary" size="sm" title={t('browse.joinPanelModsTitle')} aria-label={t('browse.joinPanelMods')} onClick={() => setJoinModalRow(row)}>
                                   <Package size={14} strokeWidth={2} aria-hidden />
@@ -565,7 +596,8 @@ export default function ServerBrowserPage() {
                               </div>
                             </TableCell>
                           </TableRow>
-                        )}
+                          );
+                        }}
                       </For>
                     </TableBody>
                   </Table>

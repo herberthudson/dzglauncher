@@ -72,6 +72,14 @@ export function favoritesKeySet(s: domain.Settings): Set<string> {
   return set;
 }
 
+export function quickFavoritesKeySet(s: domain.Settings): Set<string> {
+  const set = new Set<string>();
+  for (const f of quickFavoritesList(s)) {
+    set.add(favoriteKey(f));
+  }
+  return set;
+}
+
 export function rowKey(r: domain.ServerRow) {
   return r.queryHost + ':' + r.queryPort + ':' + r.address;
 }
