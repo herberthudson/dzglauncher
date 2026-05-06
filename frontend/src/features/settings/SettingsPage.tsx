@@ -1,6 +1,6 @@
 import {createSignal, onMount, Show} from 'solid-js';
 import {useTranslation} from 'solid-i18next';
-import {Gamepad2, Globe, MapPin, SlidersHorizontal} from 'lucide-solid';
+import {ExternalLink, Gamepad2, Globe, MapPin, SlidersHorizontal} from 'lucide-solid';
 import * as App from '../../../wailsjs/go/main/App';
 import {domain} from '../../../wailsjs/go/models';
 import {AlertError, AlertSuccess} from '@/components/ui/alert';
@@ -174,7 +174,22 @@ export default function SettingsPage() {
               {t('settings.sectionSteam')}
             </CardTitle>
             <div class="mb-2">
-              <Label for="settings-steam-key">{t('settings.steamApiKey')}</Label>
+              <div class="mb-1 flex flex-wrap items-center gap-1">
+                <Label for="settings-steam-key" class="mb-0">
+                  {t('settings.steamApiKey')}
+                </Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  class="size-7 min-h-7 shrink-0 text-blue-600 hover:bg-blue-500/15 hover:text-blue-700 dark:text-blue-400 dark:hover:bg-blue-400/10 dark:hover:text-blue-300"
+                  aria-label={t('settings.steamApiKeyLinkTitle')}
+                  title={t('settings.steamApiKeyLinkTitle')}
+                  onClick={() => void App.OpenExternalURL('https://steamcommunity.com/dev/apikey')}
+                >
+                  <ExternalLink size={14} strokeWidth={2} aria-hidden />
+                </Button>
+              </div>
               <Input id="settings-steam-key" type="password" value={s()!.steamWebApiKey} onInput={bind('steamWebApiKey')} autocomplete="off" />
             </div>
             <div class="mb-2">

@@ -77,6 +77,7 @@
     "title": "Settings",
     "playerName": "Player name",
     "steamApiKey": "Steam Web API Key",
+    "steamApiKeyLinkTitle": "Open Steam page to register your Web API Key",
     "testKey": "Test key (optional; overrides saved)",
     "testKeyPlaceholder": "leave blank to use the saved key",
     "validateKey": "Validate Steam key",

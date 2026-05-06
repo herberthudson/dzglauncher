@@ -77,6 +77,7 @@
     "title": "Ajustes",
     "playerName": "Nombre del jugador",
     "steamApiKey": "Steam Web API Key",
+    "steamApiKeyLinkTitle": "Abrir en Steam la página para registrar la Web API Key",
     "testKey": "Probar clave (opcional; reemplaza la guardada)",
     "testKeyPlaceholder": "dejar en blanco para usar la guardada",
     "validateKey": "Validar clave Steam",
