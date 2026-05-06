@@ -1,4 +1,5 @@
 import {domain} from '../../wailsjs/go/models';
+import {favoriteKeyParts} from './favoriteRows';
 
 export function historyLineToServerRow(h: domain.HistoryLine): domain.ServerRow {
   const ip = (h.ip || '').trim();
@@ -38,4 +39,12 @@ export function historyEntries(lines: domain.HistoryLine[]): HistoryTableEntry[]
     row: historyLineToServerRow(h),
     atUnix: h.atUnix ?? 0,
   }));
+}
+
+export function historyKeySet(s: domain.Settings): Set<string> {
+  const set = new Set<string>();
+  for (const h of s.history || []) {
+    set.add(favoriteKeyParts(h.ip, h.gamePort, h.queryPort));
+  }
+  return set;
 }

@@ -6,6 +6,7 @@ import {domain} from '../../../wailsjs/go/models';
 import {browseSessionPayload, loadBrowseSessionMigrate} from './browseSession';
 import {sortBrowseRows, type BrowseListSortKey} from './sortBrowseRows';
 import {favoritesKeySet, favRowKey, mapQuickFavError, quickFavoritesKeySet} from '../../shared/favoriteRows';
+import {historyKeySet} from '../../shared/historyRows';
 import {DsSelect} from '@/components/ui/select';
 import {PageSizeInput} from '../../shared/PageSizeInput';
 import {PageHeader} from '../../shared/PageHeader';
@@ -107,8 +108,9 @@ export default function ServerBrowserPage() {
 
   const favKeysForBrowse = createMemo(() => favoritesKeySet(settingsForFavUi() ?? domain.Settings.createFrom({})));
   const quickFavKeysForBrowse = createMemo(() => quickFavoritesKeySet(settingsForFavUi() ?? domain.Settings.createFrom({})));
+  const historyKeysForBrowse = createMemo(() => historyKeySet(settingsForFavUi() ?? domain.Settings.createFrom({})));
 
-  const refreshBrowseFavoriteUi = () => {
+  const refreshBrowseSettingsUi = () => {
     void App.LoadSettings()
       .then((st) => setSettingsForFavUi(domain.Settings.createFrom(st as object)))
       .catch(() => {});
@@ -526,8 +528,15 @@ export default function ServerBrowserPage() {
                           const rk = favRowKey(row);
                           const inFav = favKeysForBrowse().has(rk);
                           const inQuick = quickFavKeysForBrowse().has(rk);
+                          const inHist = historyKeysForBrowse().has(rk);
+                          const inYellowRow = inFav || inQuick;
                           return (
-                          <TableRow>
+                          <TableRow
+                            class={cn(
+                              inYellowRow && '[&_td]:border-amber-600/75',
+                              !inYellowRow && inHist && '[&_td]:border-sky-500/70',
+                            )}
+                          >
                             <TableCell class="max-w-56 whitespace-normal">{row.name}</TableCell>
                             <TableCell class={tablePasswordColClass}>
                               <ServerPasswordCell row={row} />
@@ -559,7 +568,7 @@ export default function ServerBrowserPage() {
                                   aria-label={t('browse.fav')}
                                   onClick={() =>
                                     App.ToggleFavoriteRow(row)
-                                      .then(() => refreshBrowseFavoriteUi())
+                                      .then(() => refreshBrowseSettingsUi())
                                       .catch((e) => setErr(String(e)))
                                   }
                                 >
@@ -578,7 +587,7 @@ export default function ServerBrowserPage() {
                                   aria-label={t('browse.quickFav')}
                                   onClick={() =>
                                     App.SetQuickFavorite(row, window.prompt(t('browse.quickFavPrompt'), row.name) || row.name)
-                                      .then(() => refreshBrowseFavoriteUi())
+                                      .then(() => refreshBrowseSettingsUi())
                                       .catch((e) => setErr(mapQuickFavError(String(e), t)))
                                   }
                                 >
@@ -708,7 +717,14 @@ export default function ServerBrowserPage() {
             </aside>
           </div>
           <Show when={joinModalRow()}>
-            <ServerJoinModal row={joinModalRow()} onClose={() => setJoinModalRow(null)} onRowPatched={patchJoinRow} />
+            <ServerJoinModal
+              row={joinModalRow()}
+              onClose={() => {
+                refreshBrowseSettingsUi();
+                setJoinModalRow(null);
+              }}
+              onRowPatched={patchJoinRow}
+            />
           </Show>
         </div>
       </Show>
