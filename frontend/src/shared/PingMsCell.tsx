@@ -1,3 +1,5 @@
+import {Show} from 'solid-js';
+import {GlobeOff} from 'lucide-solid';
 import {cn} from '@/lib/utils';
 
 function lerp(a: number, b: number, t: number) {
@@ -22,11 +24,20 @@ function pingMsForeground(ms: number): string | undefined {
   return lerpRgb([245, 132, 42], [218, 38, 38], Math.min(1, (ms - 200) / 100));
 }
 
-export function PingMsCell(props: {value: number}) {
+export function PingMsCell(props: {value: number; unreachable?: boolean; unreachableLabel?: string}) {
   const color = () => pingMsForeground(props.value);
   return (
-    <span class={cn(!color() && 'text-muted-foreground')} style={color() ? {color: color() as string} : undefined}>
-      {props.value}
-    </span>
+    <Show
+      when={props.unreachable}
+      fallback={
+        <span class={cn(!color() && 'text-muted-foreground')} style={color() ? {color: color() as string} : undefined}>
+          {props.value}
+        </span>
+      }
+    >
+      <span class="inline-flex items-center text-red-600" title={props.unreachableLabel} aria-label={props.unreachableLabel}>
+        <GlobeOff size={14} strokeWidth={2} aria-hidden />
+      </span>
+    </Show>
   );
 }

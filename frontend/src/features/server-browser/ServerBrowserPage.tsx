@@ -61,6 +61,10 @@ function rowKey(r: domain.ServerRow) {
   return r.queryHost + ':' + r.queryPort + ':' + r.address;
 }
 
+function pingLooksUnavailable(ping: number | undefined): boolean {
+  return ping === 9999 || ping == null || !Number.isFinite(ping);
+}
+
 function filterFields(f: domain.FilterState) {
   return {
     exclude1PP: !!f.exclude1PP,
@@ -113,6 +117,7 @@ export default function ServerBrowserPage() {
   const [browseSortKey, setBrowseSortKey] = createSignal<BrowseListSortKey | null>(null);
   const [browseSortAsc, setBrowseSortAsc] = createSignal(true);
   const [settingsForFavUi, setSettingsForFavUi] = createSignal<domain.Settings | null>(null);
+  const [pingUnreachableKeys, setPingUnreachableKeys] = createSignal<Set<string>>(new Set<string>());
 
   const endBrowseFetchIfCurrent = (gen: number) => {
     if (gen === browseFetchGen) {
@@ -216,6 +221,20 @@ export default function ServerBrowserPage() {
     setRaw((prev) => normalizeServerRows(prev).map((r) => (rowKey(r) === rk ? next : r)));
   };
 
+  const applyPingReachability = (updated: domain.ServerRow) => {
+    const k = rowKey(updated);
+    const bad = pingLooksUnavailable(updated.ping);
+    setPingUnreachableKeys((prev) => {
+      const next = new Set(prev);
+      if (bad) {
+        next.add(k);
+      } else {
+        next.delete(k);
+      }
+      return next;
+    });
+  };
+
   createEffect(() => {
     if (!browseReady()) {
       return;
@@ -288,6 +307,7 @@ export default function ServerBrowserPage() {
         }
         setRaw(normalizeServerRows(rows));
         setPage(1);
+        setPingUnreachableKeys(new Set<string>());
       })
       .catch((e) => {
         if (gen === browseFetchGen) {
@@ -306,6 +326,7 @@ export default function ServerBrowserPage() {
     setPingInFlight(true);
     void parallelServerPing(sl, (r) => App.RefreshServerPing(r), 12, (u) => {
       patchJoinRow(u);
+      applyPingReachability(u);
     })
       .catch((e) => setErr(String(e)))
       .finally(() => setPingInFlight(false));
@@ -323,6 +344,7 @@ export default function ServerBrowserPage() {
         }
         setRaw(normalizeServerRows(rows));
         setPage(1);
+        setPingUnreachableKeys(new Set<string>());
       })
       .catch((e) => {
         if (gen === browseFetchGen) {
@@ -347,6 +369,7 @@ export default function ServerBrowserPage() {
         }
         setRaw(normalizeServerRows(row != null ? [row] : []));
         setPage(1);
+        setPingUnreachableKeys(new Set<string>());
       })
       .catch((e) => {
         if (gen === browseFetchGen) {
@@ -586,11 +609,13 @@ export default function ServerBrowserPage() {
                           const inQuick = quickFavKeysForBrowse().has(rk);
                           const inHist = historyKeysForBrowse().has(rk);
                           const inYellowRow = inFav || inQuick;
+                          const pingRowMuted = pingUnreachableKeys().has(rowKey(row));
                           return (
                           <TableRow
                             class={cn(
                               inYellowRow && '[&_td]:border-amber-600/75',
                               !inYellowRow && inHist && '[&_td]:border-sky-500/70',
+                              pingRowMuted && '[&_td]:bg-muted/25 [&_td]:text-foreground/65',
                             )}
                           >
                             <TableCell class="max-w-56 whitespace-normal">{row.name}</TableCell>
@@ -609,7 +634,11 @@ export default function ServerBrowserPage() {
                               <ServerAddressCell address={row.address} />
                             </TableCell>
                             <TableCell>
-                              <PingMsCell value={row.ping} />
+                              <PingMsCell
+                                value={row.ping ?? 9999}
+                                unreachable={pingUnreachableKeys().has(rowKey(row))}
+                                unreachableLabel={t('browse.pingUnreachable')}
+                              />
                             </TableCell>
                             <TableCell>{row.distanceLabel}</TableCell>
                             <TableCell>

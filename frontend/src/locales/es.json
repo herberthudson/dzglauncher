@@ -140,6 +140,7 @@
     "tableCaption": "Tabla de servidores: nombre, mapa, perspectiva, proveedor, mods, hora en juego, jugadores, dirección, ping, distancia y acciones.",
     "loadSteam": "Cargar lista de Steam",
     "refreshPing": "Actualizar ping",
+    "pingUnreachable": "Ping no disponible: no se pudo obtener información de este servidor.",
     "refreshPingTitle": "Solo servidores de esta página",
     "scanLan": "Escanear LAN",
     "bmPlaceholder": "ID Battlemetrics",

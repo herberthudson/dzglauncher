@@ -140,6 +140,7 @@
     "tableCaption": "Server table: name, map, perspective, host type, mods flag, in-game time, players, address, ping, distance, and actions.",
     "loadSteam": "Load Steam server list",
     "refreshPing": "Refresh ping",
+    "pingUnreachable": "Ping unavailable: could not reach this server.",
     "refreshPingTitle": "Only servers on this page",
     "scanLan": "Scan LAN",
     "bmPlaceholder": "Battlemetrics ID",
