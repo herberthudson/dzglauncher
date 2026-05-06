@@ -12,6 +12,16 @@ This repository is a **personal** project. The maintainer **does not** commit to
 
 ---
 
+## Install (Linux)
+
+Run this in a terminal to download and execute [`install.sh`](../install.sh) from the `main` branch: it detects your distro and installs the latest release package (or builds from the Arch packaging files when appropriate).
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/herberthudson/dzglauncher/main/install.sh | sh
+```
+
+---
+
 ## Table of contents
 
 - [Overview](#overview)
