@@ -340,7 +340,10 @@ func (a *App) ScanLAN() ([]domain.ServerRow, error) {
 	}
 	ctx, cancel := context.WithTimeout(a.ctx, 35*time.Second)
 	defer cancel()
-	rows := lan.Scan(ctx, cfg.LANQueryPort)
+	rows, err := lan.Scan(ctx, cfg.LANQueryPort)
+	if err != nil {
+		return nil, err
+	}
 	for i := range rows {
 		rows[i].DistanceLabel = a.distanceFor(&cfg, rows[i].QueryHost)
 	}

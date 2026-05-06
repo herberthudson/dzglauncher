@@ -86,9 +86,17 @@ function patchFilter(base: domain.FilterState, patch: Partial<ReturnType<typeof 
   return domain.FilterState.createFrom({...filterFields(base), ...patch});
 }
 
+function normalizeServerRows(rows: readonly domain.ServerRow[] | null | undefined): domain.ServerRow[] {
+  if (rows == null || !Array.isArray(rows)) {
+    return [];
+  }
+  return rows as domain.ServerRow[];
+}
+
 export default function ServerBrowserPage() {
   const [t] = useTranslation();
   let applyFiltersGen = 0;
+  let browseFetchGen = 0;
   const [browseReady, setBrowseReady] = createSignal(false);
   const [raw, setRaw] = createSignal<domain.ServerRow[]>([]);
   const [filtered, setFiltered] = createSignal<domain.ServerRow[]>([]);
@@ -105,6 +113,12 @@ export default function ServerBrowserPage() {
   const [browseSortKey, setBrowseSortKey] = createSignal<BrowseListSortKey | null>(null);
   const [browseSortAsc, setBrowseSortAsc] = createSignal(true);
   const [settingsForFavUi, setSettingsForFavUi] = createSignal<domain.Settings | null>(null);
+
+  const endBrowseFetchIfCurrent = (gen: number) => {
+    if (gen === browseFetchGen) {
+      setLoading(false);
+    }
+  };
 
   const favKeysForBrowse = createMemo(() => favoritesKeySet(settingsForFavUi() ?? domain.Settings.createFrom({})));
   const quickFavKeysForBrowse = createMemo(() => quickFavoritesKeySet(settingsForFavUi() ?? domain.Settings.createFrom({})));
@@ -151,7 +165,7 @@ export default function ServerBrowserPage() {
   const persistBrowse = () => {
     void App.SaveBrowseSession(
       JSON.stringify(
-        browseSessionPayload(filterFields(filters()), raw(), page(), pageSize(), filtersListOpen(), bmId()),
+        browseSessionPayload(filterFields(filters()), normalizeServerRows(raw()), page(), pageSize(), filtersListOpen(), bmId()),
       ),
     );
   };
@@ -173,7 +187,7 @@ export default function ServerBrowserPage() {
     });
   });
 
-  const orderedFiltered = createMemo(() => sortBrowseRows(filtered(), browseSortKey(), browseSortAsc(), rowKey));
+  const orderedFiltered = createMemo(() => sortBrowseRows(normalizeServerRows(filtered()), browseSortKey(), browseSortAsc(), rowKey));
 
   const totalPages = createMemo(() => Math.max(1, Math.ceil(orderedFiltered().length / pageSize()) || 1));
 
@@ -198,9 +212,23 @@ export default function ServerBrowserPage() {
 
   const patchJoinRow = (next: domain.ServerRow) => {
     const rk = rowKey(next);
-    setFiltered((prev) => prev.map((r) => (rowKey(r) === rk ? next : r)));
-    setRaw((prev) => prev.map((r) => (rowKey(r) === rk ? next : r)));
+    setFiltered((prev) => normalizeServerRows(prev).map((r) => (rowKey(r) === rk ? next : r)));
+    setRaw((prev) => normalizeServerRows(prev).map((r) => (rowKey(r) === rk ? next : r)));
   };
+
+  createEffect(() => {
+    if (!browseReady()) {
+      return;
+    }
+    const r = raw();
+    const f = filtered();
+    if (r == null || !Array.isArray(r)) {
+      setRaw([]);
+    }
+    if (f == null || !Array.isArray(f)) {
+      setFiltered([]);
+    }
+  });
 
   createEffect(() => {
     void filters();
@@ -210,13 +238,13 @@ export default function ServerBrowserPage() {
     }
     const gen = ++applyFiltersGen;
     const plain = filterFields(filters());
-    const rawSnap = raw();
+    const rawSnap = normalizeServerRows(raw());
     void App.ApplyServerFilters(rawSnap, domain.FilterState.createFrom(plain))
       .then((out) => {
         if (gen !== applyFiltersGen) {
           return;
         }
-        setFiltered(out);
+        setFiltered(normalizeServerRows(out));
       })
       .catch((e) => {
         if (gen === applyFiltersGen) {
@@ -235,10 +263,11 @@ export default function ServerBrowserPage() {
   });
 
   createEffect(() => {
-    if (raw().length === 0) {
+    const rows = normalizeServerRows(raw());
+    if (rows.length === 0) {
       return;
     }
-    App.MergeKnownMapNamesFromRows(raw())
+    App.MergeKnownMapNamesFromRows(rows)
       .then(setKnownMapNames)
       .catch(() => {});
   });
@@ -248,15 +277,24 @@ export default function ServerBrowserPage() {
   };
 
   const fetchSteam = () => {
+    const gen = ++browseFetchGen;
     setLoading(true);
     setErr('');
+    setPingInFlight(false);
     App.FetchSteamServers()
       .then((rows) => {
-        setRaw(rows);
+        if (gen !== browseFetchGen) {
+          return;
+        }
+        setRaw(normalizeServerRows(rows));
         setPage(1);
       })
-      .catch((e) => setErr(String(e)))
-      .finally(() => setLoading(false));
+      .catch((e) => {
+        if (gen === browseFetchGen) {
+          setErr(String(e));
+        }
+      })
+      .finally(() => endBrowseFetchIfCurrent(gen));
   };
 
   const ping = () => {
@@ -274,30 +312,48 @@ export default function ServerBrowserPage() {
   };
 
   const scanLan = () => {
+    const gen = ++browseFetchGen;
     setLoading(true);
     setErr('');
+    setPingInFlight(false);
     App.ScanLAN()
       .then((rows) => {
-        setRaw(rows);
+        if (gen !== browseFetchGen) {
+          return;
+        }
+        setRaw(normalizeServerRows(rows));
         setPage(1);
       })
-      .catch((e) => setErr(String(e)))
-      .finally(() => setLoading(false));
+      .catch((e) => {
+        if (gen === browseFetchGen) {
+          setErr(String(e));
+        }
+      })
+      .finally(() => endBrowseFetchIfCurrent(gen));
   };
 
   const resolveBm = () => {
     if (!bmId().trim()) {
       return;
     }
+    const gen = ++browseFetchGen;
     setLoading(true);
     setErr('');
+    setPingInFlight(false);
     App.ResolveBattlemetricsID(bmId().trim())
       .then((row) => {
-        setRaw([row]);
+        if (gen !== browseFetchGen) {
+          return;
+        }
+        setRaw(normalizeServerRows(row != null ? [row] : []));
         setPage(1);
       })
-      .catch((e) => setErr(String(e)))
-      .finally(() => setLoading(false));
+      .catch((e) => {
+        if (gen === browseFetchGen) {
+          setErr(String(e));
+        }
+      })
+      .finally(() => endBrowseFetchIfCurrent(gen));
   };
 
   const mapSelectOptions = createMemo(() => {
@@ -385,7 +441,7 @@ export default function ServerBrowserPage() {
                   <p class="m-0 min-w-[10rem] flex-1 text-[0.8rem] text-muted-foreground">
                     {loading() || pingInFlight()
                       ? t('common.processing')
-                      : t('browse.pageLine', {slice: pageSlice().length, filtered: filtered().length, raw: raw().length})}
+                      : t('browse.pageLine', {slice: pageSlice().length, filtered: normalizeServerRows(filtered()).length, raw: normalizeServerRows(raw()).length})}
                   </p>
                   <div class="flex flex-wrap items-center gap-2">
                     <span class="text-[0.8125rem] font-semibold text-muted-foreground">{t('browse.perPage')}</span>
