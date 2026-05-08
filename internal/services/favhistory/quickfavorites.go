@@ -77,7 +77,7 @@ func RemoveQuickFavoriteAt(cfg *domain.Settings, index int) {
 }
 
 func ClearQuickFavorites(cfg *domain.Settings) {
-	cfg.QuickFavorites = nil
+	cfg.QuickFavorites = []domain.Favorite{}
 }
 
 func AddFavoriteIfMissing(cfg *domain.Settings, f domain.Favorite) {

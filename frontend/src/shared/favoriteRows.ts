@@ -37,9 +37,9 @@ export function favoriteToServerRow(f: domain.Favorite): domain.ServerRow {
 }
 
 export function quickFavoritesList(s: domain.Settings): domain.Favorite[] {
-  const q = Array.isArray(s.quickFavorites) ? s.quickFavorites : [];
-  if (q.length > 0) {
-    return q.slice(0, 5);
+  const raw = Array.isArray(s.quickFavorites) ? s.quickFavorites.filter((f): f is domain.Favorite => f != null) : [];
+  if (raw.length > 0) {
+    return raw.slice(0, 5);
   }
   if (s.quickFavorite) {
     return [s.quickFavorite];

@@ -34,9 +34,7 @@ func NewStoreAtPath(path string) *Store {
 
 var _ ports.ConfigStore = (*Store)(nil)
 
-func (s *Store) Load() (domain.Settings, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+func (s *Store) readMergedSettings() (domain.Settings, error) {
 	data, err := os.ReadFile(s.path)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -49,6 +47,38 @@ func (s *Store) Load() (domain.Settings, error) {
 		return domain.Settings{}, err
 	}
 	return mergeDefaults(out), nil
+}
+
+func mergePreserveNilCollections(disk, incoming domain.Settings) domain.Settings {
+	out := incoming
+	if incoming.Favorites == nil {
+		out.Favorites = disk.Favorites
+	}
+	if incoming.QuickFavorites == nil {
+		out.QuickFavorites = disk.QuickFavorites
+	}
+	if incoming.History == nil {
+		out.History = disk.History
+	}
+	if incoming.KnownMapNames == nil {
+		out.KnownMapNames = disk.KnownMapNames
+	}
+	if incoming.WorkshopModTimeUpdated == nil {
+		out.WorkshopModTimeUpdated = disk.WorkshopModTimeUpdated
+	}
+	if incoming.QuickFavorite == nil && disk.QuickFavorite != nil {
+		out.QuickFavorite = disk.QuickFavorite
+	}
+	if incoming.UITheme == "" && disk.UITheme != "" {
+		out.UITheme = disk.UITheme
+	}
+	return out
+}
+
+func (s *Store) Load() (domain.Settings, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.readMergedSettings()
 }
 
 func mergeDefaults(s domain.Settings) domain.Settings {
@@ -96,6 +126,12 @@ func mergeDefaults(s domain.Settings) domain.Settings {
 func (s *Store) Save(cfg domain.Settings) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	disk, err := s.readMergedSettings()
+	if err != nil {
+		return err
+	}
+	cfg = mergePreserveNilCollections(disk, cfg)
+	cfg = mergeDefaults(cfg)
 	if err := os.MkdirAll(filepath.Dir(s.path), 0o755); err != nil {
 		return err
 	}

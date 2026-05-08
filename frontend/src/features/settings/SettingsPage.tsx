@@ -15,6 +15,17 @@ import {resolveTheme} from '../../theme/resolveTheme';
 import {DsSelect} from '@/components/ui/select';
 import {PageHeader} from '../../shared/PageHeader';
 
+function settingsForPersistence(cur: domain.Settings): domain.Settings {
+  return domain.Settings.createFrom({
+    ...(cur as object),
+    favorites: cur.favorites ?? [],
+    quickFavorites: cur.quickFavorites ?? [],
+    history: cur.history ?? [],
+    knownMapNames: cur.knownMapNames ?? [],
+    workshopModTimeUpdated: cur.workshopModTimeUpdated ?? {},
+  } as object);
+}
+
 export default function SettingsPage() {
   const [t] = useTranslation();
   const [s, setS] = createSignal<domain.Settings | null>(null);
@@ -25,8 +36,9 @@ export default function SettingsPage() {
   onMount(() => {
     App.LoadSettings()
       .then((st) => {
-        setS(st);
-        void applyFullThemeFromSettings(st.uiTheme, st.uiExternalThemePath);
+        const normalized = domain.Settings.createFrom(st as object);
+        setS(normalized);
+        void applyFullThemeFromSettings(normalized.uiTheme, normalized.uiExternalThemePath);
       })
       .catch((e: unknown) => setMsg(String(e)));
   });
@@ -77,10 +89,11 @@ export default function SettingsPage() {
     if (!cur) {
       return;
     }
-    App.SaveSettings(cur)
+    const payload = settingsForPersistence(cur);
+    App.SaveSettings(payload)
       .then(() => {
-        void i18n.changeLanguage(resolveLocale(cur.locale || '', navigator.language));
-        void applyFullThemeFromSettings(cur.uiTheme, cur.uiExternalThemePath);
+        void i18n.changeLanguage(resolveLocale(payload.locale || '', navigator.language));
+        void applyFullThemeFromSettings(payload.uiTheme, payload.uiExternalThemePath);
         setOkMsg(t('settings.saved'));
         setMsg('');
       })
