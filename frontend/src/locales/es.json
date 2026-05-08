@@ -129,7 +129,9 @@
     "pageLine": "Página: {{slice}} filas · {{total}} entradas",
     "deleteTitle": "Quitar esta entrada del historial de conexiones.",
     "connectedAt": "Última: {{when}}",
-    "connectedAtTitle": "Hora de la última conexión"
+    "connectedAtTitle": "Hora de la última conexión",
+    "thConnected": "Última conexión",
+    "thConnectedLong": "Fecha y hora de la última vez que te conectaste a este servidor."
   },
   "browse": {
     "title": "Lista de servidores",

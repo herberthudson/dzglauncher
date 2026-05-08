@@ -101,7 +101,15 @@ export default function HistoryPage() {
 
   const hist = () => (s() && Array.isArray(s()!.history) ? s()!.history : []);
 
-  const allEntries = createMemo(() => historyEntries(hist()));
+  const allEntries = createMemo(() => {
+    const entries = historyEntries(hist());
+    return [...entries].sort((a, b) => {
+      if (b.atUnix !== a.atUnix) {
+        return b.atUnix - a.atUnix;
+      }
+      return b.historyIndex - a.historyIndex;
+    });
+  });
 
   const historyListIdentity = createMemo(() =>
     [...allEntries()]
@@ -247,6 +255,9 @@ export default function HistoryPage() {
                         <TableHead scope="col" title={t('browse.thNameLong')}>
                           {t('browse.thName')}
                         </TableHead>
+                        <TableHead scope="col" title={t('history.thConnectedLong')}>
+                          {t('history.thConnected')}
+                        </TableHead>
                         <TableHead scope="col" class={tablePasswordColClass} title={t('browse.thPasswordLong')}>
                           {t('browse.thPassword')}
                         </TableHead>
@@ -274,9 +285,6 @@ export default function HistoryPage() {
                         <TableHead scope="col" title={t('browse.thPingLong')}>
                           {t('browse.thPing')}
                         </TableHead>
-                        <TableHead scope="col" title={t('browse.thDistLong')}>
-                          {t('browse.thDist')}
-                        </TableHead>
                         <TableHead scope="col" title={t('browse.thActionsLong')}>
                           {t('browse.thActions')}
                         </TableHead>
@@ -292,13 +300,9 @@ export default function HistoryPage() {
                             <TableRow
                               class={cn(pingRowMuted && '[&_td]:bg-muted/25 [&_td]:text-foreground/65')}
                             >
-                              <TableCell class="max-w-56 whitespace-normal">
-                                <div>{row.name}</div>
-                                {when ? (
-                                  <div class="mt-0.5 text-[0.7rem] text-muted-foreground" title={t('history.connectedAtTitle')}>
-                                    {t('history.connectedAt', {when})}
-                                  </div>
-                                ) : null}
+                              <TableCell class="max-w-56 whitespace-normal">{row.name}</TableCell>
+                              <TableCell class="whitespace-nowrap text-[0.8125rem] text-muted-foreground" title={when ? t('history.connectedAtTitle') : undefined}>
+                                {when || '—'}
                               </TableCell>
                               <TableCell class={tablePasswordColClass}>
                                 <ServerPasswordCell row={row} />
@@ -321,7 +325,6 @@ export default function HistoryPage() {
                                   unreachableLabel={t('browse.pingUnreachable')}
                                 />
                               </TableCell>
-                              <TableCell>{row.distanceLabel}</TableCell>
                               <TableCell>
                                 <HistoryActionsCell
                                   row={row}
