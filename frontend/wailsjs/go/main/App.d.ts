@@ -15,8 +15,6 @@ export function CheckForUpdate():Promise<domain.UpdateCheckResult>;
 
 export function ClearQuickFavorite():Promise<void>;
 
-export function DeleteWorkshopItems(arg1:Array<string>):Promise<void>;
-
 export function DiscoverMapNames(arg1:Array<domain.ServerRow>):Promise<Array<string>>;
 
 export function EnrichServerMods(arg1:string,arg2:number,arg3:number):Promise<Array<string>>;

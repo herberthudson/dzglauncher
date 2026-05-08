@@ -36,21 +36,3 @@ func EnsureModDirUnderContent(contentRoot, appid, target string) error {
 	}
 	return nil
 }
-
-func DeleteModDirs(contentRoot, appid string, paths []string) error {
-	if len(paths) == 0 {
-		return nil
-	}
-	for _, p := range paths {
-		if err := EnsureModDirUnderContent(contentRoot, appid, p); err != nil {
-			return err
-		}
-	}
-	for _, p := range paths {
-		t := filepath.Clean(p)
-		if err := os.RemoveAll(t); err != nil {
-			return err
-		}
-	}
-	return nil
-}

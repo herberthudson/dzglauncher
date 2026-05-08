@@ -323,6 +323,9 @@ export namespace workshop {
 	    path: string;
 	    sizeBytes: number;
 	    metaTimestamp?: number;
+	    acfSizeBytes?: number;
+	    acfTimeUpdated?: number;
+	    acfManifest?: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new Item(source);
@@ -335,6 +338,9 @@ export namespace workshop {
 	        this.path = source["path"];
 	        this.sizeBytes = source["sizeBytes"];
 	        this.metaTimestamp = source["metaTimestamp"];
+	        this.acfSizeBytes = source["acfSizeBytes"];
+	        this.acfTimeUpdated = source["acfTimeUpdated"];
+	        this.acfManifest = source["acfManifest"];
 	    }
 	}
 

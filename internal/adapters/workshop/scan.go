@@ -14,11 +14,14 @@ var rePublished = regexp.MustCompile(`(?i)publishedid\s*=\s*(\d+)`)
 var reName = regexp.MustCompile(`(?i)name\s*=\s*"([^"]*)"`)
 
 type Item struct {
-	ID            string  `json:"id"`
-	Name          string  `json:"name"`
-	Path          string  `json:"path"`
-	SizeBytes     int64   `json:"sizeBytes"`
-	MetaTimestamp *int64  `json:"metaTimestamp,omitempty"`
+	ID             string  `json:"id"`
+	Name           string  `json:"name"`
+	Path           string  `json:"path"`
+	SizeBytes      int64   `json:"sizeBytes"`
+	MetaTimestamp  *int64  `json:"metaTimestamp,omitempty"`
+	AcfSizeBytes   *int64  `json:"acfSizeBytes,omitempty"`
+	AcfTimeUpdated *int64  `json:"acfTimeUpdated,omitempty"`
+	AcfManifest    *string `json:"acfManifest,omitempty"`
 }
 
 var reTimestamp = regexp.MustCompile(`(?i)timestamp\s*=\s*"?(\d+)"?\s*;?`)
@@ -51,6 +54,7 @@ func ListInstalled(contentRoot string, appid string) ([]Item, error) {
 	if err != nil {
 		return nil, err
 	}
+	acfByID := readAppWorkshopInstalled(contentRoot, appid)
 	var out []Item
 	for _, e := range ents {
 		if !e.IsDir() {
@@ -75,7 +79,18 @@ func ListInstalled(contentRoot string, appid string) ([]Item, error) {
 		}
 		modPath := filepath.Join(root, e.Name())
 		sz, _ := DirSizeBytes(modPath)
-		out = append(out, Item{ID: id, Name: name, Path: modPath, SizeBytes: sz, MetaTimestamp: metaTS})
+		it := Item{ID: id, Name: name, Path: modPath, SizeBytes: sz, MetaTimestamp: metaTS}
+		if acfByID != nil {
+			if ent, ok := acfByID[NormWorkshopID(id)]; ok {
+				mergeACFIntoItem(&it, ent)
+			} else if ent, ok := acfByID[e.Name()]; ok {
+				mergeACFIntoItem(&it, ent)
+			}
+		}
+		out = append(out, it)
+	}
+	if out == nil {
+		out = []Item{}
 	}
 	return out, nil
 }
