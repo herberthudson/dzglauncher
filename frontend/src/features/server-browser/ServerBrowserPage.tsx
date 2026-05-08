@@ -12,7 +12,7 @@ import {DsSelect} from '@/components/ui/select';
 import {PageSizeInput} from '../../shared/PageSizeInput';
 import {PageHeader} from '../../shared/PageHeader';
 import {clampPageSize} from '../../shared/pageSizeConstants';
-import {formatPlayersWithQueue} from '../../shared/formatPlayersWithQueue';
+import {PlayersCapacityCell} from '../../shared/PlayersCapacityCell';
 import {ServerAddressCell} from '../../shared/ServerAddressCell';
 import {pingLooksUnavailable} from '../../shared/pingReachability';
 import {parallelServerPing} from '../../shared/parallelServerPing';
@@ -135,7 +135,9 @@ function BrowseTableRow(props: BrowseTableRowProps) {
       <TableCell>
         <InGameTimeCell inGameTime={props.row.inGameTime} />
       </TableCell>
-      <TableCell>{formatPlayersWithQueue(props.row.players, props.row.maxPlayers, props.row.queueSize)}</TableCell>
+      <TableCell>
+        <PlayersCapacityCell players={props.row.players} maxPlayers={props.row.maxPlayers} queueSize={props.row.queueSize} />
+      </TableCell>
       <TableCell class="max-w-72 whitespace-normal">
         <ServerAddressCell address={props.row.address} />
       </TableCell>

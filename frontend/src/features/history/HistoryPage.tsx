@@ -10,7 +10,7 @@ import {historyEntries} from '../../shared/historyRows';
 import {PageSizeInput} from '../../shared/PageSizeInput';
 import {PageHeader} from '../../shared/PageHeader';
 import {clampPageSize} from '../../shared/pageSizeConstants';
-import {formatPlayersWithQueue} from '../../shared/formatPlayersWithQueue';
+import {PlayersCapacityCell} from '../../shared/PlayersCapacityCell';
 import {ServerAddressCell} from '../../shared/ServerAddressCell';
 import {parallelServerPing} from '../../shared/parallelServerPing';
 import {ServerJoinModal} from '../../shared/ServerJoinModal';
@@ -314,7 +314,9 @@ export default function HistoryPage() {
                               <TableCell>
                                 <InGameTimeCell inGameTime={row.inGameTime} />
                               </TableCell>
-                              <TableCell>{formatPlayersWithQueue(row.players, row.maxPlayers, row.queueSize)}</TableCell>
+                              <TableCell>
+                                <PlayersCapacityCell players={row.players} maxPlayers={row.maxPlayers} queueSize={row.queueSize} />
+                              </TableCell>
                               <TableCell class="max-w-72 whitespace-normal">
                                 <ServerAddressCell address={row.address} />
                               </TableCell>

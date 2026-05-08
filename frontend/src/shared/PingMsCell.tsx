@@ -24,6 +24,14 @@ function pingMsForeground(ms: number): string | undefined {
   return lerpRgb([245, 132, 42], [218, 38, 38], Math.min(1, (ms - 200) / 100));
 }
 
+export function heatFromNormalizedLoad(t: number): string | undefined {
+  if (!Number.isFinite(t)) {
+    return undefined;
+  }
+  const u = Math.min(1, Math.max(0, t));
+  return pingMsForeground(u * 300);
+}
+
 export function PingMsCell(props: {value: number; unreachable?: boolean; unreachableLabel?: string}) {
   const color = () => pingMsForeground(props.value);
   return (
