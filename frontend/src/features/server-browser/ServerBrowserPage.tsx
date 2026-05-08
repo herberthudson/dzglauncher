@@ -1,3 +1,4 @@
+import type {Accessor} from 'solid-js';
 import {createEffect, createMemo, createSignal, For, onCleanup, onMount, Show} from 'solid-js';
 import {useTranslation} from 'solid-i18next';
 import {BookmarkPlus, ChevronDown, ChevronUp, ListFilter, Package, Play, Radar, Server, Star, X} from 'lucide-solid';
@@ -5,7 +6,7 @@ import * as App from '../../../wailsjs/go/main/App';
 import {domain} from '../../../wailsjs/go/models';
 import {browseSessionPayload, loadBrowseSessionMigrate} from './browseSession';
 import {sortBrowseRows, type BrowseListSortKey} from './sortBrowseRows';
-import {favoritesKeySet, favRowKey, mapQuickFavError, quickFavoritesKeySet} from '../../shared/favoriteRows';
+import {favoritesKeySet, favRowKey, quickFavoritesKeySet} from '../../shared/favoriteRows';
 import {historyKeySet} from '../../shared/historyRows';
 import {DsSelect} from '@/components/ui/select';
 import {PageSizeInput} from '../../shared/PageSizeInput';
@@ -15,6 +16,7 @@ import {formatPlayersWithQueue} from '../../shared/formatPlayersWithQueue';
 import {ServerAddressCell} from '../../shared/ServerAddressCell';
 import {pingLooksUnavailable} from '../../shared/pingReachability';
 import {parallelServerPing} from '../../shared/parallelServerPing';
+import {FavoriteFlowDialogs, type FavoriteFlowState} from '../../shared/FavoriteFlowDialogs';
 import {ServerJoinModal} from '../../shared/ServerJoinModal';
 import {PingMsCell} from '../../shared/PingMsCell';
 import {ServerPasswordCell} from '../../shared/ServerPasswordCell';
@@ -94,6 +96,103 @@ function normalizeServerRows(rows: readonly domain.ServerRow[] | null | undefine
   return rows as domain.ServerRow[];
 }
 
+type BrowseTableRowProps = {
+  row: domain.ServerRow;
+  favKeySet: Accessor<Set<string>>;
+  quickFavKeySet: Accessor<Set<string>>;
+  historyKeySet: Accessor<Set<string>>;
+  pingUnreachable: Accessor<Set<string>>;
+  onJoin: (row: domain.ServerRow) => void;
+  onErr: (msg: string) => void;
+  refreshFavSettings: () => void;
+  openFavoriteFlow: (next: FavoriteFlowState) => void;
+  t: ReturnType<typeof useTranslation>[0];
+};
+
+function BrowseTableRow(props: BrowseTableRowProps) {
+  const rk = () => favRowKey(props.row);
+  const inFav = () => props.favKeySet().has(rk());
+  const inQuick = () => props.quickFavKeySet().has(rk());
+  const inHist = () => props.historyKeySet().has(rk());
+  const inYellowRow = () => inFav() || inQuick();
+  const pingRowMuted = () => props.pingUnreachable().has(rowKey(props.row));
+  return (
+    <TableRow
+      class={cn(
+        inYellowRow() && '[&_td]:border-amber-600/75',
+        !inYellowRow() && inHist() && '[&_td]:border-sky-500/70',
+        pingRowMuted() && '[&_td]:bg-muted/25 [&_td]:text-foreground/65',
+      )}
+    >
+      <TableCell class="max-w-56 whitespace-normal">{props.row.name}</TableCell>
+      <TableCell class={tablePasswordColClass}>
+        <ServerPasswordCell row={props.row} />
+      </TableCell>
+      <TableCell>{props.row.mapName}</TableCell>
+      <TableCell>{props.row.perspective}</TableCell>
+      <TableCell>{props.row.provider}</TableCell>
+      <TableCell>{props.row.modded ? props.t('common.yes') : props.t('common.no')}</TableCell>
+      <TableCell>
+        <InGameTimeCell inGameTime={props.row.inGameTime} />
+      </TableCell>
+      <TableCell>{formatPlayersWithQueue(props.row.players, props.row.maxPlayers, props.row.queueSize)}</TableCell>
+      <TableCell class="max-w-72 whitespace-normal">
+        <ServerAddressCell address={props.row.address} />
+      </TableCell>
+      <TableCell>
+        <PingMsCell
+          value={props.row.ping ?? 9999}
+          unreachable={props.pingUnreachable().has(rowKey(props.row))}
+          unreachableLabel={props.t('browse.pingUnreachable')}
+        />
+      </TableCell>
+      <TableCell>{props.row.distanceLabel}</TableCell>
+      <TableCell>
+        <div class="flex flex-wrap gap-1 [&_button]:min-h-7 [&_button]:min-w-7 [&_button]:justify-center [&_button]:p-1 [&_button]:text-xs">
+          <Button variant="secondary" size="sm" title={props.t('browse.connectTitle')} aria-label={props.t('browse.connect')} onClick={() => props.onJoin(props.row)}>
+            <Play size={14} strokeWidth={2} aria-hidden />
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            title={props.t('browse.favTitle')}
+            aria-label={props.t('browse.fav')}
+            onClick={() => {
+              if (inFav()) {
+                props.openFavoriteFlow({kind: 'removeFavorite', row: props.row});
+                return;
+              }
+              void App.ToggleFavoriteRow(props.row)
+                .then(() => props.refreshFavSettings())
+                .catch((e) => props.onErr(String(e)));
+            }}
+          >
+            <Star size={14} strokeWidth={2} aria-hidden fill={inFav() ? 'currentColor' : 'none'} class={cn(inFav() && 'text-amber-500')} />
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            title={props.t('browse.quickFavTitle')}
+            aria-label={props.t('browse.quickFav')}
+            onClick={() => {
+              if (inQuick()) {
+                props.openFavoriteFlow({kind: 'removeQuick', row: props.row});
+                return;
+              }
+              props.openFavoriteFlow({kind: 'quickFavLabel', row: props.row});
+            }}
+          >
+            <BookmarkPlus size={14} strokeWidth={2} aria-hidden fill={inQuick() ? 'currentColor' : 'none'} class={cn(inQuick() && 'text-amber-500')} />
+          </Button>
+          <Button variant="secondary" size="sm" title={props.t('browse.joinPanelModsTitle')} aria-label={props.t('browse.joinPanelMods')} onClick={() => props.onJoin(props.row)}>
+            <Package size={14} strokeWidth={2} aria-hidden />
+          </Button>
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+}
+
 export default function ServerBrowserPage() {
   const [t] = useTranslation();
   let applyFiltersGen = 0;
@@ -110,6 +209,7 @@ export default function ServerBrowserPage() {
   const [page, setPage] = createSignal(1);
   const [pageSize, setPageSize] = createSignal(clampPageSize(10));
   const [joinModalRow, setJoinModalRow] = createSignal<domain.ServerRow | null>(null);
+  const [favFlow, setFavFlow] = createSignal<FavoriteFlowState | null>(null);
   const [filtersListOpen, setFiltersListOpen] = createSignal(true);
   const [browseSortKey, setBrowseSortKey] = createSignal<BrowseListSortKey | null>(null);
   const [browseSortAsc, setBrowseSortAsc] = createSignal(true);
@@ -600,95 +700,20 @@ export default function ServerBrowserPage() {
                     </thead>
                     <TableBody>
                       <For each={pageSlice()}>
-                        {(row) => {
-                          const rk = favRowKey(row);
-                          const inFav = favKeysForBrowse().has(rk);
-                          const inQuick = quickFavKeysForBrowse().has(rk);
-                          const inHist = historyKeysForBrowse().has(rk);
-                          const inYellowRow = inFav || inQuick;
-                          const pingRowMuted = pingUnreachableKeys().has(rowKey(row));
-                          return (
-                          <TableRow
-                            class={cn(
-                              inYellowRow && '[&_td]:border-amber-600/75',
-                              !inYellowRow && inHist && '[&_td]:border-sky-500/70',
-                              pingRowMuted && '[&_td]:bg-muted/25 [&_td]:text-foreground/65',
-                            )}
-                          >
-                            <TableCell class="max-w-56 whitespace-normal">{row.name}</TableCell>
-                            <TableCell class={tablePasswordColClass}>
-                              <ServerPasswordCell row={row} />
-                            </TableCell>
-                            <TableCell>{row.mapName}</TableCell>
-                            <TableCell>{row.perspective}</TableCell>
-                            <TableCell>{row.provider}</TableCell>
-                            <TableCell>{row.modded ? t('common.yes') : t('common.no')}</TableCell>
-                            <TableCell>
-                              <InGameTimeCell inGameTime={row.inGameTime} />
-                            </TableCell>
-                            <TableCell>{formatPlayersWithQueue(row.players, row.maxPlayers, row.queueSize)}</TableCell>
-                            <TableCell class="max-w-72 whitespace-normal">
-                              <ServerAddressCell address={row.address} />
-                            </TableCell>
-                            <TableCell>
-                              <PingMsCell
-                                value={row.ping ?? 9999}
-                                unreachable={pingUnreachableKeys().has(rowKey(row))}
-                                unreachableLabel={t('browse.pingUnreachable')}
-                              />
-                            </TableCell>
-                            <TableCell>{row.distanceLabel}</TableCell>
-                            <TableCell>
-                              <div class="flex flex-wrap gap-1 [&_button]:min-h-7 [&_button]:min-w-7 [&_button]:justify-center [&_button]:p-1 [&_button]:text-xs">
-                                <Button variant="secondary" size="sm" title={t('browse.connectTitle')} aria-label={t('browse.connect')} onClick={() => setJoinModalRow(row)}>
-                                  <Play size={14} strokeWidth={2} aria-hidden />
-                                </Button>
-                                <Button
-                                  variant="secondary"
-                                  size="sm"
-                                  title={t('browse.favTitle')}
-                                  aria-label={t('browse.fav')}
-                                  onClick={() =>
-                                    App.ToggleFavoriteRow(row)
-                                      .then(() => refreshBrowseSettingsUi())
-                                      .catch((e) => setErr(String(e)))
-                                  }
-                                >
-                                  <Star
-                                    size={14}
-                                    strokeWidth={2}
-                                    aria-hidden
-                                    fill={inFav ? 'currentColor' : 'none'}
-                                    class={cn(inFav && 'text-amber-500')}
-                                  />
-                                </Button>
-                                <Button
-                                  variant="secondary"
-                                  size="sm"
-                                  title={t('browse.quickFavTitle')}
-                                  aria-label={t('browse.quickFav')}
-                                  onClick={() =>
-                                    App.SetQuickFavorite(row, window.prompt(t('browse.quickFavPrompt'), row.name) || row.name)
-                                      .then(() => refreshBrowseSettingsUi())
-                                      .catch((e) => setErr(mapQuickFavError(String(e), t)))
-                                  }
-                                >
-                                  <BookmarkPlus
-                                    size={14}
-                                    strokeWidth={2}
-                                    aria-hidden
-                                    fill={inQuick ? 'currentColor' : 'none'}
-                                    class={cn(inQuick && 'text-amber-500')}
-                                  />
-                                </Button>
-                                <Button variant="secondary" size="sm" title={t('browse.joinPanelModsTitle')} aria-label={t('browse.joinPanelMods')} onClick={() => setJoinModalRow(row)}>
-                                  <Package size={14} strokeWidth={2} aria-hidden />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                          );
-                        }}
+                        {(row) => (
+                          <BrowseTableRow
+                            row={row}
+                            favKeySet={favKeysForBrowse}
+                            quickFavKeySet={quickFavKeysForBrowse}
+                            historyKeySet={historyKeysForBrowse}
+                            pingUnreachable={pingUnreachableKeys}
+                            onJoin={setJoinModalRow}
+                            onErr={setErr}
+                            refreshFavSettings={refreshBrowseSettingsUi}
+                            openFavoriteFlow={setFavFlow}
+                            t={t}
+                          />
+                        )}
                       </For>
                     </TableBody>
                   </Table>
@@ -798,6 +823,13 @@ export default function ServerBrowserPage() {
               </Card>
             </aside>
           </div>
+          <FavoriteFlowDialogs
+            state={favFlow}
+            onClose={() => setFavFlow(null)}
+            onAfterMutation={refreshBrowseSettingsUi}
+            onErr={setErr}
+            dialogIdPrefix="browse"
+          />
           <Show when={joinModalRow()}>
             <ServerJoinModal
               row={joinModalRow()}

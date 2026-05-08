@@ -463,6 +463,22 @@ func (a *App) RemoveQuickFavoriteIndex(index int) error {
 	return a.store.Save(cfg)
 }
 
+func (a *App) RemoveQuickFavoriteRow(row domain.ServerRow) error {
+	cfg, err := a.store.Load()
+	if err != nil {
+		return err
+	}
+	favhistory.NormalizeQuickFavorites(&cfg)
+	k := favhistory.FavoriteKey(domain.FavoriteFromRow(row))
+	for i := range cfg.QuickFavorites {
+		if favhistory.FavoriteKey(cfg.QuickFavorites[i]) == k {
+			favhistory.RemoveQuickFavoriteAt(&cfg, i)
+			return a.store.Save(cfg)
+		}
+	}
+	return nil
+}
+
 func (a *App) ClearQuickFavorite() error {
 	cfg, err := a.store.Load()
 	if err != nil {

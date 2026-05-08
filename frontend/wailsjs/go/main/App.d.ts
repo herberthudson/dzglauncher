@@ -51,6 +51,8 @@ export function RemoveHistoryIndex(arg1:number):Promise<void>;
 
 export function RemoveQuickFavoriteIndex(arg1:number):Promise<void>;
 
+export function RemoveQuickFavoriteRow(arg1:domain.ServerRow):Promise<void>;
+
 export function ResolveBattlemetricsID(arg1:string):Promise<domain.ServerRow>;
 
 export function SaveBrowseSession(arg1:string):Promise<void>;

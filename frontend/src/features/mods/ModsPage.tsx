@@ -9,7 +9,7 @@ import {clampPageSize} from '../../shared/pageSizeConstants';
 import {formatBytes} from '../../shared/formatBytes';
 import {workshopFolderDisplayPath} from '../../shared/workshopDisplayPath';
 import {i18n} from '../../i18n/i18n';
-import {AlertError} from '@/components/ui/alert';
+import {AlertError, AlertInfo} from '@/components/ui/alert';
 import {Button} from '@/components/ui/button';
 import {Card, CardTitle} from '@/components/ui/card';
 import {Input} from '@/components/ui/input';
@@ -228,9 +228,16 @@ export default function ModsPage() {
             ) : null}
           </p>
         ) : null}
-        <p class="mb-2 mt-0 text-[0.8125rem] text-muted-foreground">{t('mods.help')}</p>
-        <p class="mb-2 mt-0 text-[0.8125rem] text-muted-foreground">{t('mods.overviewUnsubscribe')}</p>
-        <p class="mb-0 mt-0 text-[0.8125rem] text-muted-foreground">{t('mods.helpAcf')}</p>
+        <AlertInfo class="mb-3">
+          <p class="m-0 text-sm font-semibold leading-snug text-foreground">{t('mods.overviewImportantTitle')}</p>
+          <p class="mb-0 mt-2 text-sm leading-relaxed">{t('mods.overviewImportantP1')}</p>
+          <p class="mb-0 mt-2 text-sm leading-relaxed">{t('mods.overviewImportantP2')}</p>
+        </AlertInfo>
+        <p class="mb-1.5 mt-0 text-[0.8125rem] font-medium text-muted-foreground">{t('mods.overviewListIntro')}</p>
+        <ul class="mb-0 list-outside list-disc space-y-1.5 pl-5 text-[0.8125rem] leading-snug text-muted-foreground">
+          <li>{t('mods.overviewBulletMeta')}</li>
+          <li>{t('mods.overviewBulletAcf')}</li>
+        </ul>
       </Card>
 
       <Card class="mb-0 flex min-h-0 flex-col" aria-labelledby="mods-list-title">

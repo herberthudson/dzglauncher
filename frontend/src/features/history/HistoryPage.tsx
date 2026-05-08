@@ -1,9 +1,11 @@
+import type {Accessor} from 'solid-js';
 import {createEffect, createMemo, createSignal, For, onMount, Show} from 'solid-js';
 import {useTranslation} from 'solid-i18next';
 import {BookmarkPlus, Clock, Package, Play, Server, Trash2} from 'lucide-solid';
 import * as App from '../../../wailsjs/go/main/App';
 import {domain} from '../../../wailsjs/go/models';
-import {favRowKey, mapQuickFavError} from '../../shared/favoriteRows';
+import {favRowKey, quickFavoritesKeySet} from '../../shared/favoriteRows';
+import {FavoriteFlowDialogs, type FavoriteFlowState} from '../../shared/FavoriteFlowDialogs';
 import {historyEntries} from '../../shared/historyRows';
 import {PageSizeInput} from '../../shared/PageSizeInput';
 import {PageHeader} from '../../shared/PageHeader';
@@ -31,6 +33,43 @@ import {
 } from '@/components/ui/table';
 import {cn} from '@/lib/utils';
 
+type HistoryActionsCellProps = {
+  row: domain.ServerRow;
+  quickFavKeySet: Accessor<Set<string>>;
+  t: ReturnType<typeof useTranslation>[0];
+  onJoin: (row: domain.ServerRow) => void;
+  openFavoriteFlow: (next: FavoriteFlowState) => void;
+  onRemoveHistory: () => void;
+};
+
+function HistoryActionsCell(props: HistoryActionsCellProps) {
+  const inQuick = () => props.quickFavKeySet().has(favRowKey(props.row));
+  return (
+    <div class="flex flex-wrap gap-1 [&_button]:min-h-7 [&_button]:min-w-7 [&_button]:justify-center [&_button]:p-1 [&_button]:text-xs">
+      <Button variant="secondary" size="sm" title={props.t('favorites.connectTitle')} aria-label={props.t('favorites.connect')} onClick={() => props.onJoin(props.row)}>
+        <Play size={14} strokeWidth={2} aria-hidden />
+      </Button>
+      <Button variant="secondary" size="sm" title={props.t('favorites.joinPanelModsTitle')} aria-label={props.t('favorites.joinPanelMods')} onClick={() => props.onJoin(props.row)}>
+        <Package size={14} strokeWidth={2} aria-hidden />
+      </Button>
+      <Button
+        variant="secondary"
+        size="sm"
+        title={props.t('browse.quickFavTitle')}
+        aria-label={props.t('browse.quickFav')}
+        onClick={() =>
+          props.openFavoriteFlow(inQuick() ? {kind: 'removeQuick', row: props.row} : {kind: 'quickFavLabel', row: props.row})
+        }
+      >
+        <BookmarkPlus size={14} strokeWidth={2} aria-hidden fill={inQuick() ? 'currentColor' : 'none'} class={cn(inQuick() && 'text-amber-500')} />
+      </Button>
+      <Button variant="destructive" size="sm" title={props.t('history.deleteTitle')} aria-label={props.t('history.delete')} onClick={props.onRemoveHistory}>
+        <Trash2 size={14} strokeWidth={2} aria-hidden />
+      </Button>
+    </div>
+  );
+}
+
 export default function HistoryPage() {
   const [t, i18n] = useTranslation();
   const [s, setS] = createSignal<domain.Settings | null>(null);
@@ -39,8 +78,11 @@ export default function HistoryPage() {
   const [page, setPage] = createSignal(1);
   const [pageSize, setPageSize] = createSignal(clampPageSize(10));
   const [joinModalRow, setJoinModalRow] = createSignal<domain.ServerRow | null>(null);
+  const [favFlow, setFavFlow] = createSignal<FavoriteFlowState | null>(null);
   const [rowMergedByKey, setRowMergedByKey] = createSignal<Record<string, domain.ServerRow>>({});
   const [pingUnreachableKeys, setPingUnreachableKeys] = createSignal<Set<string>>(new Set<string>());
+
+  const quickFavKeysForHist = createMemo(() => quickFavoritesKeySet(s() ?? domain.Settings.createFrom({})));
 
   const reload = () =>
     App.LoadSettings()
@@ -281,36 +323,14 @@ export default function HistoryPage() {
                               </TableCell>
                               <TableCell>{row.distanceLabel}</TableCell>
                               <TableCell>
-                                <div class="flex flex-wrap gap-1 [&_button]:min-h-7 [&_button]:min-w-7 [&_button]:justify-center [&_button]:p-1 [&_button]:text-xs">
-                                  <Button variant="secondary" size="sm" title={t('favorites.connectTitle')} aria-label={t('favorites.connect')} onClick={() => setJoinModalRow(row)}>
-                                    <Play size={14} strokeWidth={2} aria-hidden />
-                                  </Button>
-                                  <Button variant="secondary" size="sm" title={t('favorites.joinPanelModsTitle')} aria-label={t('favorites.joinPanelMods')} onClick={() => setJoinModalRow(row)}>
-                                    <Package size={14} strokeWidth={2} aria-hidden />
-                                  </Button>
-                                  <Button
-                                    variant="secondary"
-                                    size="sm"
-                                    title={t('browse.quickFavTitle')}
-                                    aria-label={t('browse.quickFav')}
-                                    onClick={() =>
-                                      App.SetQuickFavorite(row, window.prompt(t('browse.quickFavPrompt'), row.name) || row.name).catch((e) =>
-                                        setErr(mapQuickFavError(String(e), t)),
-                                      )
-                                    }
-                                  >
-                                    <BookmarkPlus size={14} strokeWidth={2} aria-hidden />
-                                  </Button>
-                                  <Button
-                                    variant="destructive"
-                                    size="sm"
-                                    title={t('history.deleteTitle')}
-                                    aria-label={t('history.delete')}
-                                    onClick={() => App.RemoveHistoryIndex(e.historyIndex).then(reload).catch((e) => setErr(String(e)))}
-                                  >
-                                    <Trash2 size={14} strokeWidth={2} aria-hidden />
-                                  </Button>
-                                </div>
+                                <HistoryActionsCell
+                                  row={row}
+                                  quickFavKeySet={quickFavKeysForHist}
+                                  t={t}
+                                  onJoin={setJoinModalRow}
+                                  openFavoriteFlow={setFavFlow}
+                                  onRemoveHistory={() => App.RemoveHistoryIndex(e.historyIndex).then(reload).catch((err) => setErr(String(err)))}
+                                />
                               </TableCell>
                             </TableRow>
                           );
@@ -322,6 +342,13 @@ export default function HistoryPage() {
               </>
             ) : null}
           </Card>
+          <FavoriteFlowDialogs
+            state={favFlow}
+            onClose={() => setFavFlow(null)}
+            onAfterMutation={reload}
+            onErr={setErr}
+            dialogIdPrefix="history"
+          />
           <Show when={joinModalRow()}>
             <ServerJoinModal row={joinModalRow()} onClose={() => setJoinModalRow(null)} onRowPatched={noopPatch} />
           </Show>

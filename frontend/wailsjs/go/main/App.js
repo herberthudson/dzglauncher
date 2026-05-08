@@ -98,6 +98,10 @@ export function RemoveQuickFavoriteIndex(arg1) {
   return window['go']['main']['App']['RemoveQuickFavoriteIndex'](arg1);
 }
 
+export function RemoveQuickFavoriteRow(arg1) {
+  return window['go']['main']['App']['RemoveQuickFavoriteRow'](arg1);
+}
+
 export function ResolveBattlemetricsID(arg1) {
   return window['go']['main']['App']['ResolveBattlemetricsID'](arg1);
 }
