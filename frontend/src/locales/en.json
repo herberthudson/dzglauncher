@@ -205,7 +205,7 @@
     "timePhaseDay": "In-game daytime",
     "timePhaseDusk": "In-game dusk (around sunset)",
     "timePhaseNight": "In-game night",
-    "thPlayersLong": "Players online versus the cap; when the server reports a join queue via Steam or A2S, the value is shown as current/max+queue.",
+    "thPlayersLong": "Players online versus the cap. When the server is full and reports a join queue (Steam or A2S), the count is shown as current/max+queue.",
     "thAddrLong": "Connection address (IP and ports).",
     "toggleAddrShow": "Show address",
     "toggleAddrHide": "Hide address",

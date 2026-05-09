@@ -205,7 +205,7 @@
     "timePhaseDay": "Día en el juego",
     "timePhaseDusk": "Atardecer en el juego (cerca del ocaso)",
     "timePhaseNight": "Noche en el juego",
-    "thPlayersLong": "Jugadores en línea respecto al máximo; si el servidor informa cola (Steam o A2S), se muestra como actual/máx+cola.",
+    "thPlayersLong": "Jugadores en línea respecto al máximo. Si el servidor está lleno e informa cola (Steam o A2S), se muestra como actual/máx+cola.",
     "thAddrLong": "Dirección para conectar (IP y puertos).",
     "toggleAddrShow": "Mostrar dirección",
     "toggleAddrHide": "Ocultar dirección",
