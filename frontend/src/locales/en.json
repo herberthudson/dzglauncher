@@ -28,6 +28,9 @@
   "joinModal": {
     "title": "Join server",
     "server": "Server:",
+    "endpointLabel": "IP / ports:",
+    "endpointGame": "game",
+    "endpointQuery": "query",
     "loading": "Loading server mods, Steam Workshop metadata, and local install…",
     "emptyMods": "This server did not report Workshop IDs. You can still Join (connect without -mod); if the game requires mods, check the server or your Steam folder in Settings.",
     "colMod": "Mod",

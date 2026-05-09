@@ -1,6 +1,6 @@
 import {createEffect, createMemo, createSignal, For, onCleanup, Show} from 'solid-js';
 import {useTranslation} from 'solid-i18next';
-import {Check, Download, ExternalLink, Loader2, LogIn, RefreshCw, X} from 'lucide-solid';
+import {Check, Download, ExternalLink, Eye, EyeOff, Loader2, LogIn, RefreshCw, X} from 'lucide-solid';
 import * as App from '../../wailsjs/go/main/App';
 import {domain} from '../../wailsjs/go/models';
 import {AlertError, AlertInfo} from '@/components/ui/alert';
@@ -10,6 +10,7 @@ import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
 import {Table, TableBody, TableCaption, TableCell, TableHead, TableRow} from '@/components/ui/table';
 import {formatBytes} from './formatBytes';
+import {maskAddress} from './ServerAddressCell';
 
 const POLL_INSTALLED_MS = 3500;
 const PER_MOD_WAIT_MS = 25 * 60 * 1000;
@@ -81,6 +82,7 @@ export function ServerJoinModal(props: ServerJoinModalProps) {
   const [bulkSheetModName, setBulkSheetModName] = createSignal('');
   const [bulkSheetModId, setBulkSheetModId] = createSignal('');
   const [bulkMissingErr, setBulkMissingErr] = createSignal('');
+  const [endpointAddrVisible, setEndpointAddrVisible] = createSignal(false);
 
   const finalizeBulkMissing = () => {
     setBulkMissingBusy(false);
@@ -288,6 +290,35 @@ export function ServerJoinModal(props: ServerJoinModalProps) {
     return row ? row.name || row.address || t('joinModal.title') : t('joinModal.title');
   };
 
+  const endpointSummary = createMemo(() => {
+    const row = props.row;
+    if (!row) {
+      return '';
+    }
+    const host = String(row.queryHost ?? '').trim();
+    const gp = Number(row.gamePort) || 0;
+    const qp = Number(row.queryPort) || 0;
+    const addr = String(row.address ?? '').trim();
+    const parts: string[] = [];
+    if (host) {
+      parts.push(host);
+    }
+    if (gp > 0) {
+      parts.push(`${t('joinModal.endpointGame')} ${gp}`);
+    }
+    if (qp > 0) {
+      parts.push(`${t('joinModal.endpointQuery')} ${qp}`);
+    }
+    if (addr) {
+      parts.push(addr);
+    }
+    return parts.length > 0 ? parts.join(' · ') : '—';
+  });
+
+  const endpointDisplayText = createMemo(() =>
+    endpointAddrVisible() ? endpointSummary() : maskAddress(endpointSummary()),
+  );
+
   const onJoin = () => {
     const row = props.row;
     if (!row) {
@@ -353,6 +384,26 @@ export function ServerJoinModal(props: ServerJoinModalProps) {
             <span class="mr-1 font-semibold text-muted-foreground">{t('joinModal.server')}</span>
             {title()}
           </p>
+          <div class="shrink-0 border-b border-border px-3 py-2 text-xs leading-snug">
+            <div class="flex flex-wrap items-start gap-x-2 gap-y-1">
+              <span class="shrink-0 font-semibold text-muted-foreground">{t('joinModal.endpointLabel')}</span>
+              <div class="inline-flex min-w-0 max-w-full flex-1 items-start gap-1.5">
+                <button
+                  type="button"
+                  class="inline-flex min-h-7 min-w-7 shrink-0 cursor-pointer items-center justify-center rounded-md border border-border bg-card/85 p-0.5 text-muted-foreground backdrop-blur-[2px] hover:border-primary hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                  onClick={() => setEndpointAddrVisible((v) => !v)}
+                  aria-pressed={endpointAddrVisible()}
+                  title={endpointAddrVisible() ? t('browse.toggleAddrHide') : t('browse.toggleAddrShow')}
+                >
+                  {endpointAddrVisible() ? <Eye size={14} strokeWidth={2} aria-hidden /> : <EyeOff size={14} strokeWidth={2} aria-hidden />}
+                  <span class="sr-only">{endpointAddrVisible() ? t('browse.toggleAddrHide') : t('browse.toggleAddrShow')}</span>
+                </button>
+                <span class="min-w-0 flex-1 break-words font-mono text-[0.8125rem] text-foreground tabular-nums select-all" translate="no">
+                  {endpointDisplayText()}
+                </span>
+              </div>
+            </div>
+          </div>
 
           <div class="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden px-3 py-2">
             <Show when={loading()}>

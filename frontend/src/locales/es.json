@@ -28,6 +28,9 @@
   "joinModal": {
     "title": "Entrar al servidor",
     "server": "Servidor:",
+    "endpointLabel": "IP / puertos:",
+    "endpointGame": "juego",
+    "endpointQuery": "query",
     "loading": "Cargando mods del servidor, metadatos Steam Workshop e instalación local…",
     "emptyMods": "El servidor no informó IDs de Workshop. Aún puedes Entrar (conexión sin -mod); si el juego exige mods, revisa el servidor o la carpeta Steam en ajustes.",
     "colMod": "Mod",

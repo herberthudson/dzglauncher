@@ -3,7 +3,7 @@ import {useTranslation} from 'solid-i18next';
 import {Eye, EyeOff} from 'lucide-solid';
 import {cn} from '@/lib/utils';
 
-function maskAddress(addr: string): string {
+export function maskAddress(addr: string): string {
   if (!addr) {
     return '';
   }
