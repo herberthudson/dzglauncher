@@ -134,7 +134,9 @@
     "connectedAt": "Última: {{when}}",
     "connectedAtTitle": "Hora de la última conexión",
     "thConnected": "Última conexión",
-    "thConnectedLong": "Fecha y hora de la última vez que te conectaste a este servidor."
+    "thConnectedLong": "Fecha y hora de la última vez que te conectaste a este servidor.",
+    "deleteConfirmTitle": "¿Quitar del historial?",
+    "deleteConfirmBody": "¿Quitar \"{{name}}\" del historial de conexiones?"
   },
   "browse": {
     "title": "Lista de servidores",

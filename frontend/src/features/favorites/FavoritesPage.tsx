@@ -1,9 +1,9 @@
 import {createEffect, createMemo, createSignal, For, onMount, Show} from 'solid-js';
 import {useTranslation} from 'solid-i18next';
-import {Bookmark, Package, Play, Server, Star, Trash2} from 'lucide-solid';
+import {Bookmark, Package, Play, Server, Star, Trash2, X} from 'lucide-solid';
 import * as App from '../../../wailsjs/go/main/App';
 import {domain} from '../../../wailsjs/go/models';
-import {favoriteKey, favoriteKeyParts, favoritesKeySet, favoritesOnlyRows, favRowKey, quickFavoriteEntries, quickFavoritesList} from '../../shared/favoriteRows';
+import {favoriteKeyParts, favoritesKeySet, favoritesOnlyRows, favRowKey, quickFavoriteEntries} from '../../shared/favoriteRows';
 import {PageSizeInput} from '../../shared/PageSizeInput';
 import {PageHeader} from '../../shared/PageHeader';
 import {clampPageSize} from '../../shared/pageSizeConstants';
@@ -18,6 +18,7 @@ import {InGameTimeCell} from '../../shared/InGameTimeCell';
 import {AlertError} from '@/components/ui/alert';
 import {Button} from '@/components/ui/button';
 import {Card, CardTitle} from '@/components/ui/card';
+import {Dialog, DialogContent, DialogOverlay} from '@/components/ui/dialog';
 import {Table, TableBody, TableCaption, TableCell, TableHead, TableRow, TableScroll, tablePasswordColClass} from '@/components/ui/table';
 import {cn} from '@/lib/utils';
 
@@ -69,14 +70,13 @@ function FavoritesTableHead() {
 
 type FavoriteTableRowProps = {
   row: domain.ServerRow;
-  settings: domain.Settings;
   mode: 'favorite' | 'quick';
   quickSlotIndex?: number;
   favoriteKeys: Set<string>;
   pingUnreachable?: boolean;
   onOpenJoin: (row: domain.ServerRow) => void;
-  onRemoveFavorite: (row: domain.ServerRow, settings: domain.Settings) => void;
-  onRemoveQuickSlot?: (index: number) => void;
+  onRequestRemoveFavorite: (row: domain.ServerRow) => void;
+  onRequestRemoveQuickSlot?: () => void;
   onAddFavorite?: (row: domain.ServerRow) => void;
 };
 
@@ -138,17 +138,13 @@ function FavoriteTableRow(props: FavoriteTableRowProps) {
                 size="sm"
                 title={t('favorites.removeQuickTitle')}
                 aria-label={t('favorites.removeQuick')}
-                onClick={() => {
-                  if (props.quickSlotIndex != null && props.onRemoveQuickSlot) {
-                    props.onRemoveQuickSlot(props.quickSlotIndex);
-                  }
-                }}
+                onClick={() => props.onRequestRemoveQuickSlot?.()}
               >
                 <Trash2 size={14} strokeWidth={2} aria-hidden />
               </Button>
             </>
           ) : (
-            <Button variant="destructive" size="sm" title={t('favorites.removeTitle')} aria-label={t('favorites.remove')} onClick={() => props.onRemoveFavorite(props.row, props.settings)}>
+            <Button variant="destructive" size="sm" title={t('favorites.removeTitle')} aria-label={t('favorites.remove')} onClick={() => props.onRequestRemoveFavorite(props.row)}>
               <Trash2 size={14} strokeWidth={2} aria-hidden />
             </Button>
           )}
@@ -168,6 +164,10 @@ export default function FavoritesPage() {
   const [joinModalRow, setJoinModalRow] = createSignal<domain.ServerRow | null>(null);
   const [pingMsByFavKey, setPingMsByFavKey] = createSignal<Record<string, number>>({});
   const [pingUnreachableKeys, setPingUnreachableKeys] = createSignal<Set<string>>(new Set<string>());
+  const [favRemoveAsk, setFavRemoveAsk] = createSignal<
+    {kind: 'fav'; row: domain.ServerRow} | {kind: 'quick'; index: number; row: domain.ServerRow} | null
+  >(null);
+  const [favRemoveBusy, setFavRemoveBusy] = createSignal(false);
 
   const reload = () =>
     App.LoadSettings().then((v) => {
@@ -184,23 +184,9 @@ export default function FavoritesPage() {
     reload().catch(() => {});
   });
 
-  const favoritesListIdentity = createMemo(() => {
-    const st = s();
-    if (!st) {
-      return '';
-    }
-    const keys = new Set<string>();
-    for (const f of st.favorites || []) {
-      keys.add(favoriteKey(f));
-    }
-    for (const f of quickFavoritesList(st)) {
-      keys.add(favoriteKey(f));
-    }
-    return [...keys].sort().join('|');
-  });
-
   createEffect(() => {
-    favoritesListIdentity();
+    page();
+    pageSize();
     setPingMsByFavKey({});
     setPingUnreachableKeys(new Set<string>());
   });
@@ -259,16 +245,46 @@ export default function FavoritesPage() {
     });
   });
 
-  const handleRemoveFavorite = (row: domain.ServerRow, _settings: domain.Settings) => {
-    App.RemoveFavorite(row.queryHost, row.gamePort, row.queryPort)
-      .then(reload)
-      .catch((e) => setErr(String(e)));
+  const favRemoveOpen = () => favRemoveAsk() != null;
+
+  const closeFavRemoveAsk = () => {
+    if (favRemoveBusy()) {
+      return;
+    }
+    setFavRemoveAsk(null);
   };
 
-  const handleRemoveQuickSlot = (index: number) => {
-    App.RemoveQuickFavoriteIndex(index)
-      .then(reload)
-      .catch((e) => setErr(String(e)));
+  const favRemoveTitle = () => {
+    const ask = favRemoveAsk();
+    if (ask?.kind === 'quick') {
+      return t('browse.confirmRemoveQuickTitle');
+    }
+    return t('browse.confirmRemoveFavoriteTitle');
+  };
+
+  const favRemoveBodyName = () => {
+    const ask = favRemoveAsk();
+    const r = ask?.row;
+    return r?.name || r?.address || '—';
+  };
+
+  const confirmFavRemove = () => {
+    const ask = favRemoveAsk();
+    if (!ask) {
+      return;
+    }
+    setFavRemoveBusy(true);
+    const p =
+      ask.kind === 'fav'
+        ? App.RemoveFavorite(ask.row.queryHost, ask.row.gamePort, ask.row.queryPort)
+        : App.RemoveQuickFavoriteIndex(ask.index);
+    void p
+      .then(() => {
+        setFavRemoveAsk(null);
+        return reload();
+      })
+      .catch((e) => setErr(String(e)))
+      .finally(() => setFavRemoveBusy(false));
   };
 
   const handleAddFavoriteFromQuick = (row: domain.ServerRow) => {
@@ -364,14 +380,13 @@ export default function FavoritesPage() {
                       {(e) => (
                         <FavoriteTableRow
                           row={e.row}
-                          settings={s()!}
                           mode="quick"
                           quickSlotIndex={e.index}
                           favoriteKeys={favoriteKeys()}
                           pingUnreachable={pingUnreachableKeys().has(favRowKey(e.row))}
                           onOpenJoin={setJoinModalRow}
-                          onRemoveFavorite={handleRemoveFavorite}
-                          onRemoveQuickSlot={handleRemoveQuickSlot}
+                          onRequestRemoveFavorite={(row) => setFavRemoveAsk({kind: 'fav', row})}
+                          onRequestRemoveQuickSlot={() => setFavRemoveAsk({kind: 'quick', index: e.index, row: e.row})}
                           onAddFavorite={handleAddFavoriteFromQuick}
                         />
                       )}
@@ -438,12 +453,11 @@ export default function FavoritesPage() {
                         {(row) => (
                           <FavoriteTableRow
                             row={row}
-                            settings={s()!}
                             mode="favorite"
                             favoriteKeys={favoriteKeys()}
                             pingUnreachable={pingUnreachableKeys().has(favRowKey(row))}
                             onOpenJoin={setJoinModalRow}
-                            onRemoveFavorite={handleRemoveFavorite}
+                            onRequestRemoveFavorite={(row) => setFavRemoveAsk({kind: 'fav', row})}
                           />
                         )}
                       </For>
@@ -456,6 +470,49 @@ export default function FavoritesPage() {
           <Show when={joinModalRow()}>
             <ServerJoinModal row={joinModalRow()} onClose={() => setJoinModalRow(null)} onRowPatched={patchFavoriteRow} />
           </Show>
+          <Dialog
+            open={favRemoveOpen()}
+            onOpenChange={(next) => {
+              if (!next) {
+                closeFavRemoveAsk();
+              }
+            }}
+            modal
+            id="favorites-remove-dialog"
+          >
+            <Dialog.Portal>
+              <DialogOverlay />
+              <DialogContent
+                class="max-h-[min(80vh,24rem)] w-[min(100%,22rem)] max-w-[calc(100vw-1.5rem)]"
+                aria-labelledby="favorites-remove-dialog-title"
+              >
+                <div class="flex shrink-0 items-start justify-between gap-2 border-b border-border px-3 py-2">
+                  <Dialog.Title id="favorites-remove-dialog-title" class="m-0 pr-2 text-base font-semibold leading-snug">
+                    {favRemoveTitle()}
+                  </Dialog.Title>
+                  <Button variant="ghost" size="icon" class="shrink-0" title={t('joinModal.close')} disabled={favRemoveBusy()} onClick={closeFavRemoveAsk}>
+                    <X size={18} strokeWidth={2} aria-hidden />
+                    <span class="sr-only">{t('joinModal.close')}</span>
+                  </Button>
+                </div>
+                <div class="flex min-h-0 flex-1 flex-col gap-3 px-3 py-3">
+                  <p class="m-0 text-sm text-muted-foreground">
+                    {favRemoveAsk()?.kind === 'quick'
+                      ? t('browse.confirmRemoveQuickBody', {name: favRemoveBodyName()})
+                      : t('browse.confirmRemoveFavoriteBody', {name: favRemoveBodyName()})}
+                  </p>
+                </div>
+                <div class="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-border px-3 py-2">
+                  <Button variant="secondary" disabled={favRemoveBusy()} onClick={closeFavRemoveAsk}>
+                    {t('common.cancel')}
+                  </Button>
+                  <Button variant="destructive" disabled={favRemoveBusy()} onClick={confirmFavRemove}>
+                    {t('common.remove')}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog.Portal>
+          </Dialog>
         </div>
       </Show>
     </>

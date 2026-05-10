@@ -1,7 +1,7 @@
 import type {Accessor} from 'solid-js';
 import {createEffect, createMemo, createSignal, For, onMount, Show} from 'solid-js';
 import {useTranslation} from 'solid-i18next';
-import {BookmarkPlus, Clock, Package, Play, Server, Trash2} from 'lucide-solid';
+import {BookmarkPlus, Clock, Package, Play, Server, Trash2, X} from 'lucide-solid';
 import * as App from '../../../wailsjs/go/main/App';
 import {domain} from '../../../wailsjs/go/models';
 import {favRowKey, quickFavoritesKeySet} from '../../shared/favoriteRows';
@@ -21,6 +21,7 @@ import {InGameTimeCell} from '../../shared/InGameTimeCell';
 import {AlertError} from '@/components/ui/alert';
 import {Button} from '@/components/ui/button';
 import {Card, CardTitle} from '@/components/ui/card';
+import {Dialog, DialogContent, DialogOverlay} from '@/components/ui/dialog';
 import {
   Table,
   TableBody,
@@ -39,7 +40,7 @@ type HistoryActionsCellProps = {
   t: ReturnType<typeof useTranslation>[0];
   onJoin: (row: domain.ServerRow) => void;
   openFavoriteFlow: (next: FavoriteFlowState) => void;
-  onRemoveHistory: () => void;
+  onRequestRemoveHistory: () => void;
 };
 
 function HistoryActionsCell(props: HistoryActionsCellProps) {
@@ -63,7 +64,7 @@ function HistoryActionsCell(props: HistoryActionsCellProps) {
       >
         <BookmarkPlus size={14} strokeWidth={2} aria-hidden fill={inQuick() ? 'currentColor' : 'none'} class={cn(inQuick() && 'text-amber-500')} />
       </Button>
-      <Button variant="destructive" size="sm" title={props.t('history.deleteTitle')} aria-label={props.t('history.delete')} onClick={props.onRemoveHistory}>
+      <Button variant="destructive" size="sm" title={props.t('history.deleteTitle')} aria-label={props.t('history.delete')} onClick={props.onRequestRemoveHistory}>
         <Trash2 size={14} strokeWidth={2} aria-hidden />
       </Button>
     </div>
@@ -81,6 +82,8 @@ export default function HistoryPage() {
   const [favFlow, setFavFlow] = createSignal<FavoriteFlowState | null>(null);
   const [rowMergedByKey, setRowMergedByKey] = createSignal<Record<string, domain.ServerRow>>({});
   const [pingUnreachableKeys, setPingUnreachableKeys] = createSignal<Set<string>>(new Set<string>());
+  const [historyRemoveAsk, setHistoryRemoveAsk] = createSignal<{historyIndex: number; name: string} | null>(null);
+  const [historyRemoveBusy, setHistoryRemoveBusy] = createSignal(false);
 
   const quickFavKeysForHist = createMemo(() => quickFavoritesKeySet(s() ?? domain.Settings.createFrom({})));
 
@@ -111,15 +114,9 @@ export default function HistoryPage() {
     });
   });
 
-  const historyListIdentity = createMemo(() =>
-    [...allEntries()]
-      .sort((a, b) => a.historyIndex - b.historyIndex)
-      .map((e) => `${e.historyIndex}:${favRowKey(e.row)}`)
-      .join('|'),
-  );
-
   createEffect(() => {
-    historyListIdentity();
+    page();
+    pageSize();
     setRowMergedByKey({});
     setPingUnreachableKeys(new Set<string>());
   });
@@ -172,6 +169,30 @@ export default function HistoryPage() {
   };
 
   const noopPatch = (_next: domain.ServerRow) => {};
+
+  const historyRemoveOpen = () => historyRemoveAsk() != null;
+
+  const closeHistoryRemoveAsk = () => {
+    if (historyRemoveBusy()) {
+      return;
+    }
+    setHistoryRemoveAsk(null);
+  };
+
+  const confirmHistoryRemove = () => {
+    const ask = historyRemoveAsk();
+    if (!ask) {
+      return;
+    }
+    setHistoryRemoveBusy(true);
+    void App.RemoveHistoryIndex(ask.historyIndex)
+      .then(() => {
+        setHistoryRemoveAsk(null);
+        return reload();
+      })
+      .catch((e: unknown) => setErr(String(e)))
+      .finally(() => setHistoryRemoveBusy(false));
+  };
 
   const ping = () => {
     const sl = pageSlice();
@@ -334,7 +355,12 @@ export default function HistoryPage() {
                                   t={t}
                                   onJoin={setJoinModalRow}
                                   openFavoriteFlow={setFavFlow}
-                                  onRemoveHistory={() => App.RemoveHistoryIndex(e.historyIndex).then(reload).catch((err) => setErr(String(err)))}
+                                  onRequestRemoveHistory={() =>
+                                    setHistoryRemoveAsk({
+                                      historyIndex: e.historyIndex,
+                                      name: row.name || row.address || '—',
+                                    })
+                                  }
                                 />
                               </TableCell>
                             </TableRow>
@@ -357,6 +383,47 @@ export default function HistoryPage() {
           <Show when={joinModalRow()}>
             <ServerJoinModal row={joinModalRow()} onClose={() => setJoinModalRow(null)} onRowPatched={noopPatch} />
           </Show>
+          <Dialog
+            open={historyRemoveOpen()}
+            onOpenChange={(next) => {
+              if (!next) {
+                closeHistoryRemoveAsk();
+              }
+            }}
+            modal
+            id="history-remove-dialog"
+          >
+            <Dialog.Portal>
+              <DialogOverlay />
+              <DialogContent
+                class="max-h-[min(80vh,24rem)] w-[min(100%,22rem)] max-w-[calc(100vw-1.5rem)]"
+                aria-labelledby="history-remove-dialog-title"
+              >
+                <div class="flex shrink-0 items-start justify-between gap-2 border-b border-border px-3 py-2">
+                  <Dialog.Title id="history-remove-dialog-title" class="m-0 pr-2 text-base font-semibold leading-snug">
+                    {t('history.deleteConfirmTitle')}
+                  </Dialog.Title>
+                  <Button variant="ghost" size="icon" class="shrink-0" title={t('joinModal.close')} disabled={historyRemoveBusy()} onClick={closeHistoryRemoveAsk}>
+                    <X size={18} strokeWidth={2} aria-hidden />
+                    <span class="sr-only">{t('joinModal.close')}</span>
+                  </Button>
+                </div>
+                <div class="flex min-h-0 flex-1 flex-col gap-3 px-3 py-3">
+                  <p class="m-0 text-sm text-muted-foreground">
+                    {t('history.deleteConfirmBody', {name: historyRemoveAsk()?.name || '—'})}
+                  </p>
+                </div>
+                <div class="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-border px-3 py-2">
+                  <Button variant="secondary" disabled={historyRemoveBusy()} onClick={closeHistoryRemoveAsk}>
+                    {t('common.cancel')}
+                  </Button>
+                  <Button variant="destructive" disabled={historyRemoveBusy()} onClick={confirmHistoryRemove}>
+                    {t('common.remove')}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog.Portal>
+          </Dialog>
         </div>
       </Show>
     </>
